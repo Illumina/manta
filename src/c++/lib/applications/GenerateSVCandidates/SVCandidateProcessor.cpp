@@ -37,17 +37,17 @@ SVCandidateProcessor::
 SVCandidateProcessor(
     const GSCOptions& opt,
     const SVLocusScanner& readScanner,
-    const char* progName,
-    const char* progVersion,
     const SVLocusSet& cset,
+    const SVWriter& svWriter,
     std::shared_ptr<EdgeRuntimeTracker> edgeTrackerPtr,
     GSCEdgeStatsManager& edgeStatMan) :
     _opt(opt),
     _cset(cset),
+    _svWriter(svWriter),
     _edgeTrackerPtr(edgeTrackerPtr),
     _edgeStatMan(edgeStatMan),
     _svRefine(opt, cset.getBamHeader(), cset.getAllSampleReadCounts(), _edgeTrackerPtr),
-    _svWriter(opt, readScanner, cset.getBamHeader(), progName, progVersion)
+    _svScorer(opt, readScanner, cset.getBamHeader())
 {}
 
 
@@ -79,6 +79,215 @@ evaluateCandidates(
     {
         evaluateCandidate(edge,cand,svData,isFindLargeInsertions, svSupports);
     }
+}
+
+
+
+static
+bool
+isAnyFalse(
+    const std::vector<bool>& vb)
+{
+    for (const bool val : vb)
+    {
+        if (! val) return true;
+    }
+    return false;
+}
+
+
+
+/// Each junction of a candidate SV is checked and marked as filtered if it is found to be low quality.
+///
+/// The junction filtration rules are:
+/// 1. If the junction is part of an sv candidate where all junctions have a spanning evidence count less than
+///    minCandidateSpanningCount, then all junctions in the sv candidate will be filtered.
+/// 2. Any individual junction with a spanning evidence count less than minJunctionCandidateSpanningCount will be
+///    filtered.
+/// 3. Complex candidate regions which did not produce a successful contig alignment will be filtered (the candidate
+///    is not spanning so there is no imprecise hypothesis to pursue if contig alignment fails).
+/// 4. Candidates will be filtered if their size is smaller than minCandidateVariantSize
+///
+static
+void
+checkJunctionsToFilter(
+    const SVMultiJunctionCandidate& mjSV,
+    const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
+    std::vector<bool>& isJunctionFiltered,
+    const GSCOptions& opt)
+{
+    const unsigned junctionCount(mjSV.junction.size());
+
+    // relax min spanning count to just 2 for the special case of a
+    // junction that is part of a multi-junction EVENT
+    const unsigned minJunctionCandidateSpanningCount(std::min(2u,opt.minCandidateSpanningCount));
+
+    // first step of SV filtering (before candidates are written)
+    // 2 junction filter types:
+    // 1) tests where the junction can fail independently
+    // 2) tests where all junctions have to fail for the candidate to be filtered:
+    bool isCandidateSpanFail(true);
+
+    for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
+    {
+        const SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
+        const SVCandidate& sv(mjSV.junction[junctionIndex]);
+
+        const bool isCandidateSpanning(assemblyData.isCandidateSpanning);
+
+#ifdef DEBUG_GSV
+        log_os << __FUNCTION__ << ": isSpanningSV junction: " <<  isCandidateSpanning << "\n";
+        log_os << __FUNCTION__ << ": Pairs:" << sv.bp1.getPairCount() << " Spanning:" << sv.bp1.getSpanningCount() << "\n";
+#endif
+
+        // junction dependent tests:
+        //   (1) at least one junction in the set must have spanning count of minCandidateSpanningCount or more
+        bool isJunctionSpanFail(false);
+        if (isCandidateSpanning)
+        {
+            if (sv.getPostAssemblySpanningCount(opt.isRNA) < opt.minCandidateSpanningCount)
+            {
+                isJunctionSpanFail=true;
+            }
+        }
+        if (! isJunctionSpanFail) isCandidateSpanFail=false;
+
+        // independent tests -- as soon as one of these fails, we can continue:
+        if (isCandidateSpanning)
+        {
+            //   (2) each spanning junction in the set must have spanning count of
+            //      minJunctionCandidateSpanningCount or more
+            if (sv.getPostAssemblySpanningCount(opt.isRNA) < minJunctionCandidateSpanningCount)
+            {
+                isJunctionFiltered[junctionIndex] = true;
+                continue;
+            }
+        }
+        else
+        {
+            if (sv.isImprecise())
+            {
+                // (3) no unassembled non-spanning candidates, in this case a non-spanning low-res candidate
+                // went into assembly but did not produce a successful contig alignment:
+#ifdef DEBUG_GSV
+                log_os << __FUNCTION__ << ": Rejecting candidate junction: imprecise non-spanning SV\n";
+#endif
+                isJunctionFiltered[junctionIndex] = true;
+                continue;
+            }
+        }
+
+        // (4) check min size, or if it is IMPRECISE case where CIEND is a subset of CIPOS for candidate output:
+        if (isSVBelowMinSize(sv, opt.scanOpt.minCandidateVariantSize))
+        {
+#ifdef DEBUG_GSV
+            log_os << __FUNCTION__ << ": Filtering out candidate below min size before candidate output stage\n";
+#endif
+            isJunctionFiltered[junctionIndex] = true;
+            continue;
+        }
+    }
+
+    if (isCandidateSpanFail)
+    {
+        for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
+        {
+#ifdef DEBUG_GSV
+            log_os << __FUNCTION__ << ": Rejecting candidate junction: minCandidateSpanningCount\n";
+#endif
+            isJunctionFiltered[junctionIndex] = true;
+        }
+    }
+}
+
+
+
+void
+SVCandidateProcessor::
+scoreSV(
+    const SVCandidateSetData& svData,
+    const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
+    const SVMultiJunctionCandidate& mjSV,
+    const std::vector<SVId>& junctionSVId,
+    std::vector<bool>& isJunctionFiltered,
+    bool& isMJEvent,
+    SupportSamples& svSupports)
+{
+    if (_opt.isSkipScoring) return;
+
+    // check min size for scoring:
+    const unsigned junctionCount(isJunctionFiltered.size());
+    for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
+    {
+        if (isJunctionFiltered[junctionIndex]) continue;
+
+        const SVCandidate& sv(mjSV.junction[junctionIndex]);
+        if (isSVBelowMinSize(sv, _opt.minScoredVariantSize))
+        {
+#ifdef DEBUG_GSV
+            log_os << __FUNCTION__ << ": Filtering out candidate junction below min size at scoring stage\n";
+#endif
+            isJunctionFiltered[junctionIndex] = true;
+        }
+    }
+
+    // check to see if all junctions are filtered before scoring:
+    //
+    if (! isAnyFalse(isJunctionFiltered)) return;
+
+    _svScorer.scoreSV(svData, mjAssemblyData, mjSV, junctionSVId,
+                    isJunctionFiltered, _opt.isSomatic(), _opt.isTumorOnly(),
+                    _mjModelScoreInfo, _mjJointModelScoreInfo,
+                    isMJEvent, svSupports);
+}
+
+
+
+void
+SVCandidateProcessor::
+scoreAndWriteSV(
+    const EdgeInfo& edge,
+    const SVCandidateSetData& svData,
+    const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
+    const SVMultiJunctionCandidate& mjSV,
+    const std::vector<bool>& isInputJunctionFiltered,
+    SupportSamples& svSupports)
+{
+    // track filtration for each junction:
+    std::vector<bool> isCandidateJunctionFiltered(isInputJunctionFiltered);
+    checkJunctionsToFilter(mjSV, mjAssemblyData, isCandidateJunctionFiltered, _opt);
+
+    // check to see if all junctions are filtered, if so skip the whole candidate:
+    //
+    if (! isAnyFalse(isCandidateJunctionFiltered))
+    {
+#ifdef DEBUG_GSV
+        log_os << __FUNCTION__ << ": Rejecting candidate, all junctions filtered.\n";
+#endif
+        return;
+    }
+
+    // compute all junction ids
+    //
+    const unsigned junctionCount(isCandidateJunctionFiltered.size());
+    std::vector<SVId> junctionSVId(junctionCount);
+    for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
+    {
+        const SVCandidate& sv(mjSV.junction[junctionIndex]);
+        SVId& svId(junctionSVId[junctionIndex]);
+        _idgen.getId(edge, sv, _opt.isRNA, svId);
+    }
+
+    // Now score the SV
+    //
+    bool isMultiJunctionEvent(false);
+    std::vector<bool> isScoredJunctionFiltered(isCandidateJunctionFiltered);
+    scoreSV(svData, mjAssemblyData, mjSV, junctionSVId, isScoredJunctionFiltered, isMultiJunctionEvent, svSupports);
+
+    // finally, write out to all VCF streams
+    //
+    _svWriter.writeSV(edge, svData, mjAssemblyData, mjSV, isCandidateJunctionFiltered, isScoredJunctionFiltered,
+        junctionSVId, _mjModelScoreInfo, _mjJointModelScoreInfo, isMultiJunctionEvent, svSupports);
 }
 
 
@@ -233,13 +442,13 @@ evaluateCandidate(
             {
                 std::vector<bool> isJunctionFilteredHack(junctionCount,true);
                 isJunctionFilteredHack[junctionIndex] = false;
-                _svWriter.writeSV(edge, svData, mjAssemblyData, mjAssembledCandidateSV,
+                scoreAndWriteSV(edge, svData, mjAssemblyData, mjAssembledCandidateSV,
                                   isJunctionFilteredHack, svSupports);
             }
         }
         else
         {
-            _svWriter.writeSV(edge, svData, mjAssemblyData, mjAssembledCandidateSV,
+            scoreAndWriteSV(edge, svData, mjAssemblyData, mjAssembledCandidateSV,
                               isJunctionFiltered, svSupports);
         }
     }

@@ -67,21 +67,23 @@ void
 VcfWriterRnaSV::
 modifyTranslocInfo(
     const SVCandidate& sv,
+    const SVScoreInfo* baseScoringInfoPtr,
     const bool isFirstOfPair,
     const SVCandidateAssemblyData& assemblyData,
     InfoTag_t& infotags) const
 {
-    const SVScoreInfo& baseInfo(getBaseInfo());
+    assert(baseScoringInfoPtr);
+    const SVScoreInfo& baseScoringInfo(*baseScoringInfoPtr);
 
     infotags.push_back( str(boost::format("BND_DEPTH=%i") %
-                            (isFirstOfPair ? baseInfo.bp1MaxDepth : baseInfo.bp2MaxDepth) ) );
+                            (isFirstOfPair ? baseScoringInfo.bp1MaxDepth : baseScoringInfo.bp2MaxDepth) ) );
     infotags.push_back( str(boost::format("MATE_BND_DEPTH=%i") %
-                            (isFirstOfPair ? baseInfo.bp2MaxDepth : baseInfo.bp1MaxDepth) ) );
+                            (isFirstOfPair ? baseScoringInfo.bp2MaxDepth : baseScoringInfo.bp1MaxDepth) ) );
     {
         ///TODO better multisample handler here:
         const unsigned sampleIndex(0);
 
-        const SVSampleAlleleInfo& refinfo(baseInfo.samples[sampleIndex].ref);
+        const SVSampleAlleleInfo& refinfo(baseScoringInfo.samples[sampleIndex].ref);
         infotags.push_back(str(boost::format("REF_COUNT=%i") %
                                (isFirstOfPair ? refinfo.confidentSplitReadAndPairCountRefBp1 : refinfo.confidentSplitReadAndPairCountRefBp2)));
         infotags.push_back(str(boost::format("MATE_REF_COUNT=%i") %
@@ -156,9 +158,10 @@ addDebugInfo(
 
 void
 VcfWriterRnaSV::
-writeFilter() const
+writeFilter(const boost::any specializedScoringInfo) const
 {
-    writeFilters(getRnaInfo().filters, _os);
+    const SVScoreInfoRna& rnaScoringInfo(*boost::any_cast<const SVScoreInfoRna*>(specializedScoringInfo));
+    writeFilters(rnaScoringInfo.filters, _os);
 }
 
 
@@ -166,15 +169,18 @@ void
 VcfWriterRnaSV::
 modifySample(
     const SVCandidate& sv,
+    const SVScoreInfo* baseScoringInfoPtr,
+    const boost::any /*specializedScoringInfo*/,
     SampleTag_t& sampletags) const
 {
-    const SVScoreInfo& baseInfo(getBaseInfo());
-    const unsigned sampleCount(baseInfo.samples.size());
+    assert(baseScoringInfoPtr);
+    const SVScoreInfo& baseScoringInfo(*baseScoringInfoPtr);
+    const unsigned sampleCount(baseScoringInfo.samples.size());
 
     std::vector<std::string> values(sampleCount);
     for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
     {
-        const SVSampleInfo& sampleInfo(baseInfo.samples[sampleIndex]);
+        const SVSampleInfo& sampleInfo(baseScoringInfo.samples[sampleIndex]);
         values[sampleIndex] = str(boost::format("%i,%i")
                                   % sampleInfo.ref.spanningPairCount
                                   % sampleInfo.alt.spanningPairCount);
@@ -185,7 +191,7 @@ modifySample(
 
     for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
     {
-        const SVSampleInfo& sampleInfo(baseInfo.samples[sampleIndex]);
+        const SVSampleInfo& sampleInfo(baseScoringInfo.samples[sampleIndex]);
         values[sampleIndex] =  str( boost::format("%i,%i")
                                     % sampleInfo.ref.splitReadCount
                                     % sampleInfo.alt.splitReadCount);
@@ -202,16 +208,9 @@ writeSV(
     const SVCandidateAssemblyData& adata,
     const SVCandidate& sv,
     const SVId& svId,
-    const SVScoreInfo& baseInfo,
+    const SVScoreInfo& baseScoringInfo,
     const SVScoreInfoRna& rnaInfo,
-    const EventInfo& event)
+    const EventInfo& event) const
 {
-    //TODO: this is a lame way to customize subclass behavior:
-    setScoreInfo(baseInfo);
-    _rnaInfoPtr =&rnaInfo;
-
-    writeSVCore(svData, adata, sv, svId, event, true);
-
-    clearScoreInfo();
-    _rnaInfoPtr =nullptr;
+    writeSVCore(svData, adata, sv, svId, &baseScoringInfo, &rnaInfo, event, true);
 }

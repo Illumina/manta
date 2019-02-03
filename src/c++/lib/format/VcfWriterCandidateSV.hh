@@ -42,6 +42,7 @@ struct VcfWriterCandidateSV : public VcfWriterSV
     void
     modifyTranslocInfo(
         const SVCandidate& sv,
+        const SVScoreInfo* baseScoringInfoPtr,
         const bool isFirstOfPair,
         const SVCandidateAssemblyData& assemblyData,
         InfoTag_t& infoTags) const override;
@@ -57,6 +58,6 @@ struct VcfWriterCandidateSV : public VcfWriterSV
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata,
         const SVCandidate& sv,
-        const SVId& svId);
+        const SVId& svId) const;
 };
 

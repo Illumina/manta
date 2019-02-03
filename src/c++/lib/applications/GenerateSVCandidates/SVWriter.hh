@@ -24,7 +24,6 @@
 #pragma once
 
 #include "GSCOptions.hh"
-#include "SVScorer.hh"
 
 #include "common/OutStream.hh"
 #include "manta/JunctionIdGenerator.hh"
@@ -36,34 +35,35 @@
 #include "format/VcfWriterSomaticSV.hh"
 #include "format/VcfWriterTumorSV.hh"
 #include "format/VcfWriterRnaSV.hh"
+#include "SVSupports.hh"
 
 
 struct SVWriter
 {
     SVWriter(
         const GSCOptions& initOpt,
-        const SVLocusScanner& readScanner,
         const bam_header_info& bamHeaderInfo,
         const char* progName,
-        const char* progVersion);
+        const char* progVersion,
+        const std::vector<std::string>& sampleNames);
 
     void
     writeSV(
         const EdgeInfo& edge,
         const SVCandidateSetData& svData,
-        const std::vector<SVCandidateAssemblyData>& assemblyData,
+        const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
         const SVMultiJunctionCandidate& mjSV,
-        const std::vector<bool>& isInputJunctionFiltered,
-        SupportSamples& svSupports);
+        const std::vector<bool>& isCandidateJunctionFiltered,
+        const std::vector<bool>& isScoredJunctionFiltered,
+        const std::vector<SVId>& junctionSVId,
+        const std::vector<SVModelScoreInfo>& mjModelScoreInfo,
+        const SVModelScoreInfo& mjJointModelScoreInfo,
+        const bool isMJEvent,
+        SupportSamples& svSupports) const;
 
     ///////////////////////// data:
     const GSCOptions& opt;
-    const bool isSomatic;
-    const bool isTumorOnly;
-
-    SVScorer svScore;
-
-    std::vector<SVModelScoreInfo> mjModelScoreInfo;
+    unsigned diploidSampleCount;
 
     OutStream candfs;
     OutStream dipfs;
@@ -76,6 +76,4 @@ struct SVWriter
     VcfWriterSomaticSV somWriter;
     VcfWriterTumorSV tumorWriter;
     VcfWriterRnaSV rnaWriter;
-
-    JunctionIdGenerator _idgen;
 };

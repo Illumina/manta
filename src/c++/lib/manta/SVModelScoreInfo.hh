@@ -30,7 +30,7 @@
 #include "manta/SVScoreInfoRna.hh"
 
 
-/// all scoring info for one sv candidate, including data related to specific scoring models
+/// All scoring info for one sv candidate, including data related to specific scoring models
 ///
 struct SVModelScoreInfo
 {

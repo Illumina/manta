@@ -40,14 +40,12 @@
 SVWriter::
 SVWriter(
     const GSCOptions& initOpt,
-    const SVLocusScanner& readScanner,
     const bam_header_info& bamHeaderInfo,
     const char* progName,
-    const char* progVersion) :
+    const char* progVersion,
+    const std::vector<std::string>& sampleNames) :
     opt(initOpt),
-    isSomatic(! opt.somaticOutputFilename.empty()),
-    isTumorOnly(! opt.tumorOutputFilename.empty()),
-    svScore(opt, readScanner, bamHeaderInfo),
+    diploidSampleCount(opt.alignFileOpt.diploidSampleCount()),
     candfs(opt.candidateOutputFilename),
     dipfs(opt.diploidOutputFilename),
     somfs(opt.somaticOutputFilename),
@@ -67,26 +65,23 @@ SVWriter(
     rnaWriter(opt.referenceFilename, bamHeaderInfo, rnafs.getStream(),
               opt.isOutputContig)
 {
-    if (0 == opt.edgeOpt.binIndex)
-    {
-        std::vector<std::string> noSampleNames;
-        candWriter.writeHeader(progName, progVersion,noSampleNames);
+    // Use 'noSampleNames' to force default sample names for the candidate header (why?)
+    std::vector<std::string> noSampleNames;
+    candWriter.writeHeader(progName, progVersion,noSampleNames);
 
-        const std::vector<std::string>& sampleNames(svScore.sampleNames());
-        if (isTumorOnly)
-        {
-            tumorWriter.writeHeader(progName, progVersion,sampleNames);
-        }
-        else if (opt.isRNA)
-        {
-            rnaWriter.writeHeader(progName, progVersion, sampleNames);
-        }
-        else
-        {
-            std::vector<std::string> diploidSampleNames(sampleNames.begin(),sampleNames.begin()+svScore.diploidSampleCount());
-            diploidWriter.writeHeader(progName, progVersion,diploidSampleNames);
-            if (isSomatic) somWriter.writeHeader(progName, progVersion,sampleNames);
-        }
+    if (opt.isTumorOnly())
+    {
+        tumorWriter.writeHeader(progName, progVersion,sampleNames);
+    }
+    else if (opt.isRNA)
+    {
+        rnaWriter.writeHeader(progName, progVersion, sampleNames);
+    }
+    else
+    {
+        std::vector<std::string> diploidSampleNames(sampleNames.begin(),sampleNames.begin()+diploidSampleCount);
+        diploidWriter.writeHeader(progName, progVersion,diploidSampleNames);
+        if (opt.isSomatic()) somWriter.writeHeader(progName, progVersion,sampleNames);
     }
 }
 
@@ -106,111 +101,6 @@ isAnyFalse(
 
 
 
-/// Each junction of a candidate SV is checked and marked as filtered if it is found to be low quality.
-///
-/// The junction filtration rules are:
-/// 1. If the junction is part of an sv candidate where all junctions have a spanning evidence count less than
-///    minCandidateSpanningCount, then all junctions in the sv candidate will be filtered.
-/// 2. Any individual junction with a spanning evidence count less than minJunctionCandidateSpanningCount will be
-///    filtered.
-/// 3. Complex candidate regions which did not produce a successful contig alignment will be filtered (the candidate
-///    is not spanning so there is no imprecise hypothesis to pursue if contig alignment fails).
-/// 4. Candidates will be filtered if their size is smaller than minCandidateVariantSize
-///
-static
-void
-checkJunctionsToFilter(
-    const SVMultiJunctionCandidate& mjSV,
-    const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
-    std::vector<bool>& isJunctionFiltered,
-    const GSCOptions& opt)
-{
-    const unsigned junctionCount(mjSV.junction.size());
-
-    // relax min spanning count to just 2 for the special case of a
-    // junction that is part of a multi-junction EVENT
-    const unsigned minJunctionCandidateSpanningCount(std::min(2u,opt.minCandidateSpanningCount));
-
-    // first step of SV filtering (before candidates are written)
-    // 2 junction filter types:
-    // 1) tests where the junction can fail independently
-    // 2) tests where all junctions have to fail for the candidate to be filtered:
-    bool isCandidateSpanFail(true);
-
-    for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
-    {
-        const SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
-        const SVCandidate& sv(mjSV.junction[junctionIndex]);
-
-        const bool isCandidateSpanning(assemblyData.isCandidateSpanning);
-
-#ifdef DEBUG_GSV
-        log_os << __FUNCTION__ << ": isSpanningSV junction: " <<  isCandidateSpanning << "\n";
-        log_os << __FUNCTION__ << ": Pairs:" << sv.bp1.getPairCount() << " Spanning:" << sv.bp1.getSpanningCount() << "\n";
-#endif
-
-        // junction dependent tests:
-        //   (1) at least one junction in the set must have spanning count of minCandidateSpanningCount or more
-        bool isJunctionSpanFail(false);
-        if (isCandidateSpanning)
-        {
-            if (sv.getPostAssemblySpanningCount(opt.isRNA) < opt.minCandidateSpanningCount)
-            {
-                isJunctionSpanFail=true;
-            }
-        }
-        if (! isJunctionSpanFail) isCandidateSpanFail=false;
-
-        // independent tests -- as soon as one of these fails, we can continue:
-        if (isCandidateSpanning)
-        {
-            //   (2) each spanning junction in the set must have spanning count of
-            //      minJunctionCandidateSpanningCount or more
-            if (sv.getPostAssemblySpanningCount(opt.isRNA) < minJunctionCandidateSpanningCount)
-            {
-                isJunctionFiltered[junctionIndex] = true;
-                continue;
-            }
-        }
-        else
-        {
-            if (sv.isImprecise())
-            {
-                // (3) no unassembled non-spanning candidates, in this case a non-spanning low-res candidate
-                // went into assembly but did not produce a successful contig alignment:
-#ifdef DEBUG_GSV
-                log_os << __FUNCTION__ << ": Rejecting candidate junction: imprecise non-spanning SV\n";
-#endif
-                isJunctionFiltered[junctionIndex] = true;
-                continue;
-            }
-        }
-
-        // (4) check min size, or if it is IMPRECISE case where CIEND is a subset of CIPOS for candidate output:
-        if (isSVBelowMinSize(sv, opt.scanOpt.minCandidateVariantSize))
-        {
-#ifdef DEBUG_GSV
-            log_os << __FUNCTION__ << ": Filtering out candidate below min size before candidate output stage\n";
-#endif
-            isJunctionFiltered[junctionIndex] = true;
-            continue;
-        }
-    }
-
-    if (isCandidateSpanFail)
-    {
-        for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
-        {
-#ifdef DEBUG_GSV
-            log_os << __FUNCTION__ << ": Rejecting candidate junction: minCandidateSpanningCount\n";
-#endif
-            isJunctionFiltered[junctionIndex] = true;
-        }
-    }
-}
-
-
-
 void
 SVWriter::
 writeSV(
@@ -218,73 +108,33 @@ writeSV(
     const SVCandidateSetData& svData,
     const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
     const SVMultiJunctionCandidate& mjSV,
-    const std::vector<bool>& isInputJunctionFiltered,
-    SupportSamples& svSupports)
+    const std::vector<bool>& isCandidateJunctionFiltered,
+    const std::vector<bool>& isScoredJunctionFiltered,
+    const std::vector<SVId>& junctionSVId,
+    const std::vector<SVModelScoreInfo>& mjModelScoreInfo,
+    const SVModelScoreInfo& mjJointModelScoreInfo,
+    const bool isMJEvent,
+    SupportSamples& svSupports) const
 {
-    const unsigned junctionCount(mjSV.junction.size());
-
-    // track filtration for each junction:
-    std::vector<bool> isJunctionFiltered(isInputJunctionFiltered);
-    checkJunctionsToFilter(mjSV, mjAssemblyData, isJunctionFiltered, opt);
-    // check to see if all junctions are filtered, if so skip the whole candidate:
-    //
-    if (! isAnyFalse(isJunctionFiltered))
-    {
-#ifdef DEBUG_GSV
-        log_os << __FUNCTION__ << ": Rejecting candidate, all junctions filtered.\n";
-#endif
-        return;
-    }
-
-    std::vector<SVId> junctionSVId(junctionCount);
-
     // write out candidates for each junction independently:
+    const unsigned junctionCount(mjSV.junction.size());
     for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
     {
-        if (isJunctionFiltered[junctionIndex]) continue;
+        if (isCandidateJunctionFiltered[junctionIndex]) continue;
 
         const SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
         const SVCandidate& sv(mjSV.junction[junctionIndex]);
-        SVId& svId(junctionSVId[junctionIndex]);
-
-        _idgen.getId(edge, sv, opt.isRNA, svId);
+        const SVId& svId(junctionSVId[junctionIndex]);
 
         candWriter.writeSV(svData, assemblyData, sv, svId);
     }
 
     if (opt.isSkipScoring) return;
 
-    // check min size for scoring:
-    for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
-    {
-        if (isJunctionFiltered[junctionIndex]) continue;
+    // check to see if all scored junctions are filtered before writing scored vcf output:
+    if (! isAnyFalse(isScoredJunctionFiltered)) return;
 
-        const SVCandidate& sv(mjSV.junction[junctionIndex]);
-        if (isSVBelowMinSize(sv, opt.minScoredVariantSize))
-        {
-#ifdef DEBUG_GSV
-            log_os << __FUNCTION__ << ": Filtering out candidate junction below min size at scoring stage\n";
-#endif
-            isJunctionFiltered[junctionIndex] = true;
-        }
-    }
-
-    // check to see if all junctions are filtered before scoring:
-    //
-    if (! isAnyFalse(isJunctionFiltered)) return;
-
-    bool isMJEvent(false);
-
-    unsigned sampleCount(svScore.sampleCount());
-    unsigned diploidSampleCount(svScore.diploidSampleCount());
-    SVModelScoreInfo mjJointModelScoreInfo;
-    mjJointModelScoreInfo.setSampleCount(sampleCount, diploidSampleCount);
-    svScore.scoreSV(svData, mjAssemblyData, mjSV, junctionSVId,
-                    isJunctionFiltered, isSomatic, isTumorOnly,
-                    mjModelScoreInfo, mjJointModelScoreInfo,
-                    isMJEvent, svSupports);
-
-    const unsigned unfilteredJunctionCount(std::count(isJunctionFiltered.begin(),isJunctionFiltered.end(),true));
+    const unsigned unfilteredJunctionCount(std::count(isScoredJunctionFiltered.begin(), isScoredJunctionFiltered.end(), true));
 
     // setup all event-level info that we need to share across all event junctions:
     bool isMJDiploidEvent(isMJEvent);
@@ -322,7 +172,7 @@ writeSV(
 
             for (unsigned junctionIndex(0); junctionIndex < junctionCount; ++junctionIndex)
             {
-                if (isJunctionFiltered[junctionIndex]) continue;
+                if (isScoredJunctionFiltered[junctionIndex]) continue;
 
                 const SVScoreInfoDiploid& diploidInfo(mjModelScoreInfo[junctionIndex].diploid);
                 const SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[sampleIndex]);
@@ -362,7 +212,7 @@ writeSV(
 
         for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
         {
-            if (isJunctionFiltered[junctionIndex]) continue;
+            if (isScoredJunctionFiltered[junctionIndex]) continue;
 
             // set the Id of the first junction in the group as the event (i.e. multi-junction) label
             if (event.label.empty())
@@ -409,27 +259,27 @@ writeSV(
     //
     for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
     {
-        if (isJunctionFiltered[junctionIndex]) continue;
+        if (isScoredJunctionFiltered[junctionIndex]) continue;
 
         const SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
         const SVCandidate& sv(mjSV.junction[junctionIndex]);
         const SVModelScoreInfo& modelScoreInfo(mjModelScoreInfo[junctionIndex]);
 
         const SVId& svId(junctionSVId[junctionIndex]);
-        const SVScoreInfo& baseInfo(modelScoreInfo.base);
+        const SVScoreInfo& baseScoringInfo(modelScoreInfo.base);
         static const EventInfo nonEvent;
 
-        if (isTumorOnly)
+        if (opt.isTumorOnly())
         {
             //TODO: add logic for MJEvent
 
             const SVScoreInfoTumor& tumorInfo(modelScoreInfo.tumor);
-            tumorWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, tumorInfo, nonEvent);
+            tumorWriter.writeSV(svData, assemblyData, sv, svId, baseScoringInfo, tumorInfo, nonEvent);
         }
         else if (opt.isRNA)
         {
             const SVScoreInfoRna& rnaInfo(modelScoreInfo.rna);
-            rnaWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, rnaInfo, nonEvent);
+            rnaWriter.writeSV(svData, assemblyData, sv, svId, baseScoringInfo, rnaInfo, nonEvent);
         }
         else
         {
@@ -469,11 +319,11 @@ writeSV(
 
                 if (isWriteDiploid)
                 {
-                    diploidWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, diploidInfo, diploidEvent, modelScoreInfo.diploid);
+                    diploidWriter.writeSV(svData, assemblyData, sv, svId, baseScoringInfo, diploidInfo, diploidEvent, modelScoreInfo.diploid);
                 }
             }
 
-            if (isSomatic)
+            if (opt.isSomatic())
             {
                 const EventInfo& somaticEvent( isMJEvent ? event : nonEvent );
                 const SVModelScoreInfo& scoreInfo(isMJEvent ? mjJointModelScoreInfo : modelScoreInfo);
@@ -492,7 +342,7 @@ writeSV(
 
                 if (isWriteSomatic)
                 {
-                    somWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, somaticInfo, somaticEvent, modelScoreInfo.somatic);
+                    somWriter.writeSV(svData, assemblyData, sv, svId, baseScoringInfo, somaticInfo, somaticEvent, modelScoreInfo.somatic);
                 }
             }
         }

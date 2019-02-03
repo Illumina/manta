@@ -26,13 +26,14 @@
 #include "EdgeRuntimeTracker.hh"
 #include "GSCEdgeStatsManager.hh"
 #include "GSCOptions.hh"
-#include "SVCandidateAssemblyRefiner.hh"
+#include "manta/JunctionIdGenerator.hh"
 #include "manta/SVCandidateSetData.hh"
 #include "manta/SVLocusScanner.hh"
 #include "manta/SVMultiJunctionCandidate.hh"
-#include "SVWriter.hh"
+#include "SVCandidateAssemblyRefiner.hh"
+#include "SVScorer.hh"
 #include "SVSupports.hh"
-
+#include "SVWriter.hh"
 
 
 struct SVCandidateProcessor
@@ -40,9 +41,8 @@ struct SVCandidateProcessor
     SVCandidateProcessor(
         const GSCOptions& opt,
         const SVLocusScanner& readScanner,
-        const char* progName,
-        const char* progVersion,
         const SVLocusSet& cset,
+        const SVWriter& svWriter,
         std::shared_ptr<EdgeRuntimeTracker> edgeTrackerPtr,
         GSCEdgeStatsManager& edgeStatMan);
 
@@ -61,6 +61,26 @@ struct SVCandidateProcessor
 private:
 
     void
+    scoreSV(
+        const SVCandidateSetData& svData,
+        const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
+        const SVMultiJunctionCandidate& mjSV,
+        const std::vector<SVId>& junctionSVId,
+        std::vector<bool>& isJunctionFiltered,
+        bool& isMultiJunctionEvent,
+        SupportSamples& svSupports);
+
+    /// Complete scoring a single SV and then write it out to VCF
+    void
+    scoreAndWriteSV(
+        const EdgeInfo& edge,
+        const SVCandidateSetData& svData,
+        const std::vector<SVCandidateAssemblyData>& assemblyData,
+        const SVMultiJunctionCandidate& mjSV,
+        const std::vector<bool>& isInputJunctionFiltered,
+        SupportSamples& svSupports);
+
+    void
     evaluateCandidate(
         const EdgeInfo& edge,
         const SVMultiJunctionCandidate& mjCandidateSV,
@@ -70,8 +90,14 @@ private:
 
     const GSCOptions& _opt;
     const SVLocusSet& _cset;
+    const SVWriter& _svWriter;
     std::shared_ptr<EdgeRuntimeTracker> _edgeTrackerPtr;
     GSCEdgeStatsManager& _edgeStatMan;
     SVCandidateAssemblyRefiner _svRefine;
-    SVWriter _svWriter;
+    SVScorer _svScorer;
+    JunctionIdGenerator _idgen;
+
+    /// These are only cached here to reduce syscalls:
+    std::vector<SVModelScoreInfo> _mjModelScoreInfo;
+    SVModelScoreInfo _mjJointModelScoreInfo;
 };

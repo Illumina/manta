@@ -143,7 +143,7 @@ private:
 
 
 
-/// object to support SV scoring process
+/// Implements SV scoring/genotyping process
 ///
 struct SVScorer
 {
@@ -152,13 +152,13 @@ struct SVScorer
         const SVLocusScanner& readScanner,
         const bam_header_info& header);
 
-    /// gather supporting evidence and generate:
+    /// Gather supporting read evidence and generate:
     /// 1) diploid quality score and genotype for SV candidate
     /// 2) somatic quality score
     ///
     /// \param mjModelScoreInfo standard (junction-independent) scoring information for each junction
-    /// \param mjJointModelScoreInfo  joint junction scoring information used for cases where a multi-junction event
-    ///                               is detected
+    /// \param mjJointModelScoreInfo  joint junction scoring information used for cases where a
+    ///   multi-junction event is detected
     void
     scoreSV(
         const SVCandidateSetData& svData,
@@ -176,16 +176,11 @@ struct SVScorer
     typedef std::shared_ptr<SVScorePairProcessor> pairProcPtr;
     typedef std::shared_ptr<bam_streamer> streamPtr;
 
+#if 0
     unsigned
     sampleCount() const
     {
         return _sampleCount;
-    }
-
-    unsigned
-    diploidSampleCount() const
-    {
-        return _diploidSampleCount;
     }
 
     const std::vector<std::string>&
@@ -193,6 +188,7 @@ struct SVScorer
     {
         return _sampleNames;
     }
+#endif
 
     /// TestSVScorer is a friend structure of SV scorer. So that it can access private
     /// methods of SVScorer. As SVScorer has many private methods, for unit test writing
@@ -307,5 +303,4 @@ private:
 
     unsigned _sampleCount;
     unsigned _diploidSampleCount;
-    std::vector<std::string> _sampleNames;
 };

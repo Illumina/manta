@@ -27,6 +27,17 @@
 /// \brief Input alignment file object shared by all programs which require these as input
 struct AlignmentFileOptions
 {
+    unsigned
+    diploidSampleCount() const
+    {
+        unsigned count(0);
+        for (const bool isTumor : isAlignmentTumor)
+        {
+            if (!isTumor) count++;
+        }
+        return count;
+    }
+
     typedef std::vector<std::string> files_t;
 
     files_t alignmentFilenames;

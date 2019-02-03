@@ -24,11 +24,10 @@
 #pragma once
 
 #include "format/VcfWriterSV.hh"
-#include "format/VcfWriterScoredSV.hh"
 #include "options/CallOptionsTumor.hh"
 
 
-struct VcfWriterTumorSV : public VcfWriterSV, VcfWriterScoredSV
+struct VcfWriterTumorSV : public VcfWriterSV
 {
     VcfWriterTumorSV(
         const CallOptionsTumor& tumorOpt,
@@ -39,8 +38,7 @@ struct VcfWriterTumorSV : public VcfWriterSV, VcfWriterScoredSV
         const bool& isOutputContig) :
         VcfWriterSV(referenceFilename, bamHeaderInfo, os, isOutputContig),
         _tumorOpt(tumorOpt),
-        _isMaxDepthFilter(isMaxDepthFilter),
-        _tumorInfoPtr(nullptr)
+        _isMaxDepthFilter(isMaxDepthFilter)
     {}
 
     void
@@ -49,9 +47,9 @@ struct VcfWriterTumorSV : public VcfWriterSV, VcfWriterScoredSV
         const SVCandidateAssemblyData& adata,
         const SVCandidate& sv,
         const SVId& svId,
-        const SVScoreInfo& baseInfo,
+        const SVScoreInfo& baseScoringInfo,
         const SVScoreInfoTumor& tumorInfo,
-        const EventInfo& event);
+        const EventInfo& event) const;
 
 private:
 
@@ -65,31 +63,24 @@ private:
     addHeaderFilters() const override;
 
     void
-    writeFilter() const override;
+    writeFilter(const boost::any specializedScoringInfo) const override;
 
     void
     modifySample(
         const SVCandidate& sv,
+        const SVScoreInfo* baseScoringInfoPtr,
+        const boost::any specializedScoringInfo,
         SampleTag_t& sampletags) const override;
 
     void
     modifyTranslocInfo(
         const SVCandidate& sv,
+        const SVScoreInfo* baseScoringInfoPtr,
         const bool isFirstOfPair,
         const SVCandidateAssemblyData& assemblyData,
         InfoTag_t& infotags) const override;
 
-
-
-    const SVScoreInfoTumor&
-    getTumorInfo() const
-    {
-        assert(nullptr != _tumorInfoPtr);
-        return *_tumorInfoPtr;
-    }
-
     const CallOptionsTumor& _tumorOpt;
     const bool _isMaxDepthFilter;
-    const SVScoreInfoTumor* _tumorInfoPtr;
 };
 

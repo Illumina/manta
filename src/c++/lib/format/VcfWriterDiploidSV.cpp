@@ -68,15 +68,21 @@ addHeaderFilters() const
 
 
 
+typedef std::pair<const SVScoreInfoDiploid*,const SVScoreInfoDiploid*> AllDiploidScoringInfo;
+
+
+
 void
 VcfWriterDiploidSV::
 modifyInfo(
     const EventInfo& event,
+    const boost::any specializedScoringInfo,
     InfoTag_t& infotags) const
 {
     if (event.isEvent())
     {
-        infotags.push_back( str(boost::format("JUNCTION_QUAL=%i") % getSingleJunctionDiploidInfo().altScore) );
+        const SVScoreInfoDiploid& singleJunctionDiploidScoringInfo(*boost::any_cast<AllDiploidScoringInfo>(specializedScoringInfo).second);
+        infotags.push_back( str(boost::format("JUNCTION_QUAL=%i") % singleJunctionDiploidScoringInfo.altScore) );
     }
 }
 
@@ -86,34 +92,38 @@ void
 VcfWriterDiploidSV::
 modifyTranslocInfo(
     const SVCandidate& /*sv*/,
+    const SVScoreInfo* baseScoringInfoPtr,
     const bool isFirstOfPair,
     const SVCandidateAssemblyData& /*assemblyData*/,
     InfoTag_t& infotags) const
 {
-    const SVScoreInfo& baseInfo(getBaseInfo());
+    assert(baseScoringInfoPtr);
+    const SVScoreInfo& baseScoringInfo(*baseScoringInfoPtr);
 
     infotags.push_back( str(boost::format("BND_DEPTH=%i") %
-                            (isFirstOfPair ? baseInfo.bp1MaxDepth : baseInfo.bp2MaxDepth) ) );
+                            (isFirstOfPair ? baseScoringInfo.bp1MaxDepth : baseScoringInfo.bp2MaxDepth) ) );
     infotags.push_back( str(boost::format("MATE_BND_DEPTH=%i") %
-                            (isFirstOfPair ? baseInfo.bp2MaxDepth : baseInfo.bp1MaxDepth) ) );
+                            (isFirstOfPair ? baseScoringInfo.bp2MaxDepth : baseScoringInfo.bp1MaxDepth) ) );
 }
 
 
 
 void
 VcfWriterDiploidSV::
-writeQual() const
+writeQual(const boost::any specializedScoringInfo) const
 {
-    _os << getDiploidInfo().altScore;
+    const SVScoreInfoDiploid& diploidScoringInfo(*boost::any_cast<AllDiploidScoringInfo>(specializedScoringInfo).first);
+    _os << diploidScoringInfo.altScore;
 }
 
 
 
 void
 VcfWriterDiploidSV::
-writeFilter() const
+writeFilter(const boost::any specializedScoringInfo) const
 {
-    writeFilters(getDiploidInfo().filters,_os);
+    const SVScoreInfoDiploid& diploidScoringInfo(*boost::any_cast<AllDiploidScoringInfo>(specializedScoringInfo).first);
+    writeFilters(diploidScoringInfo.filters,_os);
 }
 
 
@@ -143,23 +153,27 @@ void
 VcfWriterDiploidSV::
 modifySample(
     const SVCandidate& sv,
+    const SVScoreInfo* baseScoringInfoPtr,
+    const boost::any specializedScoringInfo,
     SampleTag_t& sampletags) const
 {
-    const SVScoreInfo& baseInfo(getBaseInfo());
-    const SVScoreInfoDiploid& diploidInfo(getDiploidInfo());
-    const unsigned diploidSampleCount(diploidInfo.samples.size());
+    assert(baseScoringInfoPtr);
+    const SVScoreInfo& baseScoringInfo(*baseScoringInfoPtr);
+    const SVScoreInfoDiploid& diploidScoringInfo(*boost::any_cast<AllDiploidScoringInfo>(specializedScoringInfo).first);
+
+    const unsigned diploidSampleCount(diploidScoringInfo.samples.size());
 
     std::vector<std::string> values(diploidSampleCount);
     for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
     {
-        const SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[diploidSampleIndex]);
+        const SVScoreInfoDiploidSample& diploidSampleInfo(diploidScoringInfo.samples[diploidSampleIndex]);
         values[diploidSampleIndex] = gtLabel(diploidSampleInfo.gt);
     }
     sampletags.push_back(std::make_pair("GT",values));
 
     for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
     {
-        const SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[diploidSampleIndex]);
+        const SVScoreInfoDiploidSample& diploidSampleInfo(diploidScoringInfo.samples[diploidSampleIndex]);
 
         writeFilters(diploidSampleInfo.filters, values[diploidSampleIndex]);
     }
@@ -167,7 +181,7 @@ modifySample(
 
     for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
     {
-        const SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[diploidSampleIndex]);
+        const SVScoreInfoDiploidSample& diploidSampleInfo(diploidScoringInfo.samples[diploidSampleIndex]);
 
         values[diploidSampleIndex] = str( boost::format("%s") % diploidSampleInfo.gtScore);
     }
@@ -175,7 +189,7 @@ modifySample(
 
     for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
     {
-        const SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[diploidSampleIndex]);
+        const SVScoreInfoDiploidSample& diploidSampleInfo(diploidScoringInfo.samples[diploidSampleIndex]);
 
         values[diploidSampleIndex] =  str( boost::format("%s,%s,%s")
                                            % diploidSampleInfo.phredLoghood[DIPLOID_GT::REF]
@@ -186,7 +200,7 @@ modifySample(
 
     for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
     {
-        const SVSampleInfo& sampleInfo(baseInfo.samples[diploidSampleIndex]);
+        const SVSampleInfo& sampleInfo(baseScoringInfo.samples[diploidSampleIndex]);
         values[diploidSampleIndex] =  str( boost::format("%i,%i")
                                            % sampleInfo.ref.confidentSpanningPairCount
                                            % sampleInfo.alt.confidentSpanningPairCount);
@@ -197,7 +211,7 @@ modifySample(
 
     for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
     {
-        const SVSampleInfo& sampleInfo(baseInfo.samples[diploidSampleIndex]);
+        const SVSampleInfo& sampleInfo(baseScoringInfo.samples[diploidSampleIndex]);
         values[diploidSampleIndex] =  str( boost::format("%i,%i")
                                            % sampleInfo.ref.confidentSplitReadCount
                                            % sampleInfo.alt.confidentSplitReadCount);
@@ -214,19 +228,10 @@ writeSV(
     const SVCandidateAssemblyData& adata,
     const SVCandidate& sv,
     const SVId& svId,
-    const SVScoreInfo& baseInfo,
+    const SVScoreInfo& baseScoringInfo,
     const SVScoreInfoDiploid& diploidInfo,
     const EventInfo& event,
-    const SVScoreInfoDiploid& singleJunctionDiploidInfo)
+    const SVScoreInfoDiploid& singleJunctionDiploidInfo) const
 {
-    //TODO: this is a lame way to customize subclass behavior:
-    setScoreInfo(baseInfo);
-    _diploidInfoPtr=&diploidInfo;
-    _singleJunctionDiploidInfoPtr=&singleJunctionDiploidInfo;
-
-    writeSVCore(svData, adata, sv, svId, event);
-
-    clearScoreInfo();
-    _diploidInfoPtr=nullptr;
-    _singleJunctionDiploidInfoPtr=nullptr;
+    writeSVCore(svData, adata, sv, svId, &baseScoringInfo, std::make_pair(&diploidInfo,&singleJunctionDiploidInfo), event);
 }

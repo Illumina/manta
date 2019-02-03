@@ -61,9 +61,10 @@ addHeaderFilters() const
 
 void
 VcfWriterTumorSV::
-writeFilter() const
+writeFilter(const boost::any specializedScoringInfo) const
 {
-    writeFilters(getTumorInfo().filters, _os);
+    const SVScoreInfoTumor& tumorScoringInfo(*boost::any_cast<const SVScoreInfoTumor*>(specializedScoringInfo));
+    writeFilters(tumorScoringInfo.filters, _os);
 }
 
 
@@ -72,16 +73,20 @@ void
 VcfWriterTumorSV::
 modifySample(
     const SVCandidate& sv,
+    const SVScoreInfo* baseScoringInfoPtr,
+    const boost::any /*specializedScoringInfo*/,
     SampleTag_t& sampletags) const
 {
-    const SVScoreInfo& baseInfo(getBaseInfo());
-    const unsigned sampleCount(baseInfo.samples.size());
+    assert(baseScoringInfoPtr);
+    const SVScoreInfo& baseScoringInfo(*baseScoringInfoPtr);
+
+    const unsigned sampleCount(baseScoringInfo.samples.size());
 
     std::vector<std::string> values(sampleCount);
 
     for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
     {
-        const SVSampleInfo& sinfo(baseInfo.samples[sampleIndex]);
+        const SVSampleInfo& sinfo(baseScoringInfo.samples[sampleIndex]);
         values[sampleIndex] = str( boost::format("%i,%i") % sinfo.ref.confidentSpanningPairCount % sinfo.alt.confidentSpanningPairCount);
     }
     sampletags.push_back(std::make_pair("PR",values));
@@ -90,7 +95,7 @@ modifySample(
 
     for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
     {
-        const SVSampleInfo& sinfo(baseInfo.samples[sampleIndex]);
+        const SVSampleInfo& sinfo(baseScoringInfo.samples[sampleIndex]);
         values[sampleIndex] = str( boost::format("%i,%i") % sinfo.ref.confidentSplitReadCount % sinfo.alt.confidentSplitReadCount);
     }
     sampletags.push_back(std::make_pair("SR",values));
@@ -100,16 +105,17 @@ void
 VcfWriterTumorSV::
 modifyTranslocInfo(
     const SVCandidate& /*sv*/,
+    const SVScoreInfo* baseScoringInfoPtr,
     const bool isFirstOfPair,
     const SVCandidateAssemblyData& /*assemblyData*/,
     InfoTag_t& infotags) const
 {
-    const SVScoreInfo& baseInfo(getBaseInfo());
-
+    assert(baseScoringInfoPtr);
+    const SVScoreInfo& baseScoringInfo(*baseScoringInfoPtr);
     infotags.push_back( str(boost::format("BND_DEPTH=%i") %
-                            (isFirstOfPair ? baseInfo.bp1MaxDepth : baseInfo.bp2MaxDepth) ) );
+                            (isFirstOfPair ? baseScoringInfo.bp1MaxDepth : baseScoringInfo.bp2MaxDepth) ) );
     infotags.push_back( str(boost::format("MATE_BND_DEPTH=%i") %
-                            (isFirstOfPair ? baseInfo.bp2MaxDepth : baseInfo.bp1MaxDepth) ) );
+                            (isFirstOfPair ? baseScoringInfo.bp2MaxDepth : baseScoringInfo.bp1MaxDepth) ) );
 }
 
 
@@ -121,16 +127,9 @@ writeSV(
     const SVCandidateAssemblyData& adata,
     const SVCandidate& sv,
     const SVId& svId,
-    const SVScoreInfo& baseInfo,
+    const SVScoreInfo& baseScoringInfo,
     const SVScoreInfoTumor& tumorInfo,
-    const EventInfo& event
-)
+    const EventInfo& event) const
 {
-    //TODO: this is a lame way to customize subclass behavior:
-    setScoreInfo(baseInfo);
-    _tumorInfoPtr=&tumorInfo;
-    writeSVCore(svData, adata, sv, svId, event);
-
-    clearScoreInfo();
-    _tumorInfoPtr=nullptr;
+    writeSVCore(svData, adata, sv, svId, &baseScoringInfo, &tumorInfo, event);
 }

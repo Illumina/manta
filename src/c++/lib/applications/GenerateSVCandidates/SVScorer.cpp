@@ -31,7 +31,6 @@
 #include "blt_util/qscore.hh"
 #include "common/Exceptions.hh"
 #include "htsapi/align_path_bam_util.hh"
-#include "htsapi/bam_header_util.hh"
 #include "manta/BamStreamerUtils.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidateUtil.hh"
@@ -75,24 +74,7 @@ SVScorer(
     openBamStreams(opt.referenceFilename, opt.alignFileOpt.alignmentFilenames, _bamStreams);
 
     _sampleCount=opt.alignFileOpt.isAlignmentTumor.size();
-    _diploidSampleCount=0;
-    for (const bool isTumor : opt.alignFileOpt.isAlignmentTumor)
-    {
-        if (! isTumor) _diploidSampleCount++;
-    }
-
-    // initialize sampleNames from all bam headers (assuming 1 sample per bam for now)
-    const unsigned bamCount(_bamStreams.size());
-    for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
-    {
-        const bam_hdr_t& indexHeader(_bamStreams[bamIndex]->get_header());
-        std::ostringstream defaultName;
-        defaultName << "SAMPLE" << (bamIndex+1);
-        std::string sampleName(get_bam_header_sample_name(indexHeader, defaultName.str().c_str()));
-        // remove spaces from sample name
-        std::replace(sampleName.begin(), sampleName.end(), ' ', '_');
-        _sampleNames.push_back(sampleName);
-    }
+    _diploidSampleCount=opt.alignFileOpt.diploidSampleCount();
 }
 
 
@@ -1864,10 +1846,11 @@ scoreSV(
 
     for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
     {
-        mjModelScoreInfo[junctionIndex].setSampleCount(sampleCount(),diploidSampleCount());
-        junctionEvidence[junctionIndex].samples.resize(sampleCount());
+        mjModelScoreInfo[junctionIndex].setSampleCount(_sampleCount,_diploidSampleCount);
+        junctionEvidence[junctionIndex].samples.resize(_sampleCount);
     }
 
+    mjJointModelScoreInfo.setSampleCount(_sampleCount, _diploidSampleCount);
     mjJointModelScoreInfo.clear();
 
     unsigned unfilteredJunctionCount(0);

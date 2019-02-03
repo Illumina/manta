@@ -64,18 +64,25 @@ addHeaderFilters() const
 
 
 
+typedef std::pair<const SVScoreInfoSomatic*,const SVScoreInfoSomatic*> AllSomaticScoringInfo;
+
+
+
 void
 VcfWriterSomaticSV::
 modifyInfo(
     const EventInfo& event,
+    const boost::any specializedScoringInfo,
     std::vector<std::string>& infotags) const
 {
+    const SVScoreInfoSomatic& somaticScoringInfo(*boost::any_cast<AllSomaticScoringInfo>(specializedScoringInfo).first);
     infotags.push_back("SOMATIC");
-    infotags.push_back( str(boost::format("SOMATICSCORE=%i") % getSomaticInfo().somaticScore) );
+    infotags.push_back( str(boost::format("SOMATICSCORE=%i") % somaticScoringInfo.somaticScore) );
 
     if (event.isEvent())
     {
-        infotags.push_back( str(boost::format("JUNCTION_SOMATICSCORE=%i") % getSingleJunctionSomaticInfo().somaticScore) );
+        const SVScoreInfoSomatic& singleJunctionSomaticScoringInfo(*boost::any_cast<AllSomaticScoringInfo>(specializedScoringInfo).second);
+        infotags.push_back( str(boost::format("JUNCTION_SOMATICSCORE=%i") % singleJunctionSomaticScoringInfo.somaticScore) );
     }
 }
 
@@ -85,17 +92,18 @@ void
 VcfWriterSomaticSV::
 modifyTranslocInfo(
     const SVCandidate& /*sv*/,
+    const SVScoreInfo* baseScoringInfoPtr,
     const bool isFirstOfPair,
     const SVCandidateAssemblyData& /*assemblyData*/,
-
     std::vector<std::string>& infotags) const
 {
-    const SVScoreInfo& baseInfo(getBaseInfo());
+    assert(baseScoringInfoPtr);
+    const SVScoreInfo& baseScoringInfo(*baseScoringInfoPtr);
 
     infotags.push_back( str(boost::format("BND_DEPTH=%i") %
-                            (isFirstOfPair ? baseInfo.bp1MaxDepth : baseInfo.bp2MaxDepth) ) );
+                            (isFirstOfPair ? baseScoringInfo.bp1MaxDepth : baseScoringInfo.bp2MaxDepth) ) );
     infotags.push_back( str(boost::format("MATE_BND_DEPTH=%i") %
-                            (isFirstOfPair ? baseInfo.bp2MaxDepth : baseInfo.bp1MaxDepth) ) );
+                            (isFirstOfPair ? baseScoringInfo.bp2MaxDepth : baseScoringInfo.bp1MaxDepth) ) );
 }
 
 
@@ -104,16 +112,20 @@ void
 VcfWriterSomaticSV::
 modifySample(
     const SVCandidate& sv,
+    const SVScoreInfo* baseScoringInfoPtr,
+    const boost::any /*specializedScoringInfo*/,
     SampleTag_t& sampletags) const
 {
-    const SVScoreInfo& baseInfo(getBaseInfo());
-    const unsigned sampleCount(baseInfo.samples.size());
+    assert(baseScoringInfoPtr);
+    const SVScoreInfo& baseScoringInfo(*baseScoringInfoPtr);
+
+    const unsigned sampleCount(baseScoringInfo.samples.size());
 
     std::vector<std::string> values(sampleCount);
 
     for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
     {
-        const SVSampleInfo& sinfo(baseInfo.samples[sampleIndex]);
+        const SVSampleInfo& sinfo(baseScoringInfo.samples[sampleIndex]);
         values[sampleIndex] = str( boost::format("%i,%i") % sinfo.ref.confidentSpanningPairCount % sinfo.alt.confidentSpanningPairCount);
     }
     sampletags.push_back(std::make_pair("PR",values));
@@ -122,7 +134,7 @@ modifySample(
 
     for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
     {
-        const SVSampleInfo& sinfo(baseInfo.samples[sampleIndex]);
+        const SVSampleInfo& sinfo(baseScoringInfo.samples[sampleIndex]);
         values[sampleIndex] = str( boost::format("%i,%i") % sinfo.ref.confidentSplitReadCount % sinfo.alt.confidentSplitReadCount);
     }
     sampletags.push_back(std::make_pair("SR",values));
@@ -132,9 +144,10 @@ modifySample(
 
 void
 VcfWriterSomaticSV::
-writeFilter() const
+writeFilter(const boost::any specializedScoringInfo) const
 {
-    writeFilters(getSomaticInfo().filters, _os);
+    const SVScoreInfoSomatic& somaticScoringInfo(*boost::any_cast<AllSomaticScoringInfo>(specializedScoringInfo).first);
+    writeFilters(somaticScoringInfo.filters, _os);
 }
 
 
@@ -146,19 +159,10 @@ writeSV(
     const SVCandidateAssemblyData& adata,
     const SVCandidate& sv,
     const SVId& svId,
-    const SVScoreInfo& baseInfo,
+    const SVScoreInfo& baseScoringInfo,
     const SVScoreInfoSomatic& somaticInfo,
     const EventInfo& event,
-    const SVScoreInfoSomatic& singleJunctionSomaticInfo)
+    const SVScoreInfoSomatic& singleJunctionSomaticInfo) const
 {
-    //TODO: this is a lame way to customize subclass behavior:
-    setScoreInfo(baseInfo);
-    _somaticInfoPtr=&somaticInfo;
-    _singleJunctionSomaticInfoPtr=&singleJunctionSomaticInfo;
-
-    writeSVCore(svData, adata, sv, svId, event);
-
-    clearScoreInfo();
-    _somaticInfoPtr=nullptr;
-    _singleJunctionSomaticInfoPtr=nullptr;
+    writeSVCore(svData, adata, sv, svId, &baseScoringInfo, std::make_pair(&somaticInfo, &singleJunctionSomaticInfo), event);
 }

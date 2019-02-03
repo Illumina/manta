@@ -99,7 +99,7 @@ operator<<(std::ostream& os, const SVAlignmentInfo& ai);
 
 
 
-/// sample-specific and allele-specific evidence info
+/// Sample-specific and allele-specific evidence info
 struct SVSampleAlleleInfo
 {
     void
@@ -138,7 +138,7 @@ operator<<(std::ostream& os, const SVSampleAlleleInfo& si);
 
 
 
-/// sample-specific evidence info
+/// Sample-specific evidence info
 struct SVSampleInfo
 {
     void
@@ -156,7 +156,7 @@ std::ostream&
 operator<<(std::ostream& os, const SVSampleInfo& si);
 
 
-/// consolidate model-agnostic scoring results applied to an SV candidate
+/// Consolidate model-agnostic scoring results applied to an SV candidate
 struct SVScoreInfo
 {
     void

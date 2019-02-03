@@ -23,12 +23,15 @@
 
 #pragma once
 
+#include "boost/any.hpp"
+
 #include "htsapi/bam_header_info.hh"
 #include "manta/EventInfo.hh"
 #include "manta/JunctionIdGenerator.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidateSetData.hh"
+#include "manta/SVModelScoreInfo.hh"
 
 #include <iosfwd>
 
@@ -85,14 +88,17 @@ protected:
         const SVCandidateAssemblyData& adata,
         const SVCandidate& sv,
         const SVId& svId,
+        const SVScoreInfo* baseScoringInfoPtr,
+        const boost::any specializedScoringInfo,
         const EventInfo& event,
-        const bool isForceIntraChromBnd = false);
+        const bool isForceIntraChromBnd = false) const;
 
     /// add info tags which can be customized by sub-class
     virtual
     void
     modifyInfo(
         const EventInfo& /*event*/,
+        const boost::any /*specializedScoringInfo*/,
         InfoTag_t& /*infotags*/) const
     {}
 
@@ -101,6 +107,7 @@ protected:
     void
     modifyTranslocInfo(
         const SVCandidate& /*sv*/,
+        const SVScoreInfo* /*baseScoringInfoPtr*/,
         const bool /*isFirstOfPair*/,
         const SVCandidateAssemblyData& /*assemblyData*/,
         InfoTag_t& /*infoTags*/) const
@@ -117,14 +124,14 @@ protected:
 
     virtual
     void
-    writeQual() const
+    writeQual(const boost::any /*specializedScoringInfo*/) const
     {
         _os << '.';
     }
 
     virtual
     void
-    writeFilter() const
+    writeFilter(const boost::any /*specializedScoringInfo*/) const
     {
         _os << '.';
     }
@@ -133,6 +140,8 @@ protected:
     void
     modifySample(
         const SVCandidate& /*sv*/,
+        const SVScoreInfo* /*baseScoringInfoPtr*/,
+        const boost::any /*specializedScoringInfo*/,
         SampleTag_t& /*sampletags*/) const
     {}
 
@@ -155,26 +164,32 @@ private:
     writeTransloc(
         const SVCandidate& sv,
         const SVId& svId,
+        const SVScoreInfo* baseScoringInfoPtr,
+        const boost::any specializedScoringInfo,
         const bool isFirstBreakend,
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata,
-        const EventInfo& event);
+        const EventInfo& event) const;
 
     void
     writeTranslocPair(
         const SVCandidate& sv,
         const SVId& svId,
+        const SVScoreInfo* baseScoringInfoPtr,
+        const boost::any specializedScoringInfo,
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata,
-        const EventInfo& event);
+        const EventInfo& event) const;
 
     /// \param isIndel if true, the variant is a simple right/left breakend insert/delete combination
     void
     writeIndel(
         const SVCandidate& sv,
         const SVId& svId,
+        const SVScoreInfo* baseScoringInfoPtr,
+        const boost::any specializedScoringInfo,
         const bool isIndel,
-        const EventInfo& event);
+        const EventInfo& event) const;
 
 protected:
     const std::string& _referenceFilename;

@@ -39,6 +39,18 @@
 
 struct GSCOptions
 {
+    bool
+    isSomatic() const
+    {
+        return (! somaticOutputFilename.empty());
+    }
+
+    bool
+    isTumorOnly() const
+    {
+        return (! tumorOutputFilename.empty());
+    }
+
     AlignmentFileOptions alignFileOpt;
     EdgeOptions edgeOpt;
     ReadScannerOptions scanOpt;

@@ -23,14 +23,12 @@
 
 #pragma once
 
-#include "manta/JunctionIdGenerator.hh"
 #include "manta/SVModelScoreInfo.hh"
 #include "format/VcfWriterSV.hh"
-#include "format/VcfWriterScoredSV.hh"
 #include "options/CallOptionsDiploid.hh"
 
 
-struct VcfWriterDiploidSV : public VcfWriterSV, VcfWriterScoredSV
+struct VcfWriterDiploidSV : public VcfWriterSV
 {
     VcfWriterDiploidSV(
         const CallOptionsDiploid& diploidOpt,
@@ -41,9 +39,7 @@ struct VcfWriterDiploidSV : public VcfWriterSV, VcfWriterScoredSV
         const bool& isOutputContig) :
         VcfWriterSV(referenceFilename, bamHeaderInfo, os, isOutputContig),
         _diploidOpt(diploidOpt),
-        _isMaxDepthFilter(isMaxDepthFilter),
-        _diploidInfoPtr(nullptr),
-        _singleJunctionDiploidInfoPtr(nullptr)
+        _isMaxDepthFilter(isMaxDepthFilter)
     {}
 
     void
@@ -52,10 +48,10 @@ struct VcfWriterDiploidSV : public VcfWriterSV, VcfWriterScoredSV
         const SVCandidateAssemblyData& adata,
         const SVCandidate& sv,
         const SVId& svId,
-        const SVScoreInfo& baseInfo,
+        const SVScoreInfo& baseScoringInfo,
         const SVScoreInfoDiploid& diploidInfo,
         const EventInfo& event,
-        const SVScoreInfoDiploid& singleJunctionDiploidInfo);
+        const SVScoreInfoDiploid& singleJunctionDiploidInfo) const;
 
 private:
 
@@ -71,42 +67,30 @@ private:
     void
     modifyInfo(
         const EventInfo& event,
+        const boost::any specializedScoringInfo,
         InfoTag_t& infotags) const override;
 
     void
     modifySample(
         const SVCandidate& sv,
+        const SVScoreInfo* baseScoringInfoPtr,
+        const boost::any specializedScoringInfo,
         SampleTag_t& sampletags) const override;
 
     void
     modifyTranslocInfo(
         const SVCandidate& sv,
+        const SVScoreInfo* baseScoringInfoPtr,
         const bool isFirstOfPair,
         const SVCandidateAssemblyData& assemblyData,
         InfoTag_t& infotags) const override;
 
     void
-    writeQual() const override;
+    writeQual(const boost::any specializedScoringInfo) const override;
 
     void
-    writeFilter() const override;
-
-    const SVScoreInfoDiploid&
-    getDiploidInfo() const
-    {
-        assert(nullptr != _diploidInfoPtr);
-        return *_diploidInfoPtr;
-    }
-
-    const SVScoreInfoDiploid&
-    getSingleJunctionDiploidInfo() const
-    {
-        assert(nullptr != _singleJunctionDiploidInfoPtr);
-        return *_singleJunctionDiploidInfoPtr;
-    }
+    writeFilter(const boost::any specializedScoringInfo) const override;
 
     const CallOptionsDiploid& _diploidOpt;
     const bool _isMaxDepthFilter;
-    const SVScoreInfoDiploid* _diploidInfoPtr;
-    const SVScoreInfoDiploid* _singleJunctionDiploidInfoPtr;
 };

@@ -23,22 +23,19 @@
 
 #pragma once
 
-#include "manta/JunctionIdGenerator.hh"
 #include "manta/SVModelScoreInfo.hh"
 #include "format/VcfWriterSV.hh"
-#include "format/VcfWriterScoredSV.hh"
 #include "options/CallOptionsDiploid.hh"
 
 
-struct VcfWriterRnaSV : public VcfWriterSV, VcfWriterScoredSV
+struct VcfWriterRnaSV : public VcfWriterSV
 {
     VcfWriterRnaSV(
         const std::string& referenceFilename,
         const bam_header_info& bamHeaderInfo,
         std::ostream& os,
         const bool& isOutputContig) :
-        VcfWriterSV(referenceFilename, bamHeaderInfo, os, isOutputContig),
-        _rnaInfoPtr(nullptr)
+        VcfWriterSV(referenceFilename, bamHeaderInfo, os, isOutputContig)
     {}
 
     void
@@ -47,9 +44,9 @@ struct VcfWriterRnaSV : public VcfWriterSV, VcfWriterScoredSV
         const SVCandidateAssemblyData& adata,
         const SVCandidate& sv,
         const SVId& svId,
-        const SVScoreInfo& baseInfo,
+        const SVScoreInfo& baseScoringInfo,
         const SVScoreInfoRna& rnaInfo,
-        const EventInfo& event);
+        const EventInfo& event) const;
 
 private:
 
@@ -65,24 +62,18 @@ private:
     void
     modifySample(
         const SVCandidate& sv,
+        const SVScoreInfo* baseScoringInfoPtr,
+        const boost::any specializedScoringInfo,
         SampleTag_t& sampletags) const override;
 
     void
     modifyTranslocInfo(
         const SVCandidate& sv,
+        const SVScoreInfo* baseScoringInfoPtr,
         const bool isFirstOfPair,
         const SVCandidateAssemblyData& assemblyData,
         InfoTag_t& infotags) const override;
 
     void
-    writeFilter() const override;
-
-    const SVScoreInfoRna&
-    getRnaInfo() const
-    {
-        assert(nullptr != _rnaInfoPtr);
-        return *_rnaInfoPtr;
-    }
-
-    const SVScoreInfoRna* _rnaInfoPtr;
+    writeFilter(const boost::any specializedScoringInfo) const override;
 };

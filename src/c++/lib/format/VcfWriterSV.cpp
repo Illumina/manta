@@ -319,10 +319,12 @@ VcfWriterSV::
 writeTransloc(
     const SVCandidate& sv,
     const SVId& svId,
+    const SVScoreInfo* baseScoringInfoPtr,
+    const boost::any specializedScoringInfo,
     const bool isFirstBreakend,
     const SVCandidateSetData& /*svData*/,
     const SVCandidateAssemblyData& adata,
-    const EventInfo& event)
+    const EventInfo& event) const
 {
     const bool isImprecise(sv.isImprecise());
     const bool isBreakendRangeSameShift(sv.isBreakendRangeSameShift());
@@ -451,10 +453,10 @@ writeTransloc(
 
     addSharedInfo(event, infoTags);
 
-    modifyInfo(event, infoTags);
-    modifyTranslocInfo(sv, isFirstBreakend, adata, infoTags);
+    modifyInfo(event, specializedScoringInfo, infoTags);
+    modifyTranslocInfo(sv, baseScoringInfoPtr, isFirstBreakend, adata, infoTags);
 
-    modifySample(sv, sampleTags);
+    modifySample(sv, baseScoringInfoPtr, specializedScoringInfo, sampleTags);
 #ifdef DEBUG_VCF
     addDebugInfo(bpA, bpB, isFirstBreakend, adata, infoTags);
 #endif
@@ -466,9 +468,9 @@ writeTransloc(
         << '\t' << ref // REF
         << '\t' << str( altFormat ) // ALT
         << '\t';
-    writeQual();
+    writeQual(specializedScoringInfo);
     _os << '\t';
-    writeFilter();
+    writeFilter(specializedScoringInfo);
     _os << '\t';
     makeInfoField(infoTags,_os); // INFO
     makeFormatSampleField(sampleTags, _os); // FORMAT + SAMPLE
@@ -482,12 +484,14 @@ VcfWriterSV::
 writeTranslocPair(
     const SVCandidate& sv,
     const SVId& svId,
+    const SVScoreInfo* baseScoringInfoPtr,
+    const boost::any specializedScoringInfo,
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata,
-    const EventInfo& event)
+    const EventInfo& event) const
 {
-    writeTransloc(sv, svId, true, svData, adata, event);
-    writeTransloc(sv, svId, false, svData, adata, event);
+    writeTransloc(sv, svId, baseScoringInfoPtr, specializedScoringInfo, true, svData, adata, event);
+    writeTransloc(sv, svId, baseScoringInfoPtr, specializedScoringInfo, false, svData, adata, event);
 }
 
 
@@ -497,8 +501,10 @@ VcfWriterSV::
 writeIndel(
     const SVCandidate& sv,
     const SVId& svId,
+    const SVScoreInfo* baseScoringInfoPtr,
+    const boost::any specializedScoringInfo,
     const bool isIndel,
-    const EventInfo& event)
+    const EventInfo& event) const
 {
     const bool isImprecise(sv.isImprecise());
     const bool isBreakendRangeSameShift(sv.isBreakendRangeSameShift());
@@ -705,10 +711,10 @@ writeIndel(
 
     addSharedInfo(event, infoTags);
 
-    modifyInfo(event, infoTags);
+    modifyInfo(event, specializedScoringInfo, infoTags);
     modifyInvdelInfo(sv, isBp1First, infoTags);
 
-    modifySample(sv, sampleTags);
+    modifySample(sv, baseScoringInfoPtr, specializedScoringInfo, sampleTags);
 
     // write out record:
     _os << chrom
@@ -717,9 +723,9 @@ writeIndel(
         << '\t' << ref // REF
         << '\t' << alt // ALT
         << '\t';
-    writeQual();
+    writeQual(specializedScoringInfo);
     _os << '\t';
-    writeFilter();
+    writeFilter(specializedScoringInfo);
     _os << '\t';
     makeInfoField(infoTags,_os); // INFO
     makeFormatSampleField(sampleTags, _os); // FORMAT + SAMPLE
@@ -758,8 +764,10 @@ writeSVCore(
     const SVCandidateAssemblyData& adata,
     const SVCandidate& sv,
     const SVId& svId,
+    const SVScoreInfo* baseScoringInfoPtr,
+    const boost::any specializedScoringInfo,
     const EventInfo& event,
-    const bool isForceIntraChromBnd)
+    const bool isForceIntraChromBnd) const
 {
     using namespace EXTENDED_SV_TYPE;
     const index_t svType(getExtendedSVType(sv, isForceIntraChromBnd));
@@ -781,12 +789,12 @@ writeSVCore(
     {
         if (isSVTransloc(svType) || isSVInv(svType))
         {
-            writeTranslocPair(sv, svId, svData, adata, event);
+            writeTranslocPair(sv, svId, baseScoringInfoPtr, specializedScoringInfo, svData, adata, event);
         }
         else
         {
             const bool isIndel(isSVIndel(svType));
-            writeIndel(sv, svId, isIndel, event);
+            writeIndel(sv, svId, baseScoringInfoPtr, specializedScoringInfo, isIndel, event);
         }
     }
     catch (...)

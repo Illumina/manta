@@ -42,6 +42,7 @@ void
 VcfWriterCandidateSV::
 modifyTranslocInfo(
     const SVCandidate& sv,
+    const SVScoreInfo* /*baseScoringInfoPtr*/,
     const bool isFirstOfPair,
     const SVCandidateAssemblyData& /*assemblyData*/,
     InfoTag_t& infoTags) const
@@ -77,8 +78,8 @@ writeSV(
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata,
     const SVCandidate& sv,
-    const SVId& svId)
+    const SVId& svId) const
 {
     static const EventInfo event;
-    writeSVCore( svData, adata, sv, svId, event);
+    writeSVCore( svData, adata, sv, svId, nullptr, nullptr, event);
 }

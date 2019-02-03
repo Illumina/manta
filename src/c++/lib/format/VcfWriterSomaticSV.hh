@@ -25,11 +25,10 @@
 
 #include "manta/SVModelScoreInfo.hh"
 #include "format/VcfWriterSV.hh"
-#include "format/VcfWriterScoredSV.hh"
 #include "options/CallOptionsSomatic.hh"
 
 
-struct VcfWriterSomaticSV : public VcfWriterSV, VcfWriterScoredSV
+struct VcfWriterSomaticSV : public VcfWriterSV
 {
     VcfWriterSomaticSV(
         const CallOptionsSomatic& somaticOpt,
@@ -40,9 +39,7 @@ struct VcfWriterSomaticSV : public VcfWriterSV, VcfWriterScoredSV
         const bool& isOutputContig) :
         VcfWriterSV(referenceFilename, bamHeaderInfo, os, isOutputContig),
         _somaticOpt(somaticOpt),
-        _isMaxDepthFilter(isMaxDepthFilter),
-        _somaticInfoPtr(nullptr),
-        _singleJunctionSomaticInfoPtr(nullptr)
+        _isMaxDepthFilter(isMaxDepthFilter)
     {}
 
     void
@@ -51,10 +48,10 @@ struct VcfWriterSomaticSV : public VcfWriterSV, VcfWriterScoredSV
         const SVCandidateAssemblyData& adata,
         const SVCandidate& sv,
         const SVId& svId,
-        const SVScoreInfo& baseInfo,
+        const SVScoreInfo& baseScoringInfo,
         const SVScoreInfoSomatic& somaticInfo,
         const EventInfo& event,
-        const SVScoreInfoSomatic& singleJunctionSomaticInfo);
+        const SVScoreInfoSomatic& singleJunctionSomaticInfo) const;
 
 private:
 
@@ -70,11 +67,13 @@ private:
     void
     modifyInfo(
         const EventInfo& event,
+        const boost::any specializedScoringInfo,
         std::vector<std::string>& infotags) const override;
 
     void
     modifyTranslocInfo(
         const SVCandidate& sv,
+        const SVScoreInfo* baseScoringInfoPtr,
         const bool isFirstOfPair,
         const SVCandidateAssemblyData& assemblyData,
         std::vector<std::string>& infotags) const override;
@@ -82,29 +81,15 @@ private:
     void
     modifySample(
         const SVCandidate& sv,
+        const SVScoreInfo* baseScoringInfoPtr,
+        const boost::any specializedScoringInfo,
         SampleTag_t& sampletags) const override;
 
     void
-    writeFilter() const override;
-
-    const SVScoreInfoSomatic&
-    getSomaticInfo() const
-    {
-        assert(nullptr != _somaticInfoPtr);
-        return *_somaticInfoPtr;
-    }
-
-    const SVScoreInfoSomatic&
-    getSingleJunctionSomaticInfo() const
-    {
-        assert(nullptr != _singleJunctionSomaticInfoPtr);
-        return *_singleJunctionSomaticInfoPtr;
-    }
+    writeFilter(const boost::any specializedScoringInfo) const override;
 
 
     const CallOptionsSomatic& _somaticOpt;
     const bool _isMaxDepthFilter;
-    const SVScoreInfoSomatic* _somaticInfoPtr;
-    const SVScoreInfoSomatic* _singleJunctionSomaticInfoPtr;
 };
 
