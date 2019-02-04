@@ -30,6 +30,8 @@ struct bam_header_info;
 struct SVLocusSet;
 
 /// Provide access to temporary file and limit lifetime of the temporary file to the object filetime
+///
+/// This object should not be directly instantiated by client code.
 struct TestFileMakerBase
 {
     ~TestFileMakerBase();
@@ -41,6 +43,9 @@ struct TestFileMakerBase
     }
 
 protected:
+    // don't allow this to be directly instantiated:
+    TestFileMakerBase() = default;
+
     std::string _tempFilename;
 };
 

@@ -748,8 +748,10 @@ BOOST_AUTO_TEST_CASE( test_SVCandidates )
 
     // Create options
     TestFilenameMaker testFilenameMaker;
+    TestFilenameMaker fileNameMaker0;
     TestFilenameMaker fileNameMaker1;
     GSCOptions options;
+    options.edgeRuntimeFilename = fileNameMaker0.getFilename();
     options.edgeStatsFilename = fileNameMaker1.getFilename();
     options.referenceFilename = referenceFilename;
     options.alignFileOpt.alignmentFilenames = {bamFileName};

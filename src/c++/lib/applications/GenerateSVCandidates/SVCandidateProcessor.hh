@@ -54,10 +54,6 @@ struct SVCandidateProcessor
         const SVCandidateSetData& svData,
         SupportSamples& svSupports);
 
-    /// TestSVCandidateProcessor is a friend structure of SVCandidateProcessor. So that it can access private
-    /// members of SVCandidateProcessor.
-    friend struct TestSVCandidateProcessor;
-
 private:
 
     void

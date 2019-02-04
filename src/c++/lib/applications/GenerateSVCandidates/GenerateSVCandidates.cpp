@@ -240,7 +240,11 @@ runGSC(
     const char* progName,
     const char* progVersion)
 {
-    auto edgeTrackerStreamPtr(std::make_shared<SynchronizedOutputStream>(opt.edgeRuntimeFilename));
+    std::shared_ptr<SynchronizedOutputStream> edgeTrackerStreamPtr;
+    if (! opt.edgeStatsReportFilename.empty())
+    {
+        edgeTrackerStreamPtr.reset(new SynchronizedOutputStream(opt.edgeRuntimeFilename));
+    }
 
     const SVLocusScanner readScanner(opt.scanOpt, opt.statsFilename, opt.alignFileOpt.alignmentFilenames, !opt.isUnstrandedRNA);
 

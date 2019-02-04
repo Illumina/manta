@@ -31,13 +31,13 @@ struct VcfWriterCandidateSV : public VcfWriterSV
     VcfWriterCandidateSV(
         const std::string& referenceFilename,
         const bam_header_info& bamHeaderInfo,
-        std::ostream& os,
+        const std::string& outputFilename,
         const bool& isOutputContig) :
-        VcfWriterSV(referenceFilename, bamHeaderInfo, os, isOutputContig)
+        VcfWriterSV(referenceFilename, bamHeaderInfo, outputFilename, isOutputContig)
     {}
 
     void
-    addHeaderInfo() const override;
+    addHeaderInfo(std::ostream& os) const override;
 
     void
     modifyTranslocInfo(

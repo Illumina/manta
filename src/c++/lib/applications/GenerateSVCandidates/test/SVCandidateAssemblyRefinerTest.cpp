@@ -1438,7 +1438,7 @@ BOOST_AUTO_TEST_CASE( test_generateRefinedVCFSVCandidateFromJumpAlignment )
 BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
 {
     const bam_header_info bamHeader(buildTestBamHeader());
-    TestFileMakerBase fileMakerBase1;
+    TestFilenameMaker fileMaker1;
     GSCOptions options;
     // Assembly options
     options.refineOpt.spanningAssembleOpt.minWordLength = 15;
@@ -1450,7 +1450,7 @@ BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
     options.alignFileOpt.alignmentFilenames = {bamFileName};
     options.alignFileOpt.isAlignmentTumor = {false};
     options.referenceFilename = getTestReferenceFilename();
-    options.edgeRuntimeFilename = fileMakerBase1.getFilename();
+    options.edgeRuntimeFilename = fileMaker1.getFilename();
     // Creating stats file.
     TestStatsFileMaker statsFile;
     options.statsFilename = statsFile.getFilename();

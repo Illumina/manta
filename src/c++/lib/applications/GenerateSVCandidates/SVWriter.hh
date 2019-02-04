@@ -57,19 +57,14 @@ struct SVWriter
         const SVModelScoreInfo& mjJointModelScoreInfo,
         const bool isMJEvent) const;
 
+private:
     ///////////////////////// data:
     const GSCOptions& opt;
     unsigned diploidSampleCount;
 
-    mutable OutStream candfs;
-    mutable OutStream dipfs;
-    mutable OutStream somfs;
-    mutable OutStream tumfs;
-    mutable OutStream rnafs;
-
     VcfWriterCandidateSV candWriter;
-    VcfWriterDiploidSV diploidWriter;
-    VcfWriterSomaticSV somWriter;
-    VcfWriterTumorSV tumorWriter;
-    VcfWriterRnaSV rnaWriter;
+    std::unique_ptr<VcfWriterDiploidSV> diploidWriter;
+    std::unique_ptr<VcfWriterSomaticSV> somWriter;
+    std::unique_ptr<VcfWriterTumorSV> tumorWriter;
+    std::unique_ptr<VcfWriterRnaSV> rnaWriter;
 };

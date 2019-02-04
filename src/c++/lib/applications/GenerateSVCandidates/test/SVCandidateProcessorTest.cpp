@@ -35,22 +35,6 @@
 /// The whole purpose of this test file is given an SV candidate, whether it is correctly writing
 /// SV information in the corresponding vcf file for tumor, rna, diploid and somatic cases.
 
-/// TestSVCandidateProcessor is a friend of GSCEdgeStatsManager. So that can access private
-/// members of SVCandidateProcessor.
-struct TestSVCandidateProcessor
-{
-    // closing all the streams, as we need to read those files before
-    // program exits.
-    void flushStreams(SVCandidateProcessor &candidateProcessor)
-    {
-        candidateProcessor._svWriter.tumfs.getStream().flush();
-        candidateProcessor._svWriter.rnafs.getStream().flush();
-        candidateProcessor._svWriter.dipfs.getStream().flush();
-        candidateProcessor._svWriter.somfs.getStream().flush();
-        candidateProcessor._svWriter.candfs.getStream().flush();
-    }
-};
-
 std::unique_ptr<SVLocusScanner> buildSomaticSVLocusScanner(bam_header_info bamHeaderInfo);
 // As for somatic, minimum two bam files(normal and tumor) are needed,
 // so creating stats for two bam file.
@@ -310,11 +294,14 @@ BOOST_AUTO_TEST_CASE( test_tumorOnly )
     const char* testFilenamePtr(graphFilename.c_str());
     // serialize
     set1.save(testFilenamePtr);
-    const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
-    SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, edgeTrackerPtr, edgeStatMan);
-    candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
-    TestSVCandidateProcessor testSVCandidateProcessor;
-    testSVCandidateProcessor.flushStreams(candidateProcessor);
+
+    // block-scope svWriter to force file flush at end of scope:
+    {
+        const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
+        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, edgeTrackerPtr,
+                                                edgeStatMan);
+        candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
+    }
 
     // Check output vcf file
     std::ifstream tumorFile(options.tumorOutputFilename);
@@ -422,11 +409,14 @@ BOOST_AUTO_TEST_CASE( test_RNA )
     const char* testFilenamePtr(graphFilename.c_str());
     // serialize
     set1.save(testFilenamePtr);
-    const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
-    SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, edgeTrackerPtr, edgeStatMan);
-    candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
-    TestSVCandidateProcessor testSVCandidateProcessor;
-    testSVCandidateProcessor.flushStreams(candidateProcessor);
+
+    // block-scope svWriter to force file flush at end of scope:
+    {
+        const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
+        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, edgeTrackerPtr,
+                                                edgeStatMan);
+        candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
+    }
 
     // Check output vcf file
     std::ifstream rnaFile(options.rnaOutputFilename);
@@ -535,11 +525,14 @@ BOOST_AUTO_TEST_CASE( test_Diploid )
     const char* testFilenamePtr(graphFilename.c_str());
     // serialize
     set1.save(testFilenamePtr);
-    const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
-    SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, edgeTrackerPtr, edgeStatMan);
-    candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
-    TestSVCandidateProcessor testSVCandidateProcessor;
-    testSVCandidateProcessor.flushStreams(candidateProcessor);
+
+    // block-scope svWriter to force file flush at end of scope:
+    {
+        const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
+        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, edgeTrackerPtr,
+                                                edgeStatMan);
+        candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
+    }
 
     // Check output vcf file
     std::ifstream diploidFile(options.diploidOutputFilename);
@@ -671,11 +664,14 @@ BOOST_AUTO_TEST_CASE( test_Somatic )
     const char* testFilenamePtr(graphFilename.c_str());
     // serialize
     set1.save(testFilenamePtr);
-    const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
-    SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, edgeTrackerPtr, edgeStatMan);
-    candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
-    TestSVCandidateProcessor testSVCandidateProcessor;
-    testSVCandidateProcessor.flushStreams(candidateProcessor);
+
+    // block-scope svWriter to force file flush at end of scope:
+    {
+        const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
+        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, edgeTrackerPtr,
+                                                edgeStatMan);
+        candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
+    }
 
     // Check output vcf files
     std::ifstream diploidFile(options.diploidOutputFilename);

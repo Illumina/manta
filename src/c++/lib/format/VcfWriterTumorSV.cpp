@@ -27,44 +27,46 @@
 
 void
 VcfWriterTumorSV::
-addHeaderInfo() const
+addHeaderInfo(std::ostream& os) const
 {
-    _os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";
-    _os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
+    os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";
+    os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
 }
 
 
 
 void
 VcfWriterTumorSV::
-addHeaderFormat() const
+addHeaderFormat(std::ostream& os) const
 {
-    _os << "##FORMAT=<ID=PR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
-    _os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split reads for the ref and alt alleles in the order listed, for reads where P(allele|read)>0.999\">\n";
+    os << "##FORMAT=<ID=PR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
+    os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split reads for the ref and alt alleles in the order listed, for reads where P(allele|read)>0.999\">\n";
 }
 
 
 
 void
 VcfWriterTumorSV::
-addHeaderFilters() const
+addHeaderFilters(std::ostream& os) const
 {
     if (_isMaxDepthFilter)
     {
-        _os << "##FILTER=<ID=" << _tumorOpt.maxDepthFilterLabel << ",Description=\"Sample site depth is greater than " << _tumorOpt.maxDepthFactor << "x the median chromosome depth near one or both variant breakends\">\n";
+        os << "##FILTER=<ID=" << _tumorOpt.maxDepthFilterLabel << ",Description=\"Sample site depth is greater than " << _tumorOpt.maxDepthFactor << "x the median chromosome depth near one or both variant breakends\">\n";
     }
 
-    _os << "##FILTER=<ID=" << _tumorOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 base), the fraction of reads with MAPQ0 around either breakend exceeds " << _tumorOpt.maxMQ0Frac << "\">\n";
+    os << "##FILTER=<ID=" << _tumorOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 base), the fraction of reads with MAPQ0 around either breakend exceeds " << _tumorOpt.maxMQ0Frac << "\">\n";
 }
 
 
 
 void
 VcfWriterTumorSV::
-writeFilter(const boost::any specializedScoringInfo) const
+writeFilter(
+    const boost::any specializedScoringInfo,
+    std::ostream& os) const
 {
     const SVScoreInfoTumor& tumorScoringInfo(*boost::any_cast<const SVScoreInfoTumor*>(specializedScoringInfo));
-    writeFilters(tumorScoringInfo.filters, _os);
+    writeFilters(tumorScoringInfo.filters, os);
 }
 
 

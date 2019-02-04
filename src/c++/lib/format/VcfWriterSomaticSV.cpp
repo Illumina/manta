@@ -29,37 +29,37 @@
 
 void
 VcfWriterSomaticSV::
-addHeaderInfo() const
+addHeaderInfo(std::ostream& os) const
 {
-    _os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";
-    _os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
-    _os << "##INFO=<ID=SOMATIC,Number=0,Type=Flag,Description=\"Somatic mutation\">\n";
-    _os << "##INFO=<ID=SOMATICSCORE,Number=1,Type=Integer,Description=\"Somatic variant quality score\">\n";
-    _os << "##INFO=<ID=JUNCTION_SOMATICSCORE,Number=1,Type=Integer,Description=\"If the SV junctino is part of an EVENT (ie. a multi-adjacency variant), this field provides the SOMATICSCORE value for the adjacency in question only\">\n";
+    os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";
+    os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
+    os << "##INFO=<ID=SOMATIC,Number=0,Type=Flag,Description=\"Somatic mutation\">\n";
+    os << "##INFO=<ID=SOMATICSCORE,Number=1,Type=Integer,Description=\"Somatic variant quality score\">\n";
+    os << "##INFO=<ID=JUNCTION_SOMATICSCORE,Number=1,Type=Integer,Description=\"If the SV junctino is part of an EVENT (ie. a multi-adjacency variant), this field provides the SOMATICSCORE value for the adjacency in question only\">\n";
 }
 
 
 
 void
 VcfWriterSomaticSV::
-addHeaderFormat() const
+addHeaderFormat(std::ostream& os) const
 {
-    _os << "##FORMAT=<ID=PR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
-    _os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split reads for the ref and alt alleles in the order listed, for reads where P(allele|read)>0.999\">\n";
+    os << "##FORMAT=<ID=PR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
+    os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split reads for the ref and alt alleles in the order listed, for reads where P(allele|read)>0.999\">\n";
 }
 
 
 
 void
 VcfWriterSomaticSV::
-addHeaderFilters() const
+addHeaderFilters(std::ostream& os) const
 {
     if (_isMaxDepthFilter)
     {
-        _os << "##FILTER=<ID=" << _somaticOpt.maxDepthFilterLabel << ",Description=\"Normal sample site depth is greater than " << _somaticOpt.maxDepthFactor << "x the median chromosome depth near one or both variant breakends\">\n";
+        os << "##FILTER=<ID=" << _somaticOpt.maxDepthFilterLabel << ",Description=\"Normal sample site depth is greater than " << _somaticOpt.maxDepthFactor << "x the median chromosome depth near one or both variant breakends\">\n";
     }
-    _os << "##FILTER=<ID=" << _somaticOpt.minSomaticScoreLabel << ",Description=\"Somatic score is less than " << _somaticOpt.minPassSomaticScore << "\">\n";
-    _os << "##FILTER=<ID=" << _somaticOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 bases) in the normal sample, the fraction of reads with MAPQ0 around either breakend exceeds " << _somaticOpt.maxMQ0Frac << "\">\n";
+    os << "##FILTER=<ID=" << _somaticOpt.minSomaticScoreLabel << ",Description=\"Somatic score is less than " << _somaticOpt.minPassSomaticScore << "\">\n";
+    os << "##FILTER=<ID=" << _somaticOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 bases) in the normal sample, the fraction of reads with MAPQ0 around either breakend exceeds " << _somaticOpt.maxMQ0Frac << "\">\n";
 }
 
 
@@ -144,10 +144,12 @@ modifySample(
 
 void
 VcfWriterSomaticSV::
-writeFilter(const boost::any specializedScoringInfo) const
+writeFilter(
+    const boost::any specializedScoringInfo,
+    std::ostream& os) const
 {
     const SVScoreInfoSomatic& somaticScoringInfo(*boost::any_cast<AllSomaticScoringInfo>(specializedScoringInfo).first);
-    writeFilters(somaticScoringInfo.filters, _os);
+    writeFilters(somaticScoringInfo.filters, os);
 }
 
 

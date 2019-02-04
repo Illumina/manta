@@ -65,43 +65,52 @@ SVWriter(
     const char* progVersion) :
     opt(initOpt),
     diploidSampleCount(opt.alignFileOpt.diploidSampleCount()),
-    candfs(opt.candidateOutputFilename),
-    dipfs(opt.diploidOutputFilename),
-    somfs(opt.somaticOutputFilename),
-    tumfs(opt.tumorOutputFilename),
-    rnafs(opt.rnaOutputFilename),
-    candWriter(opt.referenceFilename, bamHeaderInfo, candfs.getStream(),
-               opt.isOutputContig),
-    diploidWriter(opt.diploidOpt, (! opt.chromDepthFilename.empty()),
-                  opt.referenceFilename, bamHeaderInfo, dipfs.getStream(),
-                  opt.isOutputContig),
-    somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
-              opt.referenceFilename, bamHeaderInfo,somfs.getStream(),
-              opt.isOutputContig),
-    tumorWriter(opt.tumorOpt, (! opt.chromDepthFilename.empty()),
-                opt.referenceFilename, bamHeaderInfo, tumfs.getStream(),
-                opt.isOutputContig),
-    rnaWriter(opt.referenceFilename, bamHeaderInfo, rnafs.getStream(),
-              opt.isOutputContig)
+    candWriter(opt.referenceFilename, bamHeaderInfo, opt.candidateOutputFilename,
+               opt.isOutputContig)
 {
+    // First initialize the candidate VCF stream, which is always used
+    //
+
     // Use 'noSampleNames' to force default sample names for the candidate header (why?)
     std::vector<std::string> noSampleNames;
-    candWriter.writeHeader(progName, progVersion,noSampleNames);
+    candWriter.writeHeader(progName, progVersion, noSampleNames);
+
+    // Next initialize the model-specific VCF stream(s), each of which is only used for certain calling modes:
+    //
 
     const auto sampleNames(getSampleNamesFromBamFiles(opt));
     if (opt.isTumorOnly())
     {
-        tumorWriter.writeHeader(progName, progVersion,sampleNames);
+        tumorWriter.reset(
+            new VcfWriterTumorSV(opt.tumorOpt, (!opt.chromDepthFilename.empty()),
+                                 opt.referenceFilename, bamHeaderInfo, opt.tumorOutputFilename,
+                                 opt.isOutputContig));
+        tumorWriter->writeHeader(progName, progVersion, sampleNames);
     }
     else if (opt.isRNA)
     {
-        rnaWriter.writeHeader(progName, progVersion, sampleNames);
+        rnaWriter.reset(
+            new VcfWriterRnaSV(opt.referenceFilename, bamHeaderInfo, opt.rnaOutputFilename,
+                               opt.isOutputContig));
+        rnaWriter->writeHeader(progName, progVersion, sampleNames);
     }
     else
     {
         std::vector<std::string> diploidSampleNames(sampleNames.begin(),sampleNames.begin()+diploidSampleCount);
-        diploidWriter.writeHeader(progName, progVersion,diploidSampleNames);
-        if (opt.isSomatic()) somWriter.writeHeader(progName, progVersion,sampleNames);
+        diploidWriter.reset(
+            new VcfWriterDiploidSV(opt.diploidOpt, (!opt.chromDepthFilename.empty()),
+                                   opt.referenceFilename, bamHeaderInfo, opt.diploidOutputFilename,
+                                   opt.isOutputContig));
+        diploidWriter->writeHeader(progName, progVersion, diploidSampleNames);
+
+        if (opt.isSomatic())
+        {
+            somWriter.reset(
+                new VcfWriterSomaticSV(opt.somaticOpt, (!opt.chromDepthFilename.empty()),
+                                       opt.referenceFilename, bamHeaderInfo, opt.somaticOutputFilename,
+                                       opt.isOutputContig));
+            somWriter->writeHeader(progName, progVersion, sampleNames);
+        }
     }
 }
 
@@ -292,12 +301,12 @@ writeSV(
             //TODO: add logic for MJEvent
 
             const SVScoreInfoTumor& tumorInfo(modelScoreInfo.tumor);
-            tumorWriter.writeSV(svData, assemblyData, sv, svId, baseScoringInfo, tumorInfo, nonEvent);
+            tumorWriter->writeSV(svData, assemblyData, sv, svId, baseScoringInfo, tumorInfo, nonEvent);
         }
         else if (opt.isRNA)
         {
             const SVScoreInfoRna& rnaInfo(modelScoreInfo.rna);
-            rnaWriter.writeSV(svData, assemblyData, sv, svId, baseScoringInfo, rnaInfo, nonEvent);
+            rnaWriter->writeSV(svData, assemblyData, sv, svId, baseScoringInfo, rnaInfo, nonEvent);
         }
         else
         {
@@ -337,7 +346,7 @@ writeSV(
 
                 if (isWriteDiploid)
                 {
-                    diploidWriter.writeSV(svData, assemblyData, sv, svId, baseScoringInfo, diploidInfo, diploidEvent, modelScoreInfo.diploid);
+                    diploidWriter->writeSV(svData, assemblyData, sv, svId, baseScoringInfo, diploidInfo, diploidEvent, modelScoreInfo.diploid);
                 }
             }
 
@@ -360,7 +369,7 @@ writeSV(
 
                 if (isWriteSomatic)
                 {
-                    somWriter.writeSV(svData, assemblyData, sv, svId, baseScoringInfo, somaticInfo, somaticEvent, modelScoreInfo.somatic);
+                    somWriter->writeSV(svData, assemblyData, sv, svId, baseScoringInfo, somaticInfo, somaticEvent, modelScoreInfo.somatic);
                 }
             }
         }

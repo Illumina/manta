@@ -27,43 +27,43 @@
 
 void
 VcfWriterDiploidSV::
-addHeaderInfo() const
+addHeaderInfo(std::ostream& os) const
 {
-    _os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";
-    _os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
-    _os << "##INFO=<ID=JUNCTION_QUAL,Number=1,Type=Integer,Description=\"If the SV junction is part of an EVENT (ie. a multi-adjacency variant), this field provides the QUAL value for the adjacency in question only\">\n";
+    os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";
+    os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
+    os << "##INFO=<ID=JUNCTION_QUAL,Number=1,Type=Integer,Description=\"If the SV junction is part of an EVENT (ie. a multi-adjacency variant), this field provides the QUAL value for the adjacency in question only\">\n";
 }
 
 
 
 void
 VcfWriterDiploidSV::
-addHeaderFormat() const
+addHeaderFormat(std::ostream& os) const
 {
-    _os << "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n";
-    _os << "##FORMAT=<ID=FT,Number=1,Type=String,Description=\"Sample filter, 'PASS' indicates that all filters have passed for this sample\">\n";
-    _os << "##FORMAT=<ID=GQ,Number=1,Type=Integer,Description=\"Genotype Quality\">\n";
-    _os << "##FORMAT=<ID=PL,Number=G,Type=Integer,Description=\"Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification\">\n";
-    _os << "##FORMAT=<ID=PR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
-    _os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split reads for the ref and alt alleles in the order listed, for reads where P(allele|read)>0.999\">\n";
+    os << "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n";
+    os << "##FORMAT=<ID=FT,Number=1,Type=String,Description=\"Sample filter, 'PASS' indicates that all filters have passed for this sample\">\n";
+    os << "##FORMAT=<ID=GQ,Number=1,Type=Integer,Description=\"Genotype Quality\">\n";
+    os << "##FORMAT=<ID=PL,Number=G,Type=Integer,Description=\"Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification\">\n";
+    os << "##FORMAT=<ID=PR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
+    os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split reads for the ref and alt alleles in the order listed, for reads where P(allele|read)>0.999\">\n";
 }
 
 
 
 void
 VcfWriterDiploidSV::
-addHeaderFilters() const
+addHeaderFilters(std::ostream& os) const
 {
     if (_isMaxDepthFilter)
     {
-        _os << "##FILTER=<ID=" << _diploidOpt.maxDepthFilterLabel << ",Description=\"Depth is greater than " << _diploidOpt.maxDepthFactor << "x the median chromosome depth near one or both variant breakends\">\n";
+        os << "##FILTER=<ID=" << _diploidOpt.maxDepthFilterLabel << ",Description=\"Depth is greater than " << _diploidOpt.maxDepthFactor << "x the median chromosome depth near one or both variant breakends\">\n";
     }
-    _os << "##FILTER=<ID=" << _diploidOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 bases), the fraction of reads in all samples with MAPQ0 around either breakend exceeds " << _diploidOpt.maxMQ0Frac << "\">\n";
-    _os << "##FILTER=<ID=" << _diploidOpt.noPairSupportLabel << ",Description=\"For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele in any sample.\">\n";
-    _os << "##FILTER=<ID=" << _diploidOpt.minAltFilterLabel << ",Description=\"QUAL score is less than " << _diploidOpt.minPassAltScore << "\">\n";
-    _os << "##FILTER=<ID=" << _diploidOpt.failedSampleFTLabel << ",Description=\"No sample passes all the sample-level filters (at the field FORMAT/FT)\">\n";
-    _os << "##FILTER=<ID=" << _diploidOpt.minGTFilterLabel << ",Description=\"GQ score is less than " << _diploidOpt.minPassGTScore << " (filter applied at sample level)\">\n";
-    _os << "##FILTER=<ID=" << _diploidOpt.homRefLabel << ",Description=\"homozygous reference call (filter applied at sample level)\">\n";
+    os << "##FILTER=<ID=" << _diploidOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 bases), the fraction of reads in all samples with MAPQ0 around either breakend exceeds " << _diploidOpt.maxMQ0Frac << "\">\n";
+    os << "##FILTER=<ID=" << _diploidOpt.noPairSupportLabel << ",Description=\"For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele in any sample.\">\n";
+    os << "##FILTER=<ID=" << _diploidOpt.minAltFilterLabel << ",Description=\"QUAL score is less than " << _diploidOpt.minPassAltScore << "\">\n";
+    os << "##FILTER=<ID=" << _diploidOpt.failedSampleFTLabel << ",Description=\"No sample passes all the sample-level filters (at the field FORMAT/FT)\">\n";
+    os << "##FILTER=<ID=" << _diploidOpt.minGTFilterLabel << ",Description=\"GQ score is less than " << _diploidOpt.minPassGTScore << " (filter applied at sample level)\">\n";
+    os << "##FILTER=<ID=" << _diploidOpt.homRefLabel << ",Description=\"homozygous reference call (filter applied at sample level)\">\n";
 }
 
 
@@ -110,20 +110,24 @@ modifyTranslocInfo(
 
 void
 VcfWriterDiploidSV::
-writeQual(const boost::any specializedScoringInfo) const
+writeQual(
+    const boost::any specializedScoringInfo,
+    std::ostream& os) const
 {
     const SVScoreInfoDiploid& diploidScoringInfo(*boost::any_cast<AllDiploidScoringInfo>(specializedScoringInfo).first);
-    _os << diploidScoringInfo.altScore;
+    os << diploidScoringInfo.altScore;
 }
 
 
 
 void
 VcfWriterDiploidSV::
-writeFilter(const boost::any specializedScoringInfo) const
+writeFilter(
+    const boost::any specializedScoringInfo,
+    std::ostream& os) const
 {
     const SVScoreInfoDiploid& diploidScoringInfo(*boost::any_cast<AllDiploidScoringInfo>(specializedScoringInfo).first);
-    writeFilters(diploidScoringInfo.filters,_os);
+    writeFilters(diploidScoringInfo.filters, os);
 }
 
 

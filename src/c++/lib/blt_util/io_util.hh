@@ -59,8 +59,6 @@ public:
     explicit
     SynchronizedOutputStream(const std::string& outputFile);
 
-    bool isOpen() const;
-
     void
     write(const std::string& msg);
 

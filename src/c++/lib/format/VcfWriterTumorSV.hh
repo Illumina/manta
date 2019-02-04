@@ -34,9 +34,9 @@ struct VcfWriterTumorSV : public VcfWriterSV
         const bool isMaxDepthFilter,
         const std::string& referenceFilename,
         const bam_header_info& bamHeaderInfo,
-        std::ostream& os,
+        const std::string& outputFilename,
         const bool& isOutputContig) :
-        VcfWriterSV(referenceFilename, bamHeaderInfo, os, isOutputContig),
+        VcfWriterSV(referenceFilename, bamHeaderInfo, outputFilename, isOutputContig),
         _tumorOpt(tumorOpt),
         _isMaxDepthFilter(isMaxDepthFilter)
     {}
@@ -54,16 +54,18 @@ struct VcfWriterTumorSV : public VcfWriterSV
 private:
 
     void
-    addHeaderInfo() const override;
+    addHeaderInfo(std::ostream& os) const override;
 
     void
-    addHeaderFormat() const override;
+    addHeaderFormat(std::ostream& os) const override;
 
     void
-    addHeaderFilters() const override;
+    addHeaderFilters(std::ostream& os) const override;
 
     void
-    writeFilter(const boost::any specializedScoringInfo) const override;
+    writeFilter(
+        const boost::any specializedScoringInfo,
+        std::ostream& os) const override;
 
     void
     modifySample(

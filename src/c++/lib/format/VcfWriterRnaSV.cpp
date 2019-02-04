@@ -27,39 +27,39 @@
 
 void
 VcfWriterRnaSV::
-addHeaderInfo() const
+addHeaderInfo(std::ostream& os) const
 {
-    _os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";
-    _os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
-    _os << "##INFO=<ID=REF_COUNT,Number=1,Type=Integer,Description=\"The number of reads supporting the reference allele at this breakend\">\n";
-    _os << "##INFO=<ID=MATE_REF_COUNT,Number=1,Type=Integer,Description=\"The number of reads supporting the reference allele at the other breakend\">\n";
-    _os << "##INFO=<ID=RNA_FIRST,Number=0,Type=Flag,Description=\"For RNA fusions, this break-end is 5' in the fusion transcript\">\n";
-    _os << "##INFO=<ID=RNA_STRANDED,Number=0,Type=Flag,Description=\"For RNA fusions, the direction of transcription is known\">\n";
-    _os << "##INFO=<ID=RNA_FwRvReads,Number=2,Type=Integer,Description=\"For RNA fusions, number of stranded reads supporting forward or reverse direction of transcription\">\n";
-    _os << "##INFO=<ID=RNA_Reads,Number=1,Type=Integer,Description=\"The number of reads and pairs that potentially support this candidate before refinement and scoring\">\n";
-    _os << "##INFO=<ID=RNA_CONTIG,Number=1,Type=String,Description=\"The sequence of the breakend spanning contig\">\n";
-    _os << "##INFO=<ID=RNA_CONTIG_ALN,Number=2,Type=Integer,Description=\"Length of the spanning contig alignment on each breakend\">\n";
+    os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";
+    os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
+    os << "##INFO=<ID=REF_COUNT,Number=1,Type=Integer,Description=\"The number of reads supporting the reference allele at this breakend\">\n";
+    os << "##INFO=<ID=MATE_REF_COUNT,Number=1,Type=Integer,Description=\"The number of reads supporting the reference allele at the other breakend\">\n";
+    os << "##INFO=<ID=RNA_FIRST,Number=0,Type=Flag,Description=\"For RNA fusions, this break-end is 5' in the fusion transcript\">\n";
+    os << "##INFO=<ID=RNA_STRANDED,Number=0,Type=Flag,Description=\"For RNA fusions, the direction of transcription is known\">\n";
+    os << "##INFO=<ID=RNA_FwRvReads,Number=2,Type=Integer,Description=\"For RNA fusions, number of stranded reads supporting forward or reverse direction of transcription\">\n";
+    os << "##INFO=<ID=RNA_Reads,Number=1,Type=Integer,Description=\"The number of reads and pairs that potentially support this candidate before refinement and scoring\">\n";
+    os << "##INFO=<ID=RNA_CONTIG,Number=1,Type=String,Description=\"The sequence of the breakend spanning contig\">\n";
+    os << "##INFO=<ID=RNA_CONTIG_ALN,Number=2,Type=Integer,Description=\"Length of the spanning contig alignment on each breakend\">\n";
 }
 
 
 
 void
 VcfWriterRnaSV::
-addHeaderFormat() const
+addHeaderFormat(std::ostream& os) const
 {
-    _os << "##FORMAT=<ID=PR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
-    _os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split reads for the ref and alt alleles in the order listed\">\n";
+    os << "##FORMAT=<ID=PR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
+    os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split reads for the ref and alt alleles in the order listed\">\n";
 }
 
 
 
 void
 VcfWriterRnaSV::
-addHeaderFilters() const
+addHeaderFilters(std::ostream& os) const
 {
-    _os << "##FILTER=<ID=" << SVScoreInfoRna::rnaFilterLabel << ",Description=\"RNA fusion calls without both split read and spanning pair support\">\n";
-    _os << "##FILTER=<ID=" << SVScoreInfoRna::impreciseLabel << ",Description=\"RNA fusion candidates for which no spanning contig was found\">\n";
-    _os << "##FILTER=<ID=" << SVScoreInfoRna::localLabel << ",Description=\"RNA call covering short genomic distance\">\n";
+    os << "##FILTER=<ID=" << SVScoreInfoRna::rnaFilterLabel << ",Description=\"RNA fusion calls without both split read and spanning pair support\">\n";
+    os << "##FILTER=<ID=" << SVScoreInfoRna::impreciseLabel << ",Description=\"RNA fusion candidates for which no spanning contig was found\">\n";
+    os << "##FILTER=<ID=" << SVScoreInfoRna::localLabel << ",Description=\"RNA call covering short genomic distance\">\n";
 }
 
 
@@ -158,10 +158,12 @@ addDebugInfo(
 
 void
 VcfWriterRnaSV::
-writeFilter(const boost::any specializedScoringInfo) const
+writeFilter(
+    const boost::any specializedScoringInfo,
+    std::ostream& os) const
 {
     const SVScoreInfoRna& rnaScoringInfo(*boost::any_cast<const SVScoreInfoRna*>(specializedScoringInfo));
-    writeFilters(rnaScoringInfo.filters, _os);
+    writeFilters(rnaScoringInfo.filters, os);
 }
 
 

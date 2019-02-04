@@ -25,6 +25,7 @@
 
 #include "boost/any.hpp"
 
+#include "blt_util/io_util.hh"
 #include "htsapi/bam_header_info.hh"
 #include "manta/EventInfo.hh"
 #include "manta/JunctionIdGenerator.hh"
@@ -41,7 +42,7 @@ struct VcfWriterSV
     VcfWriterSV(
         const std::string& referenceFilename,
         const bam_header_info& bamHeaderInfo,
-        std::ostream& os,
+        const std::string& outputFilename,
         const bool& isOutputContig);
 
     virtual
@@ -51,11 +52,7 @@ struct VcfWriterSV
     writeHeader(
         const char* progName,
         const char* progVersion,
-        const std::vector<std::string>& sampleNames)
-    {
-        writeHeaderPrefix(progName, progVersion);
-        writeHeaderColumnKey(sampleNames);
-    }
+        const std::vector<std::string>& sampleNames) const;
 
     typedef std::vector<std::string> InfoTag_t;
     typedef std::vector<std::pair<std::string,std::vector<std::string> > > SampleTag_t;
@@ -64,23 +61,25 @@ protected:
     void
     writeHeaderPrefix(
         const char* progName,
-        const char* progVersion);
+        const char* progVersion,
+        std::ostream& os) const;
 
     void
     writeHeaderColumnKey(
-        const std::vector<std::string>& sampleNames) const;
+        const std::vector<std::string>& sampleNames,
+        std::ostream& os) const;
 
     virtual
     void
-    addHeaderInfo() const {}
+    addHeaderInfo(std::ostream& /*os*/) const {}
 
     virtual
     void
-    addHeaderFormat() const {}
+    addHeaderFormat(std::ostream& /*os*/) const {}
 
     virtual
     void
-    addHeaderFilters() const {}
+    addHeaderFilters(std::ostream& /*os*/) const {}
 
     void
     writeSVCore(
@@ -124,16 +123,20 @@ protected:
 
     virtual
     void
-    writeQual(const boost::any /*specializedScoringInfo*/) const
+    writeQual(
+        const boost::any /*specializedScoringInfo*/,
+        std::ostream& os) const
     {
-        _os << '.';
+        os << '.';
     }
 
     virtual
     void
-    writeFilter(const boost::any /*specializedScoringInfo*/) const
+    writeFilter(
+        const boost::any /*specializedScoringInfo*/,
+        std::ostream& os) const
     {
-        _os << '.';
+        os << '.';
     }
 
     virtual
@@ -194,7 +197,7 @@ private:
 protected:
     const std::string& _referenceFilename;
     const bool& _isOutputContig;
-    std::ostream& _os;
+    mutable SynchronizedOutputStream _stream;
 
 private:
     const bam_header_info& _header;

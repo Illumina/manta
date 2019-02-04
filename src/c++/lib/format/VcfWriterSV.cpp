@@ -51,67 +51,81 @@ VcfWriterSV::
 VcfWriterSV(
     const std::string& referenceFilename,
     const bam_header_info& bamHeaderInfo,
-    std::ostream& os,
+    const std::string& outputFilename,
     const bool& isOutputContig) :
     _referenceFilename(referenceFilename),
     _isOutputContig(isOutputContig),
-    _os(os),
+    _stream(outputFilename),
     _header(bamHeaderInfo)
-{
-}
+{}
 
+
+
+void
+VcfWriterSV::
+writeHeader(
+    const char* progName,
+    const char* progVersion,
+    const std::vector<std::string>& sampleNames) const
+{
+    std::ostringstream oss;
+    writeHeaderPrefix(progName, progVersion, oss);
+    writeHeaderColumnKey(sampleNames, oss);
+    _stream.write(oss.str());
+}
 
 
 void
 VcfWriterSV::
 writeHeaderPrefix(
     const char* progName,
-    const char* progVersion)
+    const char* progVersion,
+    std::ostream& os) const
 {
-    _os << "##fileformat=VCFv4.1\n";
-    _os << "##fileDate=" << vcf_fileDate << "\n";
-    _os << "##source=" << progName << " " << progVersion << "\n";
-    _os << "##reference=file://" << _referenceFilename << "\n";
+    os << "##fileformat=VCFv4.1\n";
+    os << "##fileDate=" << vcf_fileDate << "\n";
+    os << "##source=" << progName << " " << progVersion << "\n";
+    os << "##reference=file://" << _referenceFilename << "\n";
 
     for (const bam_header_info::chrom_info& cdata : _header.chrom_data)
     {
-        _os << "##contig=<ID=" << cdata.label << ",length=" << cdata.length << ">\n";
+        os << "##contig=<ID=" << cdata.label << ",length=" << cdata.length << ">\n";
     }
 
     /// vcf 4.1 reserved/suggested INFO tags:
-    _os << "##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description=\"Imprecise structural variation\">\n";
-    _os << "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n";
-    _os << "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">\n";
-    _os << "##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">\n";
-    _os << "##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"Confidence interval around POS\">\n";
-    _os << "##INFO=<ID=CIEND,Number=2,Type=Integer,Description=\"Confidence interval around END\">\n";
-    _os << "##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"CIGAR alignment for each alternate indel allele\">\n";
-    _os << "##INFO=<ID=MATEID,Number=.,Type=String,Description=\"ID of mate breakend\">\n";
-    _os << "##INFO=<ID=EVENT,Number=1,Type=String,Description=\"ID of event associated to breakend\">\n";
-    _os << "##INFO=<ID=HOMLEN,Number=.,Type=Integer,Description=\"Length of base pair identical homology at event breakpoints\">\n";
-    _os << "##INFO=<ID=HOMSEQ,Number=.,Type=String,Description=\"Sequence of base pair identical homology at event breakpoints\">\n";
+    os << "##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description=\"Imprecise structural variation\">\n";
+    os << "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n";
+    os << "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">\n";
+    os << "##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">\n";
+    os << "##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"Confidence interval around POS\">\n";
+    os << "##INFO=<ID=CIEND,Number=2,Type=Integer,Description=\"Confidence interval around END\">\n";
+    os << "##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"CIGAR alignment for each alternate indel allele\">\n";
+    os << "##INFO=<ID=MATEID,Number=.,Type=String,Description=\"ID of mate breakend\">\n";
+    os << "##INFO=<ID=EVENT,Number=1,Type=String,Description=\"ID of event associated to breakend\">\n";
+    os << "##INFO=<ID=HOMLEN,Number=.,Type=Integer,Description=\"Length of base pair identical homology at event breakpoints\">\n";
+    os << "##INFO=<ID=HOMSEQ,Number=.,Type=String,Description=\"Sequence of base pair identical homology at event breakpoints\">\n";
 
     /// custom INFO tags:
-    _os << "##INFO=<ID=SVINSLEN,Number=.,Type=Integer,Description=\"Length of insertion\">\n";
-    _os << "##INFO=<ID=SVINSSEQ,Number=.,Type=String,Description=\"Sequence of insertion\">\n";
-    _os << "##INFO=<ID=LEFT_SVINSSEQ,Number=.,Type=String,Description=\"Known left side of insertion for an insertion of unknown length\">\n";
-    _os << "##INFO=<ID=RIGHT_SVINSSEQ,Number=.,Type=String,Description=\"Known right side of insertion for an insertion of unknown length\">\n";
+    os << "##INFO=<ID=SVINSLEN,Number=.,Type=Integer,Description=\"Length of insertion\">\n";
+    os << "##INFO=<ID=SVINSSEQ,Number=.,Type=String,Description=\"Sequence of insertion\">\n";
+    os << "##INFO=<ID=LEFT_SVINSSEQ,Number=.,Type=String,Description=\"Known left side of insertion for an insertion of unknown length\">\n";
+    os << "##INFO=<ID=RIGHT_SVINSSEQ,Number=.,Type=String,Description=\"Known right side of insertion for an insertion of unknown length\">\n";
 
     // if "--outputContig" is specified, then print out INFO tag for Assembled contig sequence
     if (_isOutputContig)
     {
-        _os << "##INFO=<ID=CONTIG,Number=1,Type=String,Description=\"Assembled contig sequence\">\n";
+        os << "##INFO=<ID=CONTIG,Number=1,Type=String,Description=\"Assembled contig sequence\">\n";
     }
 
-    addHeaderInfo();
+    addHeaderInfo(os);
 
-    addHeaderFormat();
+    addHeaderFormat(os);
 
-    addHeaderFilters();
+    addHeaderFilters(os);
 
-    _os << "##ALT=<ID=DEL,Description=\"Deletion\">\n";
-    _os << "##ALT=<ID=INS,Description=\"Insertion\">\n";
-    _os << "##ALT=<ID=DUP:TANDEM,Description=\"Tandem Duplication\">\n";
+    os << "##ALT=<ID=DEL,Description=\"Deletion\">\n";
+    os << "##ALT=<ID=INS,Description=\"Insertion\">\n";
+    os << "##ALT=<ID=DUP:TANDEM,Description=\"Tandem Duplication\">\n";
 }
 
 
@@ -127,19 +141,20 @@ writeHeaderColKeyPrefix(std::ostream& os)
 void
 VcfWriterSV::
 writeHeaderColumnKey(
-    const std::vector<std::string>& sampleNames) const
+    const std::vector<std::string>& sampleNames,
+    std::ostream& os) const
 {
-    writeHeaderColKeyPrefix(_os);
+    writeHeaderColKeyPrefix(os);
     if (!sampleNames.empty())
     {
-        _os << "\tFORMAT";
+        os << "\tFORMAT";
 
         for (const std::string& sampleName : sampleNames)
         {
-            _os << '\t' << sampleName;
+            os << '\t' << sampleName;
         }
     }
-    _os << '\n';
+    os << '\n';
 }
 
 
@@ -462,19 +477,21 @@ writeTransloc(
 #endif
 
     // write out record:
-    _os << chrom
+    std::ostringstream oss;
+    oss << chrom
         << '\t' << pos
         << '\t' << localId // ID
         << '\t' << ref // REF
         << '\t' << str( altFormat ) // ALT
         << '\t';
-    writeQual(specializedScoringInfo);
-    _os << '\t';
-    writeFilter(specializedScoringInfo);
-    _os << '\t';
-    makeInfoField(infoTags,_os); // INFO
-    makeFormatSampleField(sampleTags, _os); // FORMAT + SAMPLE
-    _os << '\n';
+    writeQual(specializedScoringInfo, oss);
+    oss << '\t';
+    writeFilter(specializedScoringInfo, oss);
+    oss << '\t';
+    makeInfoField(infoTags, oss); // INFO
+    makeFormatSampleField(sampleTags, oss); // FORMAT + SAMPLE
+    oss << '\n';
+    _stream.write(oss.str());
 }
 
 
@@ -717,19 +734,21 @@ writeIndel(
     modifySample(sv, baseScoringInfoPtr, specializedScoringInfo, sampleTags);
 
     // write out record:
-    _os << chrom
+    std::ostringstream oss;
+    oss << chrom
         << '\t' << pos
         << '\t' << svId.localId // ID
         << '\t' << ref // REF
         << '\t' << alt // ALT
         << '\t';
-    writeQual(specializedScoringInfo);
-    _os << '\t';
-    writeFilter(specializedScoringInfo);
-    _os << '\t';
-    makeInfoField(infoTags,_os); // INFO
-    makeFormatSampleField(sampleTags, _os); // FORMAT + SAMPLE
-    _os << '\n';
+    writeQual(specializedScoringInfo, oss);
+    oss << '\t';
+    writeFilter(specializedScoringInfo, oss);
+    oss << '\t';
+    makeInfoField(infoTags,oss); // INFO
+    makeFormatSampleField(sampleTags, oss); // FORMAT + SAMPLE
+    oss << '\n';
+    _stream.write(oss.str());
 }
 
 

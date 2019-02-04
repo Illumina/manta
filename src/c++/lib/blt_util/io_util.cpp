@@ -66,10 +66,16 @@ StreamScoper::
 }
 
 
+
 SynchronizedOutputStream::
 SynchronizedOutputStream(const std::string& outputFile)
 {
-    if (outputFile.empty()) return;
+    if (outputFile.empty())
+    {
+        std::ostringstream oss;
+        oss << "No output file specified to SynchronizedOutputStream";
+        throw blt_exception(oss.str().c_str());
+    }
     m_osPtr.reset(new std::ofstream(outputFile.c_str()));
     if (! *m_osPtr)
     {
@@ -79,18 +85,12 @@ SynchronizedOutputStream(const std::string& outputFile)
     }
 }
 
-bool
-SynchronizedOutputStream::
-isOpen() const
-{
-    return static_cast<bool>(*m_osPtr);
-}
+
 
 void
 SynchronizedOutputStream::
 write(const std::string& msg)
 {
-    if (! isOpen()) return;
     std::lock_guard<std::mutex> lock(m_writerMutex);
     *m_osPtr << msg;
 }
