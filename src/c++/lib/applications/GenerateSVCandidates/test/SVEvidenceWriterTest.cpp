@@ -25,9 +25,9 @@
 #include "test/testUtil.hh"
 #include "manta/BamStreamerUtils.hh"
 
-#include "SVSupports.hh"
+#include "SVEvidenceWriter.hh"
 
-BOOST_AUTO_TEST_SUITE( SVSupports_test_suite )
+BOOST_AUTO_TEST_SUITE( SVEvidenceWriter_test_suite )
 
 // Create Temporary bam streams of a bam file which contains
 // two bam record.
@@ -105,7 +105,7 @@ static void checkEvidenceBam(const GenomeInterval &genomeInterval,
 // for evidence-BAM output correctly or not.
 BOOST_AUTO_TEST_CASE( test_AddNewSV)
 {
-    SupportRead supportRead;
+    SVEvidenceWriterRead supportRead;
     supportRead.tid = 0;
     supportRead.pos = 10345;
     // Adding new SV with ID INS_1 and support type PR(spanning pair)
@@ -125,15 +125,15 @@ BOOST_AUTO_TEST_CASE( test_AddNewSV)
 // then position.
 BOOST_AUTO_TEST_CASE( test_CompareSupportReads)
 {
-    SupportRead supportRead1;
+    SVEvidenceWriterRead supportRead1;
     supportRead1.tid = 0;
     supportRead1.pos = 10345;
 
-    SupportRead supportRead2;
+    SVEvidenceWriterRead supportRead2;
     supportRead2.tid = 1;
     supportRead2.pos = 10345;
 
-    SupportRead supportRead3;
+    SVEvidenceWriterRead supportRead3;
     supportRead3.tid = 0;
     supportRead3.pos = 10340;
     // Chromosome number of supportRead1 is less than Chromosome number of supportRead2
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE( test_CompareSupportReads)
 /// indicating the evidence type.
 BOOST_AUTO_TEST_CASE( test_SupportFragment )
 {
-    SupportFragment suppFragment1;
+    SVEvidenceWriterReadPair suppFragment1;
 
     bam_record bamRecord1;
     buildTestBamRecord(bamRecord1, 0, 200, 1, 300, 200, 15, "200M");
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE( test_SupportFragment )
     BOOST_REQUIRE_EQUAL(*(suppFragment1.read1.SVs["INS_1"].begin()), "PR");
     BOOST_REQUIRE_EQUAL(*(suppFragment1.read2.SVs["INS_1"].begin()), "PR");
 
-    SupportFragment suppFragment2;
+    SVEvidenceWriterReadPair suppFragment2;
     // Adding Split candidate support. If it is mate-1 read, it will add
     // SR to read1 and SRM to read2, if it is mate-2 read, it will add
     // SRM to read1 and SR to read2
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE( test_SupportFragment )
     BOOST_REQUIRE_EQUAL(*(suppFragment2.read1.SVs["INS_1"].begin()), "SR");
     BOOST_REQUIRE_EQUAL(*(suppFragment2.read2.SVs["INS_1"].begin()), "SRM");
 
-    SupportFragment suppFragment3;
+    SVEvidenceWriterReadPair suppFragment3;
     suppFragment3.addSplitSupport(false, "INS_1"); // mate-2 read
     BOOST_REQUIRE_EQUAL(suppFragment3.read1.SVs.size(), 1);
     BOOST_REQUIRE_EQUAL(suppFragment3.read2.SVs.size(), 1);
@@ -198,11 +198,11 @@ BOOST_AUTO_TEST_CASE( test_SupportFragment )
     BOOST_REQUIRE_EQUAL(*(suppFragment3.read2.SVs["INS_1"].begin()), "SR");
 }
 
-// Test SupportFragments which records all supporting fragments
+// Test SVEvidenceWriterSampleData which records all supporting fragments
 // that support one or more SVs for evidence-BAM output.
 BOOST_AUTO_TEST_CASE( test_SupportFragments )
 {
-    SupportFragments suppFragments;
+    SVEvidenceWriterSampleData suppFragments;
     bam_record bamRecord1;
     buildTestBamRecord(bamRecord1, 0, 200, 1, 300, 200, 15, "200M");
     bamRecord1.toggle_is_first();
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE( test_SupportFragments )
 
     // As bamRecord1 is mate-1 read, read1 should contain this read's information
     // and read2 should contain it's mate information.
-    SupportFragment suppFragment1 = suppFragments.getSupportFragment(bamRecord1);
+    SVEvidenceWriterReadPair suppFragment1 = suppFragments.getSupportFragment(bamRecord1);
     BOOST_REQUIRE_EQUAL(suppFragment1.read1.tid, 0);
     BOOST_REQUIRE_EQUAL(suppFragment1.read1.pos, 201);
     BOOST_REQUIRE_EQUAL(suppFragment1.read2.tid, 1);
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE( test_SupportFragments )
     candidateSetSequenceFragment1.read1.bamrec = bamRecord1;
 
     // Testing same information as above using SVCandidateSetSequenceFragment
-    SupportFragment suppFragment2 = suppFragments.getSupportFragment(candidateSetSequenceFragment1);
+    SVEvidenceWriterReadPair suppFragment2 = suppFragments.getSupportFragment(candidateSetSequenceFragment1);
     BOOST_REQUIRE_EQUAL(suppFragment2.read1.tid, 0);
     BOOST_REQUIRE_EQUAL(suppFragment2.read1.pos, 201);
     BOOST_REQUIRE_EQUAL(suppFragment2.read2.tid, 1);
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE( test_SupportFragments )
 
     SVCandidateSetSequenceFragment candidateSetSequenceFragment2;
     candidateSetSequenceFragment2.read2.bamrec = bamRecord2;
-    SupportFragment suppFragment3 = suppFragments.getSupportFragment(candidateSetSequenceFragment2);
+    SVEvidenceWriterReadPair suppFragment3 = suppFragments.getSupportFragment(candidateSetSequenceFragment2);
     // As bamRecord2 is mate-2 read, read1 should contain it's mate information
     // and read2 should contain this read's information.
     BOOST_REQUIRE_EQUAL(suppFragment3.read1.tid, 0);
@@ -242,34 +242,33 @@ BOOST_AUTO_TEST_CASE( test_SupportFragments )
     BOOST_REQUIRE_EQUAL(suppFragment3.read2.pos, 351);
 }
 
-// Test SupportSamples which is vector of support fragments
+// Test SVEvidenceWriterData which is vector of support fragments
 BOOST_AUTO_TEST_CASE( test_SupportSamples )
 {
-    SupportSamples suppSamples;
-    suppSamples.supportSamples.resize(2);
-    SupportFragments suppFragments1;
+    SVEvidenceWriterData svEvidenceWriterData(2);
+    SVEvidenceWriterSampleData suppFragments1;
     bam_record bamRecord1;
     buildTestBamRecord(bamRecord1, 0, 200, 1, 300, 200, 15, "200M");
     bamRecord1.toggle_is_first();
     bamRecord1.set_qname("bamRecord1");
-    suppSamples.supportSamples[0] = suppFragments1;
+    svEvidenceWriterData.sampleData[0] = suppFragments1;
 
-    SupportFragments suppFragments2;
+    SVEvidenceWriterSampleData suppFragments2;
     bam_record bamRecord2;
     buildTestBamRecord(bamRecord2, 1, 1200, 0, 1300, 200, 15, "200M");
     bamRecord2.toggle_is_first();
     bamRecord2.set_qname("bamRecord2");
-    suppSamples.supportSamples[1] = suppFragments2;
+    svEvidenceWriterData.sampleData[1] = suppFragments2;
 
     // Check information for bamRecord1
-    SupportFragment suppFragment1 = suppSamples.getSupportFragments(0).getSupportFragment(bamRecord1);
+    SVEvidenceWriterReadPair suppFragment1 = svEvidenceWriterData.getSampleData(0).getSupportFragment(bamRecord1);
     BOOST_REQUIRE_EQUAL(suppFragment1.read1.tid, 0);
     BOOST_REQUIRE_EQUAL(suppFragment1.read1.pos, 201);
     BOOST_REQUIRE_EQUAL(suppFragment1.read2.tid, 1);
     BOOST_REQUIRE_EQUAL(suppFragment1.read2.pos, 301);
 
     // Check information for bamRecord2
-    SupportFragment suppFragment2 = suppSamples.getSupportFragments(1).getSupportFragment(bamRecord2);
+    SVEvidenceWriterReadPair suppFragment2 = svEvidenceWriterData.getSampleData(1).getSupportFragment(bamRecord2);
     BOOST_REQUIRE_EQUAL(suppFragment2.read1.tid, 1);
     BOOST_REQUIRE_EQUAL(suppFragment2.read1.pos, 1201);
     BOOST_REQUIRE_EQUAL(suppFragment2.read2.tid, 0);
@@ -284,19 +283,18 @@ BOOST_AUTO_TEST_CASE( test_SupportSamples )
 // For example: if a spanning candidate supports deletion, ZM tag will be {DEL_1|PR}
 BOOST_AUTO_TEST_CASE( test_ProcessRecords )
 {
-
     GenomeInterval genomeInterval1(0, 100, 220);
     GenomeInterval genomeInterval2(1, 300, 350);
     const bam_header_info bamHeader(buildTestBamHeader());
     const HtslibBamHeaderManager bamHeaderManager(bamHeader.chrom_data);
-    const std::shared_ptr<BamFilenameMaker> bamFileNameMaker(new BamFilenameMaker());
-    const std::string& bamFileName(bamFileNameMaker.get()->getFilename());
+    const BamFilenameMaker bamFileNameMaker;
+    const std::string& bamFileName(bamFileNameMaker.getFilename());
 
-    SupportFragments suppFragments;
-    SupportFragment suppFragment1;
+    SVEvidenceWriterSampleData suppFragments;
+    SVEvidenceWriterReadPair suppFragment1;
     suppFragment1.setReads(readsToAdd[0]);
     suppFragment1.addSpanningSupport("INS_1");
-    SupportFragment suppFragment2;
+    SVEvidenceWriterReadPair suppFragment2;
     suppFragment2.setReads(readsToAdd[1]);
     suppFragment2.addSpanningSupport("DEL_1");
     suppFragments.supportFrags[readsToAdd[0].qname()] = suppFragment1;
@@ -304,7 +302,7 @@ BOOST_AUTO_TEST_CASE( test_ProcessRecords )
 
     bam_dumper bamDumper1(bamFileName.c_str(), bamHeaderManager.get());
     // Process the bam record and add ZM tag for all reads which are intersection to genomeInterval1
-    processBamRecords(bamStream.operator*(), genomeInterval1, suppFragments.supportFrags, bamDumper1);
+    SVEvidenceWriter::processBamRecords(bamStream.operator*(), genomeInterval1, suppFragments.supportFrags, bamDumper1);
     bamDumper1.close();
     // creating bam index
     const int indexStatus1 = bam_index_build(bamFileName.c_str(), 0);
@@ -316,7 +314,7 @@ BOOST_AUTO_TEST_CASE( test_ProcessRecords )
 
     bam_dumper bamDumper2(bamFileName.c_str(), bamHeaderManager.get());
     // Process the bam record and add ZM tag for all reads which are intersection to genomeInterval2
-    processBamRecords(bamStream.operator*(), genomeInterval1, suppFragments.supportFrags, bamDumper2);
+    SVEvidenceWriter::processBamRecords(bamStream.operator*(), genomeInterval1, suppFragments.supportFrags, bamDumper2);
     bamDumper2.close();
     const int indexStatus2 = bam_index_build(bamFileName.c_str(), 0);
     // check whether .bai file for bam file is build successfully or not.
@@ -324,38 +322,35 @@ BOOST_AUTO_TEST_CASE( test_ProcessRecords )
 
     // check the evidence bam for bamRecord2 as genomeInterval2 intersects with bamRecord2.
     checkEvidenceBam(genomeInterval2, bamFileName, "DEL_1|PR", "bamRecord2");
-
-    // cleanup
-    remove(bamFileName.c_str());
-    remove((bamFileName + ".bai").c_str());
 }
 
 // Test the Writing of evidence bam.
-BOOST_AUTO_TEST_CASE( test_writeSupportBam )
+BOOST_AUTO_TEST_CASE( test_writeEvidenceBam )
 {
     GenomeInterval genomeInterval1(0, 100, 220);
     GenomeInterval genomeInterval2(1, 300, 350);
 
     const bam_header_info bamHeader(buildTestBamHeader());
     const HtslibBamHeaderManager bamHeaderManager(bamHeader.chrom_data);
-    const std::shared_ptr<BamFilenameMaker> bamFileNameMaker(new BamFilenameMaker());
-    const std::string& bamFileName(bamFileNameMaker.get()->getFilename());
+    const BamFilenameMaker bamFileNameMaker;
+    const std::string& bamFileName(bamFileNameMaker.getFilename());
 
-    SupportFragments suppFragments;
-    SupportFragment suppFragment1;
+    SVEvidenceWriterSampleData suppFragments;
+    SVEvidenceWriterReadPair suppFragment1;
     suppFragment1.setReads(readsToAdd[0]);
     suppFragment1.addSpanningSupport("INS_1");
-    SupportFragment suppFragment2;
+    SVEvidenceWriterReadPair suppFragment2;
     suppFragment2.setReads(readsToAdd[1]);
     suppFragment2.addSpanningSupport("DEL_1");
 
     suppFragments.supportFrags[readsToAdd[0].qname()] = suppFragment1;
     suppFragments.supportFrags[readsToAdd[1].qname()] = suppFragment2;
 
-    bam_dumper_ptr bamDumperPtr(new bam_dumper(bamFileName.c_str(), bamHeaderManager.get()));
-    // Write both the bamRecord1 and bamRecord2 in the evidence bam
-    writeSupportBam(bamStream, suppFragments, bamDumperPtr);
-    bamDumperPtr.get()->close();
+    {
+        SVEvidenceWriter::bam_dumper_ptr bamDumperPtr(new bam_dumper(bamFileName.c_str(), bamHeaderManager.get()));
+        // Write both the bamRecord1 and bamRecord2 in the evidence bam
+        SVEvidenceWriter::writeSupportBam(bamStream, suppFragments, bamDumperPtr);
+    }
     // creating bam index
     const int indexStatus = bam_index_build(bamFileName.c_str(), 0);
     // check whether .bai file for bam file is build successfully or not.
@@ -364,10 +359,6 @@ BOOST_AUTO_TEST_CASE( test_writeSupportBam )
     // check the evidence bam as mentioned in the doc in test_ProcessRecords
     checkEvidenceBam(genomeInterval1, bamFileName, "INS_1|PR", "bamRecord1");
     checkEvidenceBam(genomeInterval2, bamFileName, "DEL_1|PR", "bamRecord2");
-
-    // cleanup
-    remove(bamFileName.c_str());
-    remove((bamFileName + ".bai").c_str());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

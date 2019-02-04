@@ -171,7 +171,7 @@ struct SVScorer
         std::vector<SVModelScoreInfo>& mjModelScoreInfo,
         SVModelScoreInfo& mjJointModelScoreInfo,
         bool& isMJEvent,
-        SupportSamples& svSupports);
+        SVEvidenceWriterData& svEvidenceWriterData);
 
     typedef std::shared_ptr<SVScorePairProcessor> pairProcPtr;
     typedef std::shared_ptr<bam_streamer> streamPtr;
@@ -204,7 +204,7 @@ private:
         const SVCandidate& sv,
         const SVId& svId,
         SVEvidence& evidence,
-        SupportSamples& svSupports);
+        SVEvidenceWriterData& svSupports);
 
     /// estimate pair support for an sv candidate
     /// restricted to simple indel style svs
@@ -232,7 +232,7 @@ private:
         const SVCandidate& sv,
         const SVId& svId,
         SVEvidence& evidence,
-        SupportSamples& svSupports);
+        SVEvidenceWriterData& svSupports);
 
     /// find split read support for ref and alt alleles
     void
@@ -242,7 +242,7 @@ private:
         const SVId& svId,
         SVScoreInfo& ssInfo,
         SVEvidence& evidence,
-        SupportSamples& svSupports);
+        SVEvidenceWriterData& svSupports);
 
     /// determine maximum depth and MQ0 frac in region around breakend of normal sample
     void
@@ -279,7 +279,7 @@ private:
         const SVId& svId,
         SVScoreInfo& ssInfo,
         SVEvidence& evidence,
-        SupportSamples& svSupports);
+        SVEvidenceWriterData& svSupports);
 
     const std::vector<bool> _isAlignmentTumor;
     const bool _isRNA;

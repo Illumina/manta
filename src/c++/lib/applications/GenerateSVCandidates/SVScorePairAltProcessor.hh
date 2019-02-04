@@ -94,7 +94,7 @@ struct SVScorePairAltProcessor : public SVScorePairProcessor
     processClearedRecord(
         const SVId& svId,
         const bam_record& bamRead,
-        SupportFragments& svSupportFrags) override;
+        SVEvidenceWriterSampleData& svSupportFrags) override;
 
     /// TestSVScorerAltProcessor is a friend structure of SVScorePairAltProcessor. So that it can access private
     /// methods of SVScorePairAltProcessor.

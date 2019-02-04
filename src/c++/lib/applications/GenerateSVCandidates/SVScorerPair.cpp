@@ -56,7 +56,7 @@ processBamProcList(
     const std::vector<SVScorer::streamPtr>& bamList,
     const SVId& svId,
     std::vector<SVScorer::pairProcPtr>& pairProcList,
-    SupportSamples& svSupports)
+    SVEvidenceWriterData& svEvidenceWriterData)
 {
     const unsigned bamCount(bamList.size());
     const unsigned bamProcCount(pairProcList.size());
@@ -79,7 +79,7 @@ processBamProcList(
         }
 
         bam_streamer& bamStream(*bamList[bamIndex]);
-        SupportFragments& svSupportFrags(svSupports.getSupportFragments(bamIndex));
+        SVEvidenceWriterSampleData& svSupportFrags(svEvidenceWriterData.getSampleData(bamIndex));
 
         const unsigned intervalCount(scanIntervals.size());
         for (unsigned intervalIndex(0); intervalIndex<intervalCount; ++intervalIndex)
@@ -489,7 +489,7 @@ processExistingAltPairInfo(
     const SVCandidate& sv,
     const SVId& svId,
     SVEvidence& evidence,
-    SupportSamples& svSupports)
+    SVEvidenceWriterData& svSupports)
 {
     const unsigned minMapQ(_readScanner.getMinMapQ());
     const unsigned minTier2MapQ(_readScanner.getMinTier2MapQ());
@@ -498,7 +498,7 @@ processExistingAltPairInfo(
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
         const SizeDistribution& fragDistro(_readScanner.getFragSizeDistro(bamIndex));
-        SupportFragments& svSupportFrags(svSupports.getSupportFragments(bamIndex));
+        SVEvidenceWriterSampleData& svSupportFrags(svSupports.getSampleData(bamIndex));
 
         const SVCandidateSetSequenceFragmentSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
         for (const SVCandidateSetSequenceFragment& fragment : svDataGroup)
@@ -587,7 +587,7 @@ processExistingAltPairInfo(
             alt.bp2.isFragmentSupport = true;
             alt.bp2.fragLengthProb = fragProb;
 
-            SupportFragment& supportFrag(svSupportFrags.getSupportFragment(fragment));
+            SVEvidenceWriterReadPair& supportFrag(svSupportFrags.getSupportFragment(fragment));
             supportFrag.addSpanningSupport(svId.localId);
 #ifdef DEBUG_SUPPORT
             log_os << __FUNCTION__ << "  Adding read support (spanning): "
@@ -607,7 +607,7 @@ getSVPairSupport(
     const SVCandidate& sv,
     const SVId& svId,
     SVEvidence& evidence,
-    SupportSamples& svSupports)
+    SVEvidenceWriterData& svSupports)
 {
     const PairOptions pairOpt(_isRNA);
 

@@ -1968,7 +1968,7 @@ BOOST_AUTO_TEST_CASE( test_ScoreSV )
     std::vector<SVModelScoreInfo> mjModelScoreInfo;
     SVModelScoreInfo mjJointModelScoreInfo;
     bool isMJEvent;
-    SupportSamples svSupports;
+    SVEvidenceWriterData svEvidenceWriterData(1);
     const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
     GSCOptions options;
@@ -1976,7 +1976,7 @@ BOOST_AUTO_TEST_CASE( test_ScoreSV )
     options.alignFileOpt.isAlignmentTumor = {false};
     SVScorer scorer(options, scanner.operator*(), bamHeader);
     BOOST_CHECK_THROW(scorer.scoreSV(svData, mjAssemblyData, mjSV, mjSVId, isJunctionFiltered,
-                                     false, true, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent, svSupports),
+                                     false, true, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent, svEvidenceWriterData),
                                      illumina::common::GeneralException);
 
     // Designed case-2. Here number of unfiltered multi-junction event is 1.
@@ -1999,7 +1999,6 @@ BOOST_AUTO_TEST_CASE( test_ScoreSV )
     mjJointModelScoreInfo.setSampleCount(1, 1);
     TestSVScorer fSVScorer;
     fSVScorer.setSampleCount(scorer, 1, 1);
-    svSupports.supportSamples.resize(1);
 
     std::string queryseq1 = "AGCTGACTGATCGATTTTTTACGTAGAGGAGCTTTGACGTATGAGCCTGATATGAGCCTG";
     std::string queryseq2 = "TGACGTATGAGCCTGATATGAGCCT";
@@ -2040,7 +2039,7 @@ BOOST_AUTO_TEST_CASE( test_ScoreSV )
                                                     "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
     mjAssemblyData.push_back(candidateAssemblyData1);
     scorer.scoreSV(svData, mjAssemblyData, mjSV, mjSVId, isJunctionFiltered,
-                   false, true, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent, svSupports);
+                   false, true, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent, svEvidenceWriterData);
     BOOST_REQUIRE(!isMJEvent);
 
     // Designed case-3. Here number of unfiltered multi-junction event is 2.
@@ -2082,7 +2081,7 @@ BOOST_AUTO_TEST_CASE( test_ScoreSV )
     //SVScorer scorer2(options, buildSVLocusScannerForSomatic(bamHeader).operator*(), bamHeader);
     //fSVScorer.setSampleCount(scorer2, 1, 1);
     scorer.scoreSV(svData, mjAssemblyData, mjSV, mjSVId, isJunctionFiltered,
-    false, true, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent, svSupports);
+    false, true, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent, svEvidenceWriterData);
     BOOST_REQUIRE(isMJEvent);
 }
 

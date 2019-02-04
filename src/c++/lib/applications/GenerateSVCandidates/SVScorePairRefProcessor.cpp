@@ -48,7 +48,7 @@ SVScorePairRefProcessor::
 processClearedRecord(
     const SVId& /*svId*/,
     const bam_record& bamRead,
-    SupportFragments& /*svSupportFrags*/)
+    SVEvidenceWriterSampleData& /*svSupportFrags*/)
 {
     using namespace illumina::common;
 

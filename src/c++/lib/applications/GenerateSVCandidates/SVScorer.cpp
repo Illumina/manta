@@ -581,7 +581,7 @@ getSVSupportingEvidence(
     const SVId& svId,
     SVScoreInfo& baseInfo,
     SVEvidence& evidence,
-    SupportSamples& svSupports)
+    SVEvidenceWriterData& svSupports)
 {
     // at what factor above the maxDepth FILTER criteria do we stop enumerating scoring components?
     static const unsigned cutoffDepthFactor(2);
@@ -1831,7 +1831,7 @@ scoreSV(
     std::vector<SVModelScoreInfo>& mjModelScoreInfo,
     SVModelScoreInfo& mjJointModelScoreInfo,
     bool& isMJEvent,
-    SupportSamples& svSupports)
+    SVEvidenceWriterData& svEvidenceWriterData)
 {
     // scoring is roughly divided into two parts -- treating individual dna-junctions
     // independently (the simpler call mechanism used the great majority of the time) and
@@ -1879,7 +1879,7 @@ scoreSV(
             // accumulate model-agnostic evidence for each candidate (or its corresponding reference allele)
             SVEvidence& evidence(junctionEvidence[junctionIndex]);
             getSVSupportingEvidence(svData, assemblyData, isTumorOnly, sv, svId,
-                                    modelScoreInfo.base, evidence, svSupports);
+                                    modelScoreInfo.base, evidence, svEvidenceWriterData);
 
             // score components specific to diploid-germline model:
             float& spanningPairWeight(junctionSpanningPairWeight[junctionIndex]);;

@@ -364,7 +364,7 @@ std::exception::what: Large insertion alignment procedure produced invalid zero-
         EdgeTo: 0 out_count: 18
         node1:EndUserGenomeInterval: chr20:44215750-44215797
 
-[SVCandidateProcessor::evaluateCandidate(EdgeInfo const&, SVMultiJunctionCandidate const&, SVCandidateSetData const&, bool, SupportSamples&)::assembly_candidate_info*] = Exception caught while attempting to assemble SVCandidate:
+[SVCandidateProcessor::evaluateCandidate(EdgeInfo const&, SVMultiJunctionCandidate const&, SVCandidateSetData const&, bool, SVEvidenceWriterData&)::assembly_candidate_info*] = Exception caught while attempting to assemble SVCandidate:
         isImprecise?: 1
         forwardTranscriptStrandReadCount: 0 ; reverseTranscriptStrandReadCount: 0
         index candidate:assemblyAlign:assemblySegment: 0:0:0

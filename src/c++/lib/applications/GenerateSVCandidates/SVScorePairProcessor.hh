@@ -26,7 +26,7 @@
 #include "SVEvidence.hh"
 #include "SVScorerPairOptions.hh"
 #include "SVScorerShared.hh"
-#include "SVSupports.hh"
+#include "SVEvidenceWriter.hh"
 
 #include "blt_util/SizeDistribution.hh"
 
@@ -116,7 +116,7 @@ struct SVScorePairProcessor : public BamRegionProcessor
     processClearedRecord(
         const SVId& svId,
         const bam_record& bamRead,
-        SupportFragments& svSupportFrags) = 0;
+        SVEvidenceWriterSampleData& svSupportFrags) = 0;
 
     static
     bool

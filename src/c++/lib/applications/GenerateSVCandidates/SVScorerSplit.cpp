@@ -152,7 +152,7 @@ getReadSplitScore(
     const bool isReversedShadow,
     SVEvidence::evidenceTrack_t& sampleEvidence,
     SVSampleInfo& sample,
-    SupportFragments& svSupportFrags)
+    SVEvidenceWriterSampleData& svSupportFrags)
 {
 #ifdef DEBUG_SVS
     log_os << __FUNCTION__ << " split scoring read: " << bamRead << "\n";
@@ -228,7 +228,7 @@ getReadSplitScore(
 
     if (fragment.isAltSplitReadSupport(bamRead.is_first()))
     {
-        SupportFragment& supportFrag(svSupportFrags.getSupportFragment(bamRead));
+        SVEvidenceWriterReadPair& supportFrag(svSupportFrags.getSupportFragment(bamRead));
         supportFrag.addSplitSupport(bamRead.is_first(), svId.localId);
 
 #ifdef DEBUG_SUPPORT
@@ -263,7 +263,7 @@ scoreSplitReads(
     SVEvidence::evidenceTrack_t& sampleEvidence,
     bam_streamer& readStream,
     SVSampleInfo& sample,
-    SupportFragments& svSupportFrags)
+    SVEvidenceWriterSampleData& svSupportFrags)
 {
     static const int extendedSearchRange(200); // Window to look for alignments that may (if unclipped) overlap the breakpoint
     // extract reads overlapping the break point
@@ -401,7 +401,7 @@ getSVSplitReadSupport(
     const SVId& svId,
     SVScoreInfo& baseInfo,
     SVEvidence& evidence,
-    SupportSamples& svSupports)
+    SVEvidenceWriterData& svSupports)
 {
     // apply the split-read scoring only when:
     // 1) the SV is precise, i.e. has successfully aligned contigs;
@@ -435,7 +435,7 @@ getSVSplitReadSupport(
         bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
         SVEvidence::evidenceTrack_t& sampleEvidence(evidence.getSampleEvidence(bamIndex));
-        SupportFragments& svSupportFrags(svSupports.getSupportFragments(bamIndex));
+        SVEvidenceWriterSampleData& svSupportFrags(svSupports.getSampleData(bamIndex));
 
         const int bamShadowSearchDistance(_readScanner.getShadowSearchDistance(bamIndex));
 

@@ -430,7 +430,7 @@ SVScorePairAltProcessor::
 processClearedRecord(
     const SVId& svId,
     const bam_record& bamRead,
-    SupportFragments& svSupportFrags)
+    SVEvidenceWriterSampleData& svSupportFrags)
 {
     using namespace illumina::common;
 
@@ -622,7 +622,7 @@ processClearedRecord(
 
     if (fragment.isAltSpanningPairSupport())
     {
-        SupportFragment& supportFrag(svSupportFrags.getSupportFragment(bamRead));
+        SVEvidenceWriterReadPair& supportFrag(svSupportFrags.getSupportFragment(bamRead));
         supportFrag.addSpanningSupport(svId.localId);
 #ifdef DEBUG_SUPPORT
         log_os << __FUNCTION__ << "  Adding read support (spanning): "

@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     // range end = 159 + (125-50) + 1 = 235
     processor1.nextBamIndex(0);
     SVId id;
-    SupportFragments suppFrags;
+    SVEvidenceWriterSampleData suppFrags;
 
     std::string querySeq1 = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
     // case-1 is designed here.

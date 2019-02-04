@@ -27,7 +27,7 @@
 #include "GSCOptions.hh"
 #include "SVCandidateProcessor.hh"
 #include "SVFinder.hh"
-#include "SVSupports.hh"
+#include "SVEvidenceWriter.hh"
 
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
@@ -186,25 +186,8 @@ processEdge(
         // junctions which are part of a larger event (like a reciprocal translocation)
         multiJunctionFilterGroupCandidateSV(opt, edge, edgeData.svs,  edgeData.edgeStatMan, edgeData.mjSVs);
 
-        const unsigned sampleSize(opt.alignFileOpt.alignmentFilenames.size());
-        SupportSamples svSupports;
-        svSupports.supportSamples.resize(sampleSize);
-
         // assemble, score and output SVs
-        edgeData.svProcessorPtr->evaluateCandidates(edge, edgeData.mjSVs, edgeData.svData, svSupports);
-
-#ifdef RABBIT
-        // write supporting reads into bam files
-        if (isGenerateSupportBam)
-        {
-            for (unsigned idx(0); idx<sampleSize; ++idx)
-            {
-                writeSupportBam(origBamStreamPtrs[idx],
-                                svSupports.supportSamples[idx],
-                                supportBamDumperPtrs[idx]);
-            }
-        }
-#endif
+        edgeData.svProcessorPtr->evaluateCandidates(edge, edgeData.mjSVs, edgeData.svData);
     }
     catch (illumina::common::ExceptionData& e)
     {
@@ -257,28 +240,7 @@ runGSC(
     std::unique_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
 
-
-
-    const unsigned sampleSize(opt.alignFileOpt.alignmentFilenames.size());
-    std::vector<bam_streamer_ptr> origBamStreamPtrs;
-    std::vector<bam_dumper_ptr> supportBamDumperPtrs;
-
-    const bool isGenerateSupportBam(opt.supportBamStub.size() > 0);
-    if (isGenerateSupportBam)
-    {
-        openBamStreams(opt.referenceFilename, opt.alignFileOpt.alignmentFilenames, origBamStreamPtrs);
-
-        assert(origBamStreamPtrs.size() == sampleSize);
-        for (unsigned sampleIndex(0); sampleIndex<sampleSize; ++sampleIndex)
-        {
-            std::string supportBamName(opt.supportBamStub
-                                       + ".bam_" + std::to_string(sampleIndex)
-                                       + ".bam");
-            const bam_hdr_t& header(origBamStreamPtrs[sampleIndex]->get_header());
-            bam_dumper_ptr bamDumperPtr(new bam_dumper(supportBamName.c_str(), header));
-            supportBamDumperPtrs.push_back(bamDumperPtr);
-        }
-    }
+    SVEvidenceWriter svEvidenceWriter(opt);
 
     if (opt.isVerbose)
     {
@@ -296,7 +258,7 @@ runGSC(
         edgeData.svFindPtr.reset(new SVFinder(opt, readScanner, bamHeader, cset.getAllSampleReadCounts(),
             edgeData.edgeTrackerPtr, edgeData.edgeStatMan));
         edgeData.svProcessorPtr.reset(
-            new SVCandidateProcessor(opt, readScanner, cset, svWriter,
+            new SVCandidateProcessor(opt, readScanner, cset, svWriter, svEvidenceWriter,
                 edgeData.edgeTrackerPtr, edgeData.edgeStatMan));
     }
 

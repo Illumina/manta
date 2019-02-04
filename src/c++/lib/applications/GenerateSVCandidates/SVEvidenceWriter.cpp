@@ -21,9 +21,11 @@
 /// \author Xiaoyu Chen
 ///
 
-#include "SVSupports.hh"
+#include "SVEvidenceWriter.hh"
 
 #include <iostream>
+
+#include "manta/BamStreamerUtils.hh"
 
 //#define DEBUG_SUPPORT
 
@@ -33,10 +35,10 @@
 
 
 std::ostream&
-operator<<( std::ostream& os, const SupportRead& suppRd)
+operator<<( std::ostream& os, const SVEvidenceWriterRead& read)
 {
-    os << suppRd.tid << ":" << suppRd.pos << "\t";
-    for (const auto& sv : suppRd.SVs)
+    os << read.tid << ":" << read.pos << "\t";
+    for (const auto& sv : read.SVs)
     {
         os << sv.first << ",";
     }
@@ -46,18 +48,18 @@ operator<<( std::ostream& os, const SupportRead& suppRd)
 
 
 std::ostream&
-operator<<( std::ostream& os, const SupportFragment& suppFrg)
+operator<<( std::ostream& os, const SVEvidenceWriterReadPair& readPair)
 {
-    os << suppFrg.read1 << "\n"
-       << suppFrg.read2 << "\n";
+    os << readPair.read1 << "\n"
+       << readPair.read2 << "\n";
     return os;
 }
 
 
 std::ostream&
-operator<<( std::ostream& os, const SupportFragments& suppFrgs)
+operator<<( std::ostream& os, const SVEvidenceWriterSampleData& sample)
 {
-    for (const auto& frg : suppFrgs.supportFrags)
+    for (const auto& frg : sample.supportFrags)
     {
         os << "qname =" << frg.first << "\n"
            << frg.second;
@@ -67,21 +69,24 @@ operator<<( std::ostream& os, const SupportFragments& suppFrgs)
 }
 
 
+
 std::ostream&
-operator<<( std::ostream& os, const SupportSamples& suppSmps)
+operator<<( std::ostream& os, const SVEvidenceWriterData& data)
 {
-    unsigned size(suppSmps.supportSamples.size());
+    unsigned size(data.sampleData.size());
     for (unsigned i=0; i<size; i++)
     {
         os << "sample index = " << i << "\n"
-           << suppSmps.supportSamples[i];
+           << data.sampleData[i];
     }
 
     return os;
 }
 
 
+
 void
+SVEvidenceWriter::
 processBamRecords(
     bam_streamer& origBamStream,
     const GenomeInterval& interval,
@@ -103,7 +108,7 @@ processBamRecords(
         support_fragments_t::const_iterator suppFragsIter(supportFrags.find(qname));
         if (suppFragsIter != supportFrags.end())
         {
-            const SupportFragment& supportFrag(suppFragsIter->second);
+            const SVEvidenceWriterReadPair& supportFrag(suppFragsIter->second);
             const bool isR1Matched(bamRec.is_first() &&
                                    (bamRec.target_id() == supportFrag.read1.tid) &&
                                    (bamRec.pos() == supportFrag.read1.pos));
@@ -113,7 +118,7 @@ processBamRecords(
 
             if (isR1Matched || isR2Matched)
             {
-                const SupportRead& read(isR1Matched ? supportFrag.read1 : supportFrag.read2);
+                const SVEvidenceWriterRead& read(isR1Matched ? supportFrag.read1 : supportFrag.read2);
 #ifdef DEBUG_SUPPORT
                 log_os << __FUNCTION__ << "  matched supporting read: "
                        << read << "\n";
@@ -150,11 +155,12 @@ processBamRecords(
 
 
 void
+SVEvidenceWriter::
 writeSupportBam(const bam_streamer_ptr& origBamStreamPtr,
-                const SupportFragments& svSupportFrags,
+                const SVEvidenceWriterSampleData& svSupportFrags,
                 const bam_dumper_ptr& supportBamDumperPtr)
 {
-    std::vector<SupportRead> supportReads;
+    std::vector<SVEvidenceWriterRead> supportReads;
     const support_fragments_t& supportFrags(svSupportFrags.supportFrags);
     for (const auto& frg : supportFrags)
     {
@@ -198,4 +204,44 @@ writeSupportBam(const bam_streamer_ptr& origBamStreamPtr,
 
 
 
+SVEvidenceWriter::
+SVEvidenceWriter(
+    const GSCOptions& opt) :
+    m_isGenerateSupportBam(opt.supportBamStub.size() > 0),
+    m_sampleSize(opt.alignFileOpt.alignmentFilenames.size())
+{
+    if (! m_isGenerateSupportBam) return;
 
+    openBamStreams(opt.referenceFilename, opt.alignFileOpt.alignmentFilenames, m_origBamStreamPtrs);
+
+    assert(m_origBamStreamPtrs.size() == m_sampleSize);
+    for (unsigned sampleIndex(0); sampleIndex<m_sampleSize; ++sampleIndex)
+    {
+        std::string supportBamName(opt.supportBamStub
+                                   + ".bam_" + std::to_string(sampleIndex)
+                                   + ".bam");
+        const bam_hdr_t& header(m_origBamStreamPtrs[sampleIndex]->get_header());
+        bam_dumper_ptr bamDumperPtr(new bam_dumper(supportBamName.c_str(), header));
+        m_supportBamDumperPtrs.push_back(bamDumperPtr);
+    }
+}
+
+
+
+void
+SVEvidenceWriter::
+write(
+    const SVEvidenceWriterData& svEvidenceWriterData)
+{
+    if (! m_isGenerateSupportBam) return;
+
+    /// TODO more specific I/O lock could be needed to make the SV caller faster when evidence BAM output is turned on:
+    std::lock_guard<std::mutex> lock(m_writerMutex);
+
+    for (unsigned sampleIndex(0); sampleIndex<m_sampleSize; ++sampleIndex)
+    {
+        writeSupportBam(m_origBamStreamPtrs[sampleIndex],
+                        svEvidenceWriterData.sampleData[sampleIndex],
+                        m_supportBamDumperPtrs[sampleIndex]);
+    }
+}

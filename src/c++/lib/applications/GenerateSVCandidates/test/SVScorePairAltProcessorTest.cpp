@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
             scanner.operator*(), options1, candidateAssemblyData1,
             candidate1, true, evidence1);
     SVId id;
-    SupportFragments suppFrags;
+    SVEvidenceWriterSampleData suppFrags;
     // The test cases below are for large insertions, which has insert sequence size larger than
     // or equal to 100.
     std::string querySeq1 = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     // Test cases for search range are mentioned in test_nextBAMIndex in SVScorePairProcessorTest.cpp
     processor2.nextBamIndex(0);
     SVId id2;
-    SupportFragments suppFrags2;
+    SVEvidenceWriterSampleData suppFrags2;
 
     // Case-1 is designed here.
     // bam read start = 10. It is not overlapping with search range [84, 235).

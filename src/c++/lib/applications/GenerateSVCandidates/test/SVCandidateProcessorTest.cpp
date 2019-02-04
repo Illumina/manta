@@ -274,9 +274,8 @@ BOOST_AUTO_TEST_CASE( test_tumorOnly )
     group.add(bamHeader, readsToAdd[0], false, true, true);
     group.add(bamHeader, readsToAdd[3], false, true, true);
     SVSequenceFragmentAssociation association(0, SVEvidenceType::PAIR);
-    group.begin().operator*().svLink.push_back(association);
-    SupportSamples svSupports;
-    svSupports.supportSamples.resize(1);
+    group.begin()->svLink.push_back(association);
+
     // Generate SV locus graph file
     // Two nodes are created.
     SVLocus locus1;
@@ -298,9 +297,10 @@ BOOST_AUTO_TEST_CASE( test_tumorOnly )
     // block-scope svWriter to force file flush at end of scope:
     {
         const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
-        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, edgeTrackerPtr,
-                                                edgeStatMan);
-        candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
+        SVEvidenceWriter svEvidenceWriter(options);
+        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, svEvidenceWriter,
+            edgeTrackerPtr, edgeStatMan);
+        candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData);
     }
 
     // Check output vcf file
@@ -389,9 +389,8 @@ BOOST_AUTO_TEST_CASE( test_RNA )
     group.add(bamHeader, readsToAdd[0], false, true, true);
     group.add(bamHeader, readsToAdd[3], false, true, true);
     SVSequenceFragmentAssociation association(0, SVEvidenceType::PAIR);
-    group.begin().operator*().svLink.push_back(association);
-    SupportSamples svSupports;
-    svSupports.supportSamples.resize(1);
+    group.begin()->svLink.push_back(association);
+
     // Generate SV locus graph file
     // Two nodes are created.
     SVLocus locus1;
@@ -413,9 +412,10 @@ BOOST_AUTO_TEST_CASE( test_RNA )
     // block-scope svWriter to force file flush at end of scope:
     {
         const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
-        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, edgeTrackerPtr,
-                                                edgeStatMan);
-        candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
+        SVEvidenceWriter svEvidenceWriter(options);
+        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, svEvidenceWriter,
+            edgeTrackerPtr, edgeStatMan);
+        candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData);
     }
 
     // Check output vcf file
@@ -505,9 +505,8 @@ BOOST_AUTO_TEST_CASE( test_Diploid )
     group.add(bamHeader, readsToAdd[0], false, true, true);
     group.add(bamHeader, readsToAdd[3], false, true, true);
     SVSequenceFragmentAssociation association(0, SVEvidenceType::PAIR);
-    group.begin().operator*().svLink.push_back(association);
-    SupportSamples svSupports;
-    svSupports.supportSamples.resize(1);
+    group.begin()->svLink.push_back(association);
+
     // Generate SV locus graph file
     // Two nodes are created.
     SVLocus locus1;
@@ -529,9 +528,10 @@ BOOST_AUTO_TEST_CASE( test_Diploid )
     // block-scope svWriter to force file flush at end of scope:
     {
         const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
-        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, edgeTrackerPtr,
-                                                edgeStatMan);
-        candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
+        SVEvidenceWriter svEvidenceWriter(options);
+        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, svEvidenceWriter,
+                                                edgeTrackerPtr, edgeStatMan);
+        candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData);
     }
 
     // Check output vcf file
@@ -639,14 +639,13 @@ BOOST_AUTO_TEST_CASE( test_Somatic )
     group.add(bamHeader, readsToAdd[0], false, true, true);
     group.add(bamHeader, readsToAdd[3], false, true, true);
     SVSequenceFragmentAssociation association(0, SVEvidenceType::PAIR);
-    group.begin().operator*().svLink.push_back(association);
+    group.begin()->svLink.push_back(association);
 
     SVCandidateSetSequenceFragmentSampleGroup& group1 = svData.getDataGroup(1);
     group1.add(bamHeader, readsToAdd[1], false, true, true);
     group1.add(bamHeader, readsToAdd[4], false, true, true);
-    group1.begin().operator*().svLink.push_back(association);
-    SupportSamples svSupports;
-    svSupports.supportSamples.resize(2);
+    group1.begin()->svLink.push_back(association);
+
     // Generate SV locus graph file
     // Two nodes are created.
     SVLocus locus1;
@@ -668,9 +667,10 @@ BOOST_AUTO_TEST_CASE( test_Somatic )
     // block-scope svWriter to force file flush at end of scope:
     {
         const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
-        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, edgeTrackerPtr,
-                                                edgeStatMan);
-        candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
+        SVEvidenceWriter svEvidenceWriter(options);
+        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, svEvidenceWriter,
+            edgeTrackerPtr, edgeStatMan);
+        candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData);
     }
 
     // Check output vcf files

@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_When_Reference_Haplotype_Wins )
 
     SVEvidence::evidenceTrack_t evidence; // this will track all support data for a sv hypothesis
     SVSampleInfo sample; // sample specif evidence info
-    SupportFragments svSupportFrags; // set of supporting fragments for an evidence bam
+    SVEvidenceWriterSampleData svSupportFrags; // set of supporting fragments for an evidence bam
     CallOptionsSharedDeriv optionsSharedDeriv(optionsShared);
 
     // Bases on the query sequence and all the breakpoint sequences, following information we will get,
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_When_Allele_Haplotype_Wins )
 
     SVEvidence::evidenceTrack_t evidence; // this will track all support data for a sv hypothesis
     SVSampleInfo sample; // sample specif evidence info
-    SupportFragments svSupportFrags; // set of supporting fragments for an evidence bam
+    SVEvidenceWriterSampleData svSupportFrags; // set of supporting fragments for an evidence bam
     CallOptionsSharedDeriv optionsSharedDeriv(optionsShared);
 
     // Bases on the query sequence and all the breakpoint sequences, following information we will get,
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_For_RNA )
 
     SVEvidence::evidenceTrack_t evidence1; // this will track all support data for a sv hypothesis
     SVSampleInfo sample1; // sample specif evidence info
-    SupportFragments svSupportFrags1; // set of supporting fragments for an evidence bam
+    SVEvidenceWriterSampleData svSupportFrags1; // set of supporting fragments for an evidence bam
     CallOptionsSharedDeriv optionsSharedDeriv(optionsShared);
 
     // Bases on the query sequence and all the breakpoint sequences, following information we will get,
@@ -378,7 +378,7 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_For_RNA )
 
     SVEvidence::evidenceTrack_t evidence2;
     SVSampleInfo sample2;
-    SupportFragments svSupportFrags2;
+    SVEvidenceWriterSampleData svSupportFrags2;
     reference.seq() = refSeqBp2;
     breakend.interval.range = known_pos_range2(24, 25);
 

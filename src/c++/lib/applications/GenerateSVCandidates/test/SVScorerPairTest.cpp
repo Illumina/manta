@@ -37,12 +37,12 @@ struct TestSVScorer
 {
     void processExistingAltPairInfo(SVScorer &scorer, PairOptions &pairOptions, SVCandidateSetData &candidateSetData,
                                     SVCandidate &candidate, SVId &id, SVEvidence &evidence,
-                                    SupportSamples &suppSamples) {
+                                    SVEvidenceWriterData &suppSamples) {
         scorer.processExistingAltPairInfo(pairOptions, candidateSetData, candidate, id, evidence, suppSamples);
     }
 
     void getSVPairSupport(SVScorer& scorer, SVCandidateSetData& candidateSetData, SVCandidateAssemblyData assemblyData,
-                          SVCandidate& candidate, SVId& id, SVEvidence& evidence, SupportSamples& suppSamples)
+                          SVCandidate& candidate, SVId& id, SVEvidence& evidence, SVEvidenceWriterData& suppSamples)
     {
         scorer.getSVPairSupport(candidateSetData, assemblyData, candidate, id, evidence, suppSamples);
     }
@@ -425,9 +425,8 @@ BOOST_AUTO_TEST_CASE( test_processBamProcList )
     std::vector<SVScorer::pairProcPtr> pairProcList = {processor};
     std::vector<SVScorer::streamPtr> bamStreams = {bamStream1, bamStream2};
     SVId id;
-    SupportSamples suppSamples;
-    suppSamples.supportSamples.resize(2);
-    processBamProcList(bamStreams, id, pairProcList, suppSamples);
+    SVEvidenceWriterData svEvidenceWriterData(2);
+    processBamProcList(bamStreams, id, pairProcList, svEvidenceWriterData);
     // Check info for 1st bam
     // bam read start = 9. It is not overlapping with search range [84, 235).
     // As a result of this, the fragment is not supporting allele on BP1.
@@ -540,13 +539,12 @@ BOOST_AUTO_TEST_CASE( test_processExistingAltPairInfo )
 
     SVId id;
     SVEvidence evidence;
-    SupportSamples suppSamples;
-    suppSamples.supportSamples.resize(2);
     evidence.samples.resize(2);
-    fSVScorer.processExistingAltPairInfo(scorer, pairOptions, candidateSetData, candidate, id, evidence, suppSamples);
+    SVEvidenceWriterData svEvidenceWriterData(2);
+    fSVScorer.processExistingAltPairInfo(scorer, pairOptions, candidateSetData, candidate, id, evidence, svEvidenceWriterData);
 
     float expected(0.24999994);
-    // Check information of 1st bam file
+    // Check 1st bam file
     for (const SVCandidateSetSequenceFragment &fragment : group1) {
         SVFragmentEvidence fragmentEvidence(evidence.getSampleEvidence(0)[fragment.qname()]);
         SVFragmentEvidenceAllele alt(fragmentEvidence.alt);
@@ -574,7 +572,7 @@ BOOST_AUTO_TEST_CASE( test_processExistingAltPairInfo )
         BOOST_REQUIRE(alt.bp2.isFragmentSupport);
     }
 
-    // Check informations for 2nd bam file
+    // Check 2nd bam file
     for (const SVCandidateSetSequenceFragment &fragment : group2) {
         SVFragmentEvidence fragmentEvidence(evidence.getSampleEvidence(1)[fragment.qname()]);
         SVFragmentEvidenceAllele alt(fragmentEvidence.alt);
@@ -673,12 +671,11 @@ BOOST_AUTO_TEST_CASE( test_getSVPairSupport )
     group1.begin()->svLink.push_back(association);
     SVId id;
     SVEvidence evidence1;
-    SupportSamples suppSamples1;
-    suppSamples1.supportSamples.resize(1);
     evidence1.samples.resize(1);
+    SVEvidenceWriterData svEvidenceWriterData1(1);
     candidate1.setPrecise();
     candidate1.assemblyAlignIndex = 0;
-    fSVScorer.getSVPairSupport(scorer, candidateSetData1, candidateAssemblyData, candidate1, id, evidence1, suppSamples1);
+    fSVScorer.getSVPairSupport(scorer, candidateSetData1, candidateAssemblyData, candidate1, id, evidence1, svEvidenceWriterData1);
 
     // According to description, F = 125 and D = 270-250 = 20
     // So D < 2*F (20 < 250). So fragment is not supporting allele on the BPs.
@@ -715,13 +712,12 @@ BOOST_AUTO_TEST_CASE( test_getSVPairSupport )
     group2.add(bamHeader, bamRecord4, false, true, true);
     group2.begin()->svLink.push_back(association);
     SVEvidence evidence2;
-    SupportSamples suppSamples2;
-    suppSamples2.supportSamples.resize(1);
     evidence2.samples.resize(1);
+    SVEvidenceWriterData svEvidenceWriterData2(1);
     candidate2.setPrecise();
     candidate2.assemblyAlignIndex = 0;
     float expected = 0.24999994;
-    fSVScorer.getSVPairSupport(scorer, candidateSetData2, candidateAssemblyData, candidate2, id, evidence2, suppSamples2);
+    fSVScorer.getSVPairSupport(scorer, candidateSetData2, candidateAssemblyData, candidate2, id, evidence2, svEvidenceWriterData2);
     // Here F = 125, But D = 770-250 = 520 which is greater than 2*F(250).
     // So fragment is supporting alt allele on the BPs.
     for (const SVCandidateSetSequenceFragment& fragment : group2)

@@ -42,5 +42,5 @@ struct SVScorePairRefProcessor : public SVScorePairProcessor
     processClearedRecord(
         const SVId& svId,
         const bam_record& bamRead,
-        SupportFragments& svSupportFrags) override;
+        SVEvidenceWriterSampleData& svSupportFrags) override;
 };

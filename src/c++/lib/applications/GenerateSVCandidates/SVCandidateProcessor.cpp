@@ -39,15 +39,18 @@ SVCandidateProcessor(
     const SVLocusScanner& readScanner,
     const SVLocusSet& cset,
     const SVWriter& svWriter,
+    SVEvidenceWriter& svEvidenceWriter,
     std::shared_ptr<EdgeRuntimeTracker> edgeTrackerPtr,
     GSCEdgeStatsManager& edgeStatMan) :
     _opt(opt),
     _cset(cset),
     _svWriter(svWriter),
+    _svEvidenceWriter(svEvidenceWriter),
     _edgeTrackerPtr(edgeTrackerPtr),
     _edgeStatMan(edgeStatMan),
     _svRefine(opt, cset.getBamHeader(), cset.getAllSampleReadCounts(), _edgeTrackerPtr),
-    _svScorer(opt, readScanner, cset.getBamHeader())
+    _svScorer(opt, readScanner, cset.getBamHeader()),
+    _svEvidenceWriterData(opt.alignFileOpt.alignmentFilenames.size())
 {}
 
 
@@ -57,8 +60,7 @@ SVCandidateProcessor::
 evaluateCandidates(
     const EdgeInfo& edge,
     const std::vector<SVMultiJunctionCandidate>& mjSVs,
-    const SVCandidateSetData& svData,
-    SupportSamples& svSupports)
+    const SVCandidateSetData& svData)
 {
     const bool isIsolatedEdge(testIsolatedEdge(_cset,edge));
 
@@ -75,10 +77,14 @@ evaluateCandidates(
     }
 
     _svRefine.clearEdgeData();
+    _svEvidenceWriterData.clear();
+
     for (const auto& cand : mjSVs)
     {
-        evaluateCandidate(edge,cand,svData,isFindLargeInsertions, svSupports);
+        evaluateCandidate(edge,cand,svData,isFindLargeInsertions);
     }
+
+    _svEvidenceWriter.write(_svEvidenceWriterData);
 }
 
 
@@ -210,8 +216,7 @@ scoreSV(
     const SVMultiJunctionCandidate& mjSV,
     const std::vector<SVId>& junctionSVId,
     std::vector<bool>& isJunctionFiltered,
-    bool& isMJEvent,
-    SupportSamples& svSupports)
+    bool& isMJEvent)
 {
     if (_opt.isSkipScoring) return;
 
@@ -238,7 +243,7 @@ scoreSV(
     _svScorer.scoreSV(svData, mjAssemblyData, mjSV, junctionSVId,
                     isJunctionFiltered, _opt.isSomatic(), _opt.isTumorOnly(),
                     _mjModelScoreInfo, _mjJointModelScoreInfo,
-                    isMJEvent, svSupports);
+                    isMJEvent, _svEvidenceWriterData);
 }
 
 
@@ -250,8 +255,7 @@ scoreAndWriteSV(
     const SVCandidateSetData& svData,
     const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
     const SVMultiJunctionCandidate& mjSV,
-    const std::vector<bool>& isInputJunctionFiltered,
-    SupportSamples& svSupports)
+    const std::vector<bool>& isInputJunctionFiltered)
 {
     // track filtration for each junction:
     std::vector<bool> isCandidateJunctionFiltered(isInputJunctionFiltered);
@@ -282,7 +286,7 @@ scoreAndWriteSV(
     //
     bool isMultiJunctionEvent(false);
     std::vector<bool> isScoredJunctionFiltered(isCandidateJunctionFiltered);
-    scoreSV(svData, mjAssemblyData, mjSV, junctionSVId, isScoredJunctionFiltered, isMultiJunctionEvent, svSupports);
+    scoreSV(svData, mjAssemblyData, mjSV, junctionSVId, isScoredJunctionFiltered, isMultiJunctionEvent);
 
     // finally, write out to all VCF streams
     //
@@ -298,8 +302,7 @@ evaluateCandidate(
     const EdgeInfo& edge,
     const SVMultiJunctionCandidate& mjCandidateSV,
     const SVCandidateSetData& svData,
-    const bool isFindLargeInsertions,
-    SupportSamples& svSupports)
+    const bool isFindLargeInsertions)
 {
     assert(! mjCandidateSV.junction.empty());
 
@@ -443,13 +446,13 @@ evaluateCandidate(
                 std::vector<bool> isJunctionFilteredHack(junctionCount,true);
                 isJunctionFilteredHack[junctionIndex] = false;
                 scoreAndWriteSV(edge, svData, mjAssemblyData, mjAssembledCandidateSV,
-                                  isJunctionFilteredHack, svSupports);
+                                  isJunctionFilteredHack);
             }
         }
         else
         {
             scoreAndWriteSV(edge, svData, mjAssemblyData, mjAssembledCandidateSV,
-                              isJunctionFiltered, svSupports);
+                              isJunctionFiltered);
         }
     }
 }

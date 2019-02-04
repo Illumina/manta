@@ -23,26 +23,23 @@
 
 #pragma once
 
-#include <set>
+//#include <algorithm>
 #include <map>
+#include <memory>
+#include <mutex>
+//#include <set>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <memory>
 
 #include "manta/SVCandidateSetData.hh"
+#include "GSCOptions.hh"
 #include "htsapi/bam_streamer.hh"
 #include "htsapi/bam_dumper.hh"
-#include "htsapi/bam_record_util.hh"
+//#include "htsapi/bam_record_util.hh"
 
 
-typedef std::shared_ptr<bam_record> bam_record_ptr;
-typedef std::shared_ptr<bam_streamer> bam_streamer_ptr;
-typedef std::shared_ptr<bam_dumper> bam_dumper_ptr;
-
-
-/// Records a single read that support one or more SVs for evidence-BAM output
-struct SupportRead
+/// Records a single read that supports one or more SVs for evidence-BAM output
+struct SVEvidenceWriterRead
 {
     typedef std::map<std::string, std::set<std::string>> SV_supportType_t;
 
@@ -60,7 +57,7 @@ struct SupportRead
 
     bool
     operator<(
-        const SupportRead& rhs) const
+        const SVEvidenceWriterRead& rhs) const
     {
         if (tid < rhs.tid) return true;
         if (tid == rhs.tid)
@@ -70,23 +67,20 @@ struct SupportRead
         return false;
     }
 
-
-
     int tid = -1;
     int pos = 0;
     SV_supportType_t SVs;
 };
 
 std::ostream&
-operator<<( std::ostream& os, const SupportRead& suppRd);
+operator<<( std::ostream& os, const SVEvidenceWriterRead& read);
 
 
 /// Records a single fragment (read1 & read2)
-/// that support one or more SVs for evidence-BAM output,
+/// that supports one or more SVs for evidence-BAM output,
 /// indicating the evidence type
-struct SupportFragment
+struct SVEvidenceWriterReadPair
 {
-
     void setReads(
         const bam_record& bamRead)
     {
@@ -129,22 +123,27 @@ struct SupportFragment
         }
     }
 
-
-    SupportRead read1;
-    SupportRead read2;
+    SVEvidenceWriterRead read1;
+    SVEvidenceWriterRead read2;
 };
 
 std::ostream&
-operator<<( std::ostream& os, const SupportFragment& suppFrg);
+operator<<( std::ostream& os, const SVEvidenceWriterReadPair& readPair);
 
-typedef std::map<std::string, SupportFragment> support_fragments_t;
+typedef std::map<std::string, SVEvidenceWriterReadPair> support_fragments_t;
 
 
 /// Records all supporting fragments
 /// that support one or more SVs for evidence-BAM output
-struct SupportFragments
+struct SVEvidenceWriterSampleData
 {
-    SupportFragment& getSupportFragment(
+    void
+    clear()
+    {
+        supportFrags.clear();
+    }
+
+    SVEvidenceWriterReadPair& getSupportFragment(
         const bam_record& bamRead)
     {
         const std::string qname(bamRead.qname());
@@ -152,7 +151,7 @@ struct SupportFragments
         // create a new entry in the map
         if (supportFrags.find(qname) == supportFrags.end())
         {
-            SupportFragment newFrag;
+            SVEvidenceWriterReadPair newFrag;
             newFrag.setReads(bamRead);
             supportFrags[qname] = newFrag;
         }
@@ -161,7 +160,7 @@ struct SupportFragments
     }
 
 
-    SupportFragment& getSupportFragment(
+    SVEvidenceWriterReadPair& getSupportFragment(
         const SVCandidateSetSequenceFragment& seqFrag)
     {
         // Tentatively add an assertion
@@ -175,7 +174,7 @@ struct SupportFragments
         // create a new entry in the map
         if (supportFrags.find(qname) == supportFrags.end())
         {
-            SupportFragment newFrag;
+            SVEvidenceWriterReadPair newFrag;
             newFrag.setReads(read.bamrec);
             supportFrags[qname] = newFrag;
         }
@@ -187,32 +186,80 @@ struct SupportFragments
 };
 
 std::ostream&
-operator<<( std::ostream& os, const SupportFragments& suppFrgs);
+operator<<( std::ostream& os, const SVEvidenceWriterSampleData& sample);
 
 
-struct SupportSamples
+/// Records SV evidence fragments for all samples
+struct SVEvidenceWriterData
 {
-    SupportFragments& getSupportFragments(
-        const unsigned index)
+    explicit
+    SVEvidenceWriterData(
+        const unsigned sampleSize)
+        : sampleData(sampleSize)
+    {}
+
+    void
+    clear()
     {
-        assert(index < supportSamples.size());
-        return supportSamples[index];
+        for (auto& data : sampleData)
+        {
+            data.clear();
+        }
     }
 
-    std::vector<SupportFragments> supportSamples;
+    SVEvidenceWriterSampleData&
+    getSampleData(
+        const unsigned index)
+    {
+        assert(index < sampleData.size());
+        return sampleData[index];
+    }
+
+    std::vector<SVEvidenceWriterSampleData> sampleData;
 };
 
 std::ostream&
-operator<<( std::ostream& os, const SupportSamples& suppSmps);
+operator<<( std::ostream& os, const SVEvidenceWriterData& data);
 
-void
-processBamRecords(bam_streamer& origBamStream,
-                  const GenomeInterval& interval,
-                  const support_fragments_t& supportFrags,
-                  bam_dumper& bamDumper);
 
-void
-writeSupportBam(const bam_streamer_ptr& origBamStream,
-                const SupportFragments& svSupportFrags,
-                const bam_dumper_ptr& supportBamDumper);
+/// \brief Coordinate all bookkeeping and data structures required to output evidence BAMs
+///
+/// Evidence BAMs are intended for visualization in debugging scenarios only. They are not part of the standard
+/// calling workflow.
+class SVEvidenceWriter
+{
+public:
+    SVEvidenceWriter(
+        const GSCOptions& opt);
 
+    /// Write SV evidence reads into bam files
+    void
+    write(
+        const SVEvidenceWriterData& svEvidenceWriterData);
+
+    // Everything below is conceptually private, but kept here for unit testing until a fix can be written:
+
+    typedef std::shared_ptr<bam_streamer> bam_streamer_ptr;
+    typedef std::shared_ptr<bam_dumper> bam_dumper_ptr;
+
+    static
+    void
+    processBamRecords(bam_streamer& origBamStream,
+                      const GenomeInterval& interval,
+                      const support_fragments_t& supportFrags,
+                      bam_dumper& bamDumper);
+
+    static
+    void
+    writeSupportBam(const bam_streamer_ptr& origBamStream,
+                    const SVEvidenceWriterSampleData& svSupportFrags,
+                    const bam_dumper_ptr& supportBamDumper);
+
+private:
+
+    bool m_isGenerateSupportBam;
+    unsigned m_sampleSize;
+    std::vector<bam_streamer_ptr> m_origBamStreamPtrs;
+    std::vector<bam_dumper_ptr> m_supportBamDumperPtrs;
+    std::mutex m_writerMutex;
+};
