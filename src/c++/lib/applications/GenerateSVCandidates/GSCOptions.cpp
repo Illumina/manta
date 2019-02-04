@@ -73,6 +73,8 @@ parseGSCOptions(
     namespace po = boost::program_options;
     po::options_description req("configuration");
     req.add_options()
+    ("threads", po::value(&opt.workerThreadCount)->default_value(opt.workerThreadCount),
+     "Number of threads to use for candidate generation")
     ("graph-file", po::value(&opt.graphFilename),
      "sv locus graph file (required)")
     ("align-stats", po::value(&opt.statsFilename),

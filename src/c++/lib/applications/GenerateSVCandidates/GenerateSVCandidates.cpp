@@ -247,11 +247,10 @@ runGSC(
         log_os << __FUNCTION__ << ": " << bamHeader << "\n";
     }
 
-    int threadCount(8);
-    ctpl::thread_pool pool(threadCount);
+    ctpl::thread_pool pool(opt.workerThreadCount);
 
     /// Initialize all thread-local edge data:
-    std::vector<EdgeThreadLocalData> edgeDataPool(threadCount);
+    std::vector<EdgeThreadLocalData> edgeDataPool(opt.workerThreadCount);
     for (auto& edgeData : edgeDataPool)
     {
         edgeData.edgeTrackerPtr.reset(new EdgeRuntimeTracker(edgeTrackerStreamPtr));

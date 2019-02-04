@@ -60,6 +60,8 @@ struct GSCOptions
     CallOptionsSomatic somaticOpt;
     CallOptionsTumor tumorOpt;
 
+    int workerThreadCount = 1;
+
     std::string graphFilename;
     std::string referenceFilename;
     std::string statsFilename;
