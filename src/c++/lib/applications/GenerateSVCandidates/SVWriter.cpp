@@ -23,17 +23,37 @@
 ///
 
 #include "SVWriter.hh"
-#if 0
-#include "manta/SVMultiJunctionCandidateUtil.hh"
-#include "svgraph/EdgeInfoUtil.hh"
 
-#include "blt_util/log.hh"
-
-#include <iostream>
+#include "htsapi/bam_header_util.hh"
+#include "manta/BamStreamerUtils.hh"
 
 
-//#define DEBUG_GSV
-#endif
+
+static
+std::vector<std::string>
+getSampleNamesFromBamFiles(
+    const GSCOptions& opt)
+{
+    std::vector<std::string> sampleNames;
+
+    std::vector<std::shared_ptr<bam_streamer>> bamStreams;
+    openBamStreams(opt.referenceFilename, opt.alignFileOpt.alignmentFilenames, bamStreams);
+
+    // initialize sampleNames from all bam headers (assuming 1 sample per bam for now)
+    const unsigned bamCount(bamStreams.size());
+    for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
+    {
+        const bam_hdr_t& indexHeader(bamStreams[bamIndex]->get_header());
+        std::ostringstream defaultName;
+        defaultName << "SAMPLE" << (bamIndex+1);
+        std::string sampleName(get_bam_header_sample_name(indexHeader, defaultName.str().c_str()));
+        // remove spaces from sample name
+        std::replace(sampleName.begin(), sampleName.end(), ' ', '_');
+        sampleNames.push_back(sampleName);
+    }
+
+    return sampleNames;
+}
 
 
 
@@ -42,8 +62,7 @@ SVWriter(
     const GSCOptions& initOpt,
     const bam_header_info& bamHeaderInfo,
     const char* progName,
-    const char* progVersion,
-    const std::vector<std::string>& sampleNames) :
+    const char* progVersion) :
     opt(initOpt),
     diploidSampleCount(opt.alignFileOpt.diploidSampleCount()),
     candfs(opt.candidateOutputFilename),
@@ -69,6 +88,7 @@ SVWriter(
     std::vector<std::string> noSampleNames;
     candWriter.writeHeader(progName, progVersion,noSampleNames);
 
+    const auto sampleNames(getSampleNamesFromBamFiles(opt));
     if (opt.isTumorOnly())
     {
         tumorWriter.writeHeader(progName, progVersion,sampleNames);
@@ -104,7 +124,6 @@ isAnyFalse(
 void
 SVWriter::
 writeSV(
-    const EdgeInfo& edge,
     const SVCandidateSetData& svData,
     const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
     const SVMultiJunctionCandidate& mjSV,
@@ -113,8 +132,7 @@ writeSV(
     const std::vector<SVId>& junctionSVId,
     const std::vector<SVModelScoreInfo>& mjModelScoreInfo,
     const SVModelScoreInfo& mjJointModelScoreInfo,
-    const bool isMJEvent,
-    SupportSamples& svSupports) const
+    const bool isMJEvent) const
 {
     // write out candidates for each junction independently:
     const unsigned junctionCount(mjSV.junction.size());

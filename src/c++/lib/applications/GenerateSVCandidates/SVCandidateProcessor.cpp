@@ -286,8 +286,8 @@ scoreAndWriteSV(
 
     // finally, write out to all VCF streams
     //
-    _svWriter.writeSV(edge, svData, mjAssemblyData, mjSV, isCandidateJunctionFiltered, isScoredJunctionFiltered,
-        junctionSVId, _mjModelScoreInfo, _mjJointModelScoreInfo, isMultiJunctionEvent, svSupports);
+    _svWriter.writeSV(svData, mjAssemblyData, mjSV, isCandidateJunctionFiltered, isScoredJunctionFiltered,
+        junctionSVId, _mjModelScoreInfo, _mjJointModelScoreInfo, isMultiJunctionEvent);
 }
 
 

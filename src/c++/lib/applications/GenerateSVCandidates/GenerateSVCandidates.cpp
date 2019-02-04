@@ -31,7 +31,6 @@
 
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
-#include "htsapi/bam_header_util.hh"
 #include "manta/BamStreamerUtils.hh"
 #include "manta/MultiJunctionUtil.hh"
 #include "manta/SVCandidateUtil.hh"
@@ -42,33 +41,6 @@
 #include <string>
 
 //#define DEBUG_GSV
-
-/// TODO move this to a shared util location
-static
-std::vector<std::string>
-getSampleNamesFromBamFiles(
-    const GSCOptions& opt)
-{
-    std::vector<std::string> sampleNames;
-
-    std::vector<std::shared_ptr<bam_streamer>> bamStreams;
-    openBamStreams(opt.referenceFilename, opt.alignFileOpt.alignmentFilenames, bamStreams);
-
-    // initialize sampleNames from all bam headers (assuming 1 sample per bam for now)
-    const unsigned bamCount(bamStreams.size());
-    for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
-    {
-        const bam_hdr_t& indexHeader(bamStreams[bamIndex]->get_header());
-        std::ostringstream defaultName;
-        defaultName << "SAMPLE" << (bamIndex+1);
-        std::string sampleName(get_bam_header_sample_name(indexHeader, defaultName.str().c_str()));
-        // remove spaces from sample name
-        std::replace(sampleName.begin(), sampleName.end(), ' ', '_');
-        sampleNames.push_back(sampleName);
-    }
-
-    return sampleNames;
-}
 
 
 /// provide additional edge details, intended for attachment to an in-flight exception:
@@ -276,8 +248,7 @@ runGSC(
     const SVLocusSet cset(opt.graphFilename.c_str(), isSkipLocusSetIndexCreation);
     const bam_header_info& bamHeader(cset.getBamHeader());
 
-    const auto sampleNames(getSampleNamesFromBamFiles(opt));
-    const SVWriter svWriter(opt, bamHeader, progName, progVersion, sampleNames);
+    const SVWriter svWriter(opt, bamHeader, progName, progVersion);
 
     std::unique_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);

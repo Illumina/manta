@@ -35,7 +35,6 @@
 #include "format/VcfWriterSomaticSV.hh"
 #include "format/VcfWriterTumorSV.hh"
 #include "format/VcfWriterRnaSV.hh"
-#include "SVSupports.hh"
 
 
 struct SVWriter
@@ -44,12 +43,10 @@ struct SVWriter
         const GSCOptions& initOpt,
         const bam_header_info& bamHeaderInfo,
         const char* progName,
-        const char* progVersion,
-        const std::vector<std::string>& sampleNames);
+        const char* progVersion);
 
     void
     writeSV(
-        const EdgeInfo& edge,
         const SVCandidateSetData& svData,
         const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
         const SVMultiJunctionCandidate& mjSV,
@@ -58,18 +55,17 @@ struct SVWriter
         const std::vector<SVId>& junctionSVId,
         const std::vector<SVModelScoreInfo>& mjModelScoreInfo,
         const SVModelScoreInfo& mjJointModelScoreInfo,
-        const bool isMJEvent,
-        SupportSamples& svSupports) const;
+        const bool isMJEvent) const;
 
     ///////////////////////// data:
     const GSCOptions& opt;
     unsigned diploidSampleCount;
 
-    OutStream candfs;
-    OutStream dipfs;
-    OutStream somfs;
-    OutStream tumfs;
-    OutStream rnafs;
+    mutable OutStream candfs;
+    mutable OutStream dipfs;
+    mutable OutStream somfs;
+    mutable OutStream tumfs;
+    mutable OutStream rnafs;
 
     VcfWriterCandidateSV candWriter;
     VcfWriterDiploidSV diploidWriter;
