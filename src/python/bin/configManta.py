@@ -80,10 +80,6 @@ You must specify a BAM or CRAM file for at least one sample.
         group.add_option("--useExistingChromDepths",
                          dest="useExistingChromDepths", action="store_true",
                          help="Use pre-calculated chromosome depths.")
-        group.add_option("--candidateBins",type="int",
-                         dest="nonlocalWorkBins", metavar="candidateBins",
-                         help="Provide the total number of tasks which candidate generation "
-                            " will be sub-divided into. (default: %default)")
         group.add_option("--retainTempFiles",
                          dest="isRetainTempFiles", action="store_true",
                          help="Keep all temporary files (for workflow debugging)")
@@ -109,8 +105,7 @@ You must specify a BAM or CRAM file for at least one sample.
             'existingAlignStatsFile' : None,
             'useExistingChromDepths' : False,
             'isRetainTempFiles' : False,
-            'isGenerateSupportBam' : False,
-            'nonlocalWorkBins' : 256
+            'isGenerateSupportBam' : False
                           })
         return defaults
 

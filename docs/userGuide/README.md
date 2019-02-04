@@ -629,15 +629,10 @@ requested run directory:
 `{MANTA_ANALYSIS_PATH}/runWorkflow.py`
 
 This script is used to control parallel execution of Manta via the
-[pyFlow][2] task engine. It can be used to parallelize structural
-variant analysis via one of two modes:
-
-1. Parallelized across multiple cores on a single node.
-2. Parallelized across multiple nodes on an SGE cluster.
+[pyFlow][2] task engine on a single compute node.
 
 A running workflow can be interrupted at any time and resumed where it
-left off. If desired, the resumed analysis can use a different running
-mode or total core count.
+left off.
 
 For a full list of execution options, see:
 
@@ -646,13 +641,7 @@ For a full list of execution options, see:
 Example execution on a single node:
 
 ```
-${MANTA_ANALYSIS_PATH}/runWorkflow.py -m local -j 8
-```
-
-Example execution on an SGE cluster:
-
-```
-${MANTA_ANALYSIS_PATH}/runWorkflow.py -m sge -j 36
+${MANTA_ANALYSIS_PATH}/runWorkflow.py -j 8
 ```
 
 #### Advanced execution options

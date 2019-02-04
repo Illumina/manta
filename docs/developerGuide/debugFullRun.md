@@ -22,7 +22,7 @@ This page describes debug/analysis capabilities which are especially useful to f
 
 This is useful if you're working on a component of candidate generation/scoring which doesn't impact graph creation, and frequently rerunning a test. To use this option provide the '–rescore" option to runWorkflow.py. When this is provided candidate generation and scoring will always be re-run, but the graph will only be created if it doesn't already exist. Example
 
-    ${RUN_DIR}/runWorkflow.py -m sge -j 24 --rescore
+    ${RUN_DIR}/runWorkflow.py -j 24 --rescore
 
 
 ## Comparing VCF output between runs

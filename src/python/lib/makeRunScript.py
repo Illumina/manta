@@ -108,8 +108,6 @@ def get_run_options(workflowClassName) :
     from configureUtil import EpilogOptionParser
     from estimateHardware import EstException, getNodeHyperthreadCoreCount, getNodeMemMb
 
-    sgeDefaultCores=workflowClassName.runModeDefaultCores('sge')
-
     epilog=\"\"\"Note this script can be re-run to continue the workflow run in case of interruption.
 Also note that dryRun option has limited utility when task definition depends on upstream task
 results -- in this case the dry run will not cover the full 'live' run task set.\"\"\"
@@ -118,13 +116,11 @@ results -- in this case the dry run will not cover the full 'live' run task set.
 
 
     parser.add_option("-m", "--mode", type="string",dest="mode",
-                      help="select run mode (local|sge)")
-    parser.add_option("-q", "--queue", type="string",dest="queue",
-                      help="specify scheduler queue name")
+                      help=SUPPRESS_HELP)
     parser.add_option("-j", "--jobs", type="string",dest="jobs",
-                  help="number of jobs, must be an integer or 'unlimited' (default: Estimate total cores on this node for local mode, %s for sge mode)" % (sgeDefaultCores))
+                  help="number of jobs, must be an integer or 'unlimited' (default: Estimate total cores on this node)")
     parser.add_option("-g","--memGb", type="string",dest="memGb",
-                  help="gigabytes of memory available to run workflow -- only meaningful in local mode, must be an integer (default: Estimate the total memory for this node for local mode, 'unlimited' for sge mode)")
+                  help="gigabytes of memory available to run workflow, must be an integer (default: Estimate the total memory for this node)")
     parser.add_option("-d","--dryRun", dest="isDryRun",action="store_true",default=False,
                       help="dryRun workflow code without actually running command-tasks")
     parser.add_option("--quiet", dest="isQuiet",action="store_true",default=False,
@@ -153,7 +149,7 @@ results -- in this case the dry run will not cover the full 'live' run task set.
 
     ext_group = OptionGroup(parser,"extended portability options (should not be needed by most users)")
     ext_group.add_option("--maxTaskRuntime", type="string", metavar="hh:mm:ss",
-                      help="Specify scheduler max runtime per task, argument is provided to the 'h_rt' resource limit if using SGE (no default)")
+                      help="Specify max runtime per task (no default)")
 
     parser.add_option_group(ext_group)
 
@@ -166,19 +162,15 @@ results -- in this case the dry run will not cover the full 'live' run task set.
         sys.exit(2)
 
     if options.mode is None :
-        parser.print_help()
-        sys.exit(2)
-    elif options.mode not in ["local","sge"] :
-        parser.error("Invalid mode. Available modes are: local, sge")
+        options.mode = "local"
+    elif options.mode not in ["local"] :
+        parser.error("Invalid mode. Available modes are: local")
 
     if options.jobs is None :
-        if options.mode == "sge" :
-            options.jobs = sgeDefaultCores
-        else :
-            try :
-                options.jobs = getNodeHyperthreadCoreCount()
-            except EstException:
-                parser.error("Failed to estimate cores on this node. Please provide job count argument (-j).")
+        try :
+            options.jobs = getNodeHyperthreadCoreCount()
+        except EstException:
+            parser.error("Failed to estimate cores on this node. Please provide job count argument (-j).")
     if options.jobs != "unlimited" :
         options.jobs=int(options.jobs)
         if options.jobs <= 0 :
@@ -186,13 +178,10 @@ results -- in this case the dry run will not cover the full 'live' run task set.
 
     # note that the user sees gigs, but we set megs
     if options.memGb is None :
-        if options.mode == "sge" :
-            options.memMb = "unlimited"
-        else :
-            try :
-                options.memMb = getNodeMemMb()
-            except EstException:
-                parser.error("Failed to estimate available memory on this node. Please provide available gigabyte argument (-g).")
+        try :
+            options.memMb = getNodeMemMb()
+        except EstException:
+            parser.error("Failed to estimate available memory on this node. Please provide available gigabyte argument (-g).")
     elif options.memGb != "unlimited" :
         options.memGb=int(options.memGb)
         if options.memGb <= 0 :
@@ -200,12 +189,6 @@ results -- in this case the dry run will not cover the full 'live' run task set.
         options.memMb = 1024*options.memGb
     else :
         options.memMb = options.memGb
-
-    options.schedulerArgList=[]
-    if options.queue is not None :
-        options.schedulerArgList.extend(["-q",options.queue])
-    if options.maxTaskRuntime is not None :
-        options.schedulerArgList.extend(["-l","h_rt="+options.maxTaskRuntime])
 
     options.resetTasks=[]
     if options.isRescore :
@@ -247,7 +230,6 @@ def main(pickleConfigFile, primaryConfigSection, workflowClassName) :
                          isForceContinue=True,
                          isDryRun=runOptions.isDryRun,
                          isQuiet=runOptions.isQuiet,
-                         schedulerArgList=runOptions.schedulerArgList,
                          resetTasks=runOptions.resetTasks,
                          successMsg=wflow.getSuccessMessage(),
                          retryWindow=0,

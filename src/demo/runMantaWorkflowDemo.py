@@ -67,7 +67,6 @@ def main() :
     cmd += " --referenceFasta=\"%s\"" % (os.path.join(dataDir,"Homo_sapiens_assembly19.COST16011_region.fa"))
     cmd += " --region=8:107652000-107655000"
     cmd += " --region=11:94974000-94989000"
-    cmd += " --candidateBins=4"
     cmd += " --exome"
     cmd += " --runDir=\"%s\"" % (analysisDir)
 
@@ -91,7 +90,7 @@ def main() :
     #
     # Step 2: run demo (on single local core):
     #
-    cmd=[sys.executable,os.path.join(analysisDir,"runWorkflow.py"),"-m","local","-j","1","-g","4"]
+    cmd=[sys.executable,os.path.join(analysisDir,"runWorkflow.py"),"-j","1","-g","4"]
 
     logfp.write("\n")
     logfp.write("**** Starting demo workflow execution.\n")

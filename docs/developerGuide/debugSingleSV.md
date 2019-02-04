@@ -31,13 +31,13 @@ To enable a regional build, simply specify the additional flag "--region" at con
 
     ${MANTA_INSTALL_ROOT}/bin/configManta.py --allHelp
 
-For a small input region it would typically be desirable to reduce the number of GenerateSVCandidate worker tasks to further accelerate the debug build by avoid additional sparse task overhead. The number of SVCandidate generation tasks can be changed with the '--candidateBins' flag. A full example of a rapid debug region run is:
+A full example of a rapid debug region run is:
 
-    ${MANTA_INSTALL_ROOT}/bin/configManta.py --normalBam myBam.bam --region chr2:19000-20000 --candidateBins 1
+    ${MANTA_INSTALL_ROOT}/bin/configManta.py --normalBam myBam.bam --region chr2:19000-20000
 
 An example debug build for a translocation is:
 
-    ${MANTA_INSTALL_ROOT}/bin/configManta.py --normalBam myBam.bam --tumorBam myTumorBam.bam --region chr2:19000-20000 --region chr20:1000-2000 --candidateBins 4
+    ${MANTA_INSTALL_ROOT}/bin/configManta.py --normalBam myBam.bam --tumorBam myTumorBam.bam --region chr2:19000-20000 --region chr20:1000-2000
 
 ## Scenario 1 : Debug gold-standard SV call which is already covered by an edge in the SVLocus graph
 

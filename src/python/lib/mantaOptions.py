@@ -103,7 +103,6 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         getChromDepthBin=joinFile(libexecDir,exeFile("GetChromDepth"))
         mantaGraphBin=joinFile(libexecDir,exeFile("EstimateSVLoci"))
         mantaGraphMergeBin=joinFile(libexecDir,exeFile("MergeSVLoci"))
-        mantaStatsMergeBin=joinFile(libexecDir,exeFile("MergeEdgeStats"))
         mantaGraphCheckBin=joinFile(libexecDir,exeFile("CheckSVLoci"))
         mantaHyGenBin=joinFile(libexecDir,exeFile("GenerateSVCandidates"))
         mantaGraphStatsBin=joinFile(libexecDir,exeFile("SummarizeSVLoci"))

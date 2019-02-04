@@ -511,9 +511,9 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     self.rnaVcfPaths = []
 
     edgeRuntimeLogPaths = []
-    edgeStatsLogPaths = []
 
-    for binId in range(self.params.nonlocalWorkBins) :
+    if True:
+        binId = 0
         binStr = str(binId).zfill(4)
         self.candidateVcfPaths.append(self.paths.getHyGenCandidatePath(binStr))
         if isTumorOnly :
@@ -526,10 +526,11 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
                 self.somaticVcfPaths.append(self.paths.getHyGenSomaticPath(binStr))
 
         hygenCmd = [ self.params.mantaHyGenBin ]
+        hygenCmd.extend(["--threads", str(self.getNCores())])
         hygenCmd.extend(["--align-stats",statsPath])
         hygenCmd.extend(["--graph-file",graphPath])
         hygenCmd.extend(["--bin-index", str(binId)])
-        hygenCmd.extend(["--bin-count", str(self.params.nonlocalWorkBins)])
+        hygenCmd.extend(["--bin-count", "1"])
         hygenCmd.extend(["--max-edge-count", str(self.params.graphNodeMaxEdgeCount)])
         hygenCmd.extend(["--min-candidate-sv-size", self.params.minCandidateVariantSize])
         hygenCmd.extend(["--min-candidate-spanning-count", self.params.minCandidateSpanningCount])
@@ -569,11 +570,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         edgeRuntimeLogPaths.append(self.paths.getHyGenEdgeRuntimeLogPath(binStr))
         hygenCmd.extend(["--edge-runtime-log", edgeRuntimeLogPaths[-1]])
 
-        edgeStatsLogPaths.append(self.paths.getHyGenEdgeStatsPath(binStr))
-        hygenCmd.extend(["--edge-stats-log", edgeStatsLogPaths[-1]])
-
-#RABBIT
-        hygenCmd.extend(["--edge-stats-report", TODO)
+        hygenCmd.extend(["--edge-stats-log", self.paths.getFinalEdgeStatsPath()])
+        hygenCmd.extend(["--edge-stats-report", self.paths.getFinalEdgeStatsReportPath()])
 
         if self.params.isGenerateSupportBam :
             hygenCmd.extend(["--evidence-bam-stub", self.paths.getSupportBamStub(binStr)])
@@ -598,7 +596,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             hygenCmd.append("--output-contigs")
 
         hygenTask = preJoin(taskPrefix,"generateCandidateSV_"+binStr)
-        hygenTasks.add(self.addTask(hygenTask,hygenCmd,dependencies=dirTask, memMb=self.params.hyGenMemMb))
+        hygenTasks.add(self.addTask(hygenTask,hygenCmd,dependencies=dirTask, nCores=self.getNCores(), memMb=self.params.hyGenMemMb))
 
         # TODO: if the bam is large, for efficiency, consider
         # 1) filtering the bin-specific bam first w.r.t. the final candidate vcf
@@ -650,20 +648,6 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
     edgeSortCmd=getEdgeLogSortCmd(logListFile,self.paths.getSortedEdgeRuntimeLogPath())
     self.addTask(preJoin(taskPrefix,"sortEdgeRuntimeLogs"), edgeSortCmd, dependencies=logListTask, isForceLocal=True)
-
-    #
-    # merge all edge stats
-    #
-    statsFileList = self.paths.getStatsFileListPath()
-    statsListTask = preJoin(taskPrefix,"mergeEdgeStatsInputList")
-    self.addWorkflowTask(statsListTask,listFileWorkflow(statsFileList,edgeStatsLogPaths),dependencies=hygenTasks)
-
-    edgeStatsMergeTask=preJoin(taskPrefix,"mergeEdgeStats")
-    edgeStatsMergeCmd=[self.params.mantaStatsMergeBin]
-    edgeStatsMergeCmd.extend(["--stats-file-list",statsFileList])
-    edgeStatsMergeCmd.extend(["--output-file",self.paths.getFinalEdgeStatsPath()])
-    edgeStatsMergeCmd.extend(["--report-file",self.paths.getFinalEdgeStatsReportPath()])
-    self.addTask(edgeStatsMergeTask, edgeStatsMergeCmd, dependencies=statsListTask, isForceLocal=True)
 
     if not self.params.isRetainTempFiles :
         # we could delete the temp hygenDir directory here, but it is used for debug so frequently it doesn't seem worth it at present.
@@ -743,9 +727,6 @@ class PathInfo:
     def getHyGenEdgeRuntimeLogPath(self, binStr) :
         return os.path.join(self.getHyGenDir(),"edgeRuntimeLog.%s.txt" % (binStr))
 
-    def getHyGenEdgeStatsPath(self, binStr) :
-        return os.path.join(self.getHyGenDir(),"edgeStats.%s.xml" % (binStr))
-
     def getSortedEdgeRuntimeLogPath(self) :
         return os.path.join(self.params.workDir,"edgeRuntimeLog.txt")
 
@@ -792,9 +773,6 @@ class PathInfo:
 
     def getEdgeRuntimeLogListPath(self) :
         return os.path.join(self.getHyGenDir(),"list.edgeRuntimeLog.txt")
-
-    def getStatsFileListPath(self) :
-        return os.path.join(self.getHyGenDir(),"list.edgeStats.txt")
 
 
 
