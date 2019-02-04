@@ -204,7 +204,7 @@ def main() :
 
         Fancy chromosome sort rules:
         if contig records are found in the vcf header, then sort chroms in that order
-        for any chrom names not found in the header, sort them in lex order after the
+        for any chrom names not found in the header, sort them in lexicographical order after the
         found chrom names
         """
 
@@ -213,7 +213,7 @@ def main() :
         except ValueError :
             headerOrder = len(chromOrder)
 
-        return (headerOrder, x.chrom, x.pos, x.endPos, x.ref, x.alt)
+        return (headerOrder, x.chrom, x.pos, x.endPos, x.ref, x.alt, x.id)
 
     recList.sort(key = vcfRecSortKey)
 
@@ -247,7 +247,7 @@ def main() :
         return True
 
     idsToRemove = set() #IDs for BNDs we want to remove since their mates have been removed
-    if(not options.isPrintAll):
+    if not options.isPrintAll:
         recList2 = []
         recEqualSet = []
         lastRec = None
