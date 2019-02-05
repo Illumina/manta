@@ -201,10 +201,10 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_When_Reference_Haplotype_Wins )
     SVCandidate candidate;
     // The next four lines are hack to avoid construction of complex svCandidateAssemblyData
     SVAlignmentInfo alignmentInfo(candidate, svCandidateAssemblyData);
-    ((std::string&)alignmentInfo.bp1ReferenceSeq()).assign(refSeqBp1);
-    ((std::string&)alignmentInfo.bp1ContigSeq()).assign(altContigSeqBp1);
-    ((std::string&)alignmentInfo.bp2ReferenceSeq()).assign(refSeqBp2);
-    ((std::string&)alignmentInfo.bp2ContigSeq()).assign(altContigSeqBp2);
+    const_cast<std::string&>(alignmentInfo.bp1ReferenceSeq()).assign(refSeqBp1);
+    const_cast<std::string&>(alignmentInfo.bp1ContigSeq()).assign(altContigSeqBp1);
+    const_cast<std::string&>(alignmentInfo.bp2ReferenceSeq()).assign(refSeqBp2);
+    const_cast<std::string&>(alignmentInfo.bp2ContigSeq()).assign(altContigSeqBp2);
     // Contig and reference offset.
     // Gapless alignment starting point will be in between (offset_start - flankScoreSize) and
     // (offset_end + flankScoreSize). In this test case flank score size is 17.
@@ -271,10 +271,10 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_When_Allele_Haplotype_Wins )
     // assembly data for  a specific sv candidate
     SVAlignmentInfo alignmentInfo(candidate, svCandidateAssemblyData);
     // The next four lines are hack to avoid construction of complex svCandidateAssemblyData
-    ((std::string&)alignmentInfo.bp1ReferenceSeq()).assign(refSeqBp1);
-    ((std::string&)alignmentInfo.bp1ContigSeq()).assign(altContigSeqBp1);
-    ((std::string&)alignmentInfo.bp2ReferenceSeq()).assign(refSeqBp2);
-    ((std::string&)alignmentInfo.bp2ContigSeq()).assign(altContigSeqBp2);
+    const_cast<std::string&>(alignmentInfo.bp1ReferenceSeq()).assign(refSeqBp1);
+    const_cast<std::string&>(alignmentInfo.bp1ContigSeq()).assign(altContigSeqBp1);
+    const_cast<std::string&>(alignmentInfo.bp2ReferenceSeq()).assign(refSeqBp2);
+    const_cast<std::string&>(alignmentInfo.bp2ContigSeq()).assign(altContigSeqBp2);
     // Contig and reference offset
     // Gapless alignment starting point will be in between (offset_start - flankScoreSize) and
     // (offset_end + flankScoreSize). In this test case flank score size is 17.
@@ -342,8 +342,8 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_For_RNA )
     SVCandidate candidate;
     // The next four lines are hack to avoid construction of complex svCandidateAssemblyData
     SVAlignmentInfo alignmentInfo(candidate, svCandidateAssemblyData);
-    ((std::string&)alignmentInfo.bp1ContigSeq()).assign(altContigSeqBp1);
-    ((std::string&)alignmentInfo.bp2ContigSeq()).assign(altContigSeqBp2);
+    const_cast<std::string&>(alignmentInfo.bp1ContigSeq()).assign(altContigSeqBp1);
+    const_cast<std::string&>(alignmentInfo.bp2ContigSeq()).assign(altContigSeqBp2);
     // Gapless alignment starting point will be in between (offset_start - flankScoreSize) and
     // (offset_end + flankScoreSize). In this test case flank score size is 17.
     alignmentInfo.bp1ContigOffset = known_pos_range2(18, 19);

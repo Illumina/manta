@@ -132,6 +132,9 @@ def main() :
     # passedByValue has been added to allow more use of c++11 shared_ptrs:
     suppressList=["unusedFunction", "unmatchedSuppression", "missingInclude", "purgedConfiguration", "passedByValue"]
 
+    # cppcheck gives FP unitialized member errors when using delegating ctors
+    suppressList.append("uninitMemberVar")
+
     # In cppcheck versions 1.69 and lower (TODO how low?), there is a bug parsing the use of the '%' character
     # in boost::format as a regular mod operator. For these versions, an extra suppression is required.
     #
@@ -160,7 +163,6 @@ def main() :
                                          (compareVersions(cppcheckVersion, maxUnusedStructMemberBugVersion) <= 0)
         if isUnusedStructMemberBugVersion :
             suppressList.append("unusedStructMember")
-
 
     for stype in suppressList :
         checkCmd.append("--suppress="+stype)

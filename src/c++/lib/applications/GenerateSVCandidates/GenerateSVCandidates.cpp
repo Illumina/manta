@@ -159,6 +159,7 @@ struct EdgeThreadLocalData
 
 
 /// Process a single edge on one thread:
+static
 void
 processEdge(
     int threadId,

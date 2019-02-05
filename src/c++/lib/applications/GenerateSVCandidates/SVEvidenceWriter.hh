@@ -229,6 +229,7 @@ operator<<( std::ostream& os, const SVEvidenceWriterData& data);
 class SVEvidenceWriter
 {
 public:
+    explicit
     SVEvidenceWriter(
         const GSCOptions& opt);
 
