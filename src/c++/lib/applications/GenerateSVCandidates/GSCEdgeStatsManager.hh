@@ -124,6 +124,7 @@ private:
         return (edge.isSelfEdge() ? edgeStats.edgeData.selfEdges : edgeStats.edgeData.remoteEdges);
     }
 
+    /// Lifetime of thread, whether it's running or not
     TimeTracker lifeTime;
     GSCEdgeStats edgeStats;
 };

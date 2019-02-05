@@ -43,7 +43,7 @@
 //#define DEBUG_GSV
 
 
-/// provide additional edge details, intended for attachment to an in-flight exception:
+/// Provide additional edge details, intended for attachment to an in-flight exception:
 static
 void
 dumpEdgeInfo(
@@ -158,7 +158,7 @@ struct EdgeThreadLocalData {
 
 
 /// Process a single edge on one thread:
-GSCEdgeStats
+void
 processEdge(
     int threadId,
     const GSCOptions& opt,
@@ -213,8 +213,9 @@ processEdge(
     }
 
     edgeData.edgeStatMan.updateScoredEdgeTime(edge, *(edgeData.edgeTrackerPtr));
-    return edgeData.edgeStatMan.returnStats();
 }
+
+
 
 static
 void
@@ -223,33 +224,26 @@ runGSC(
     const char* progName,
     const char* progVersion)
 {
-    std::shared_ptr<SynchronizedOutputStream> edgeTrackerStreamPtr;
-    if (! opt.edgeStatsReportFilename.empty())
-    {
-        edgeTrackerStreamPtr.reset(new SynchronizedOutputStream(opt.edgeRuntimeFilename));
-    }
-
     const SVLocusScanner readScanner(opt.scanOpt, opt.statsFilename, opt.alignFileOpt.alignmentFilenames, !opt.isUnstrandedRNA);
 
     static const bool isSkipLocusSetIndexCreation(true);
     const SVLocusSet cset(opt.graphFilename.c_str(), isSkipLocusSetIndexCreation);
     const bam_header_info& bamHeader(cset.getBamHeader());
 
-    const SVWriter svWriter(opt, bamHeader, progName, progVersion);
-
-    std::unique_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
-    EdgeRetriever& edger(*edgerPtr);
-
-    SVEvidenceWriter svEvidenceWriter(opt);
-
     if (opt.isVerbose)
     {
         log_os << __FUNCTION__ << ": " << bamHeader << "\n";
     }
 
-    ctpl::thread_pool pool(opt.workerThreadCount);
+    const SVWriter svWriter(opt, bamHeader, progName, progVersion);
+    SVEvidenceWriter svEvidenceWriter(opt);
 
-    /// Initialize all thread-local edge data:
+    // Initialize all thread-local edge data:
+    std::shared_ptr<SynchronizedOutputStream> edgeTrackerStreamPtr;
+    if (! opt.edgeRuntimeFilename.empty())
+    {
+        edgeTrackerStreamPtr.reset(new SynchronizedOutputStream(opt.edgeRuntimeFilename));
+    }
     std::vector<EdgeThreadLocalData> edgeDataPool(opt.workerThreadCount);
     for (auto& edgeData : edgeDataPool)
     {
@@ -261,21 +255,23 @@ runGSC(
                 edgeData.edgeTrackerPtr, edgeData.edgeStatMan));
     }
 
-    std::vector<std::future<GSCEdgeStats>> edgeResults;
+    ctpl::thread_pool pool(opt.workerThreadCount);
+
+    // Iterate through graph edges:
+    std::unique_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
+    EdgeRetriever& edger(*edgerPtr);
     while (edger.next())
     {
-        edgeResults.push_back(
-            pool.push(
-                processEdge, std::cref(opt), std::cref(cset), std::ref(edgeDataPool), edger.getEdge()));
+        pool.push(
+            processEdge, std::cref(opt), std::cref(cset), std::ref(edgeDataPool), edger.getEdge());
     }
 
     pool.stop(true);
 
     GSCEdgeStats mergedStats;
-    for (auto& edgeResult : edgeResults)
+    for (auto& edgeData : edgeDataPool)
     {
-        const GSCEdgeStats& edgeStats(edgeResult.get());
-        mergedStats.merge(edgeStats);
+        mergedStats.merge(edgeData.edgeStatMan.returnStats());
     }
 
     if (! opt.edgeStatsFilename.empty())
