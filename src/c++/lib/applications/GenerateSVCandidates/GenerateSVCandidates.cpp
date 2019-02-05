@@ -142,6 +142,9 @@ multiJunctionFilterGroupCandidateSV(
 }
 
 
+/// Mutable data shared by all worker threads:
+std::atomic<bool> isWorkerThreadException(false);
+
 
 /// These are thread-local data that we initialize before the thread pool to reduce total initialization costs,
 /// specifically we want to avoid initializing them for every edge (in principal, this has not been benchmarked).
@@ -168,7 +171,8 @@ processEdge(
     std::vector<EdgeThreadLocalData>& edgeDataPool,
     const EdgeInfo edge)
 {
-    std::cerr << "Hello from thread " << threadId;
+    if (isWorkerThreadException.load()) return;
+
     EdgeThreadLocalData& edgeData(edgeDataPool[threadId]);
 
     try
@@ -193,15 +197,29 @@ processEdge(
     }
     catch (illumina::common::ExceptionData& e)
     {
+        isWorkerThreadException = true;
         std::ostringstream oss;
-        oss << "Exception caught while processing graph edge: ";
+        oss << "Exception caught in thread " << threadId << " while processing graph edge: ";
         dumpEdgeInfo(edge,cset,oss);
         e << boost::error_info<struct current_edge_info,std::string>(oss.str());
         throw;
     }
+    catch (std::exception& e)
+    {
+        isWorkerThreadException = true;
+
+        // Convert std::exception to boost exception so that we can add on more context:
+        illumina::common::GeneralException ge(e.what());
+
+        std::ostringstream oss;
+        oss << "Exception caught in thread " << threadId << " while processing graph edge: ";
+        dumpEdgeInfo(edge,cset,oss);
+        ge << boost::error_info<struct current_edge_info,std::string>(oss.str());
+        BOOST_THROW_EXCEPTION(ge);
+    }
     catch (...)
     {
-        log_os << "Exception caught while processing graph edge: ";
+        log_os << "Unknown exception caught while processing graph edge: ";
         dumpEdgeInfo(edge,cset,log_os);
         throw;
     }
@@ -246,6 +264,7 @@ runGSC(
     {
         edgeTrackerStreamPtr.reset(new SynchronizedOutputStream(opt.edgeRuntimeFilename));
     }
+
     std::vector<EdgeThreadLocalData> edgeDataPool(opt.workerThreadCount);
     for (auto& edgeData : edgeDataPool)
     {
@@ -262,13 +281,26 @@ runGSC(
     // Iterate through graph edges:
     std::unique_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
+
+    // Although processEdge doesn't return anything now, the future<void> provides a simple way for worker thread
+    // exceptions to propogate down to this thread:
+    std::vector<std::future<void>> edgeReturnValues;
+
     while (edger.next())
     {
-        pool.push(
-            processEdge, std::cref(opt), std::cref(cset), std::ref(edgeDataPool), edger.getEdge());
+        edgeReturnValues.push_back(
+            pool.push(processEdge, std::cref(opt), std::cref(cset), std::ref(edgeDataPool), edger.getEdge()));
     }
 
     pool.stop(true);
+
+    // This is sufficient to rethrow any worker thread exceptions.
+    //
+    // Note that we don't catch them here, just throw down to the bottom- level handler for GenerateSVCandidates:
+    for (auto& edgeReturnValue : edgeReturnValues)
+    {
+        edgeReturnValue.get();
+    }
 
     GSCEdgeStats mergedStats;
     for (auto& edgeData : edgeDataPool)
