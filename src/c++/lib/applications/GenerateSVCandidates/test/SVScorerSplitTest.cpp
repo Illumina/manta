@@ -17,6 +17,10 @@
 //
 //
 
+/// \file
+/// \author Atanu Pal
+///
+
 #include "boost/test/unit_test.hpp"
 #include "test/testAlignmentDataUtil.hh"
 #include "test/testFileMakers.hh"

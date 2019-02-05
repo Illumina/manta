@@ -23,11 +23,9 @@
 
 #pragma once
 
-//#include <algorithm>
 #include <map>
 #include <memory>
 #include <mutex>
-//#include <set>
 #include <string>
 #include <vector>
 
@@ -35,7 +33,6 @@
 #include "GSCOptions.hh"
 #include "htsapi/bam_streamer.hh"
 #include "htsapi/bam_dumper.hh"
-//#include "htsapi/bam_record_util.hh"
 
 
 /// Records a single read that supports one or more SVs for evidence-BAM output

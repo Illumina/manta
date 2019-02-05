@@ -36,8 +36,8 @@
 
 /// Simple edge time tracker and reporter
 ///
-/// When multiple trackers are used across multiple-threads, the output of all thrackers can be
-/// syncronized through a SynchronizedOutputStream
+/// When multiple trackers are used across multiple threads, their output is coordinated at the file output
+/// level by a shared SynchronizedOutputStream, which must be provided at construction.
 ///
 struct EdgeRuntimeTracker : private boost::noncopyable
 {
