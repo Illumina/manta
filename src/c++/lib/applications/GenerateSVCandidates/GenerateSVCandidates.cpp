@@ -145,7 +145,8 @@ multiJunctionFilterGroupCandidateSV(
 
 /// These are thread-local data that we initialize before the thread pool to reduce total initialization costs,
 /// specifically we want to avoid initializing them for every edge (in principal, this has not been benchmarked).
-struct EdgeThreadLocalData {
+struct EdgeThreadLocalData
+{
     std::shared_ptr<EdgeRuntimeTracker> edgeTrackerPtr;
     GSCEdgeStatsManager edgeStatMan;
     std::unique_ptr<SVFinder> svFindPtr;
@@ -249,10 +250,10 @@ runGSC(
     {
         edgeData.edgeTrackerPtr.reset(new EdgeRuntimeTracker(edgeTrackerStreamPtr));
         edgeData.svFindPtr.reset(new SVFinder(opt, readScanner, bamHeader, cset.getAllSampleReadCounts(),
-            edgeData.edgeTrackerPtr, edgeData.edgeStatMan));
+                                              edgeData.edgeTrackerPtr, edgeData.edgeStatMan));
         edgeData.svProcessorPtr.reset(
             new SVCandidateProcessor(opt, readScanner, cset, svWriter, svEvidenceWriter,
-                edgeData.edgeTrackerPtr, edgeData.edgeStatMan));
+                                     edgeData.edgeTrackerPtr, edgeData.edgeStatMan));
     }
 
     ctpl::thread_pool pool(opt.workerThreadCount);

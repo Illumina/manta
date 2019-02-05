@@ -35,9 +35,10 @@
 /// methods of SVScorer.
 struct TestSVScorer
 {
-    void processExistingAltPairInfo(SVScorer &scorer, PairOptions &pairOptions, SVCandidateSetData &candidateSetData,
-                                    SVCandidate &candidate, SVId &id, SVEvidence &evidence,
-                                    SVEvidenceWriterData &suppSamples) {
+    void processExistingAltPairInfo(SVScorer& scorer, PairOptions& pairOptions, SVCandidateSetData& candidateSetData,
+                                    SVCandidate& candidate, SVId& id, SVEvidence& evidence,
+                                    SVEvidenceWriterData& suppSamples)
+    {
         scorer.processExistingAltPairInfo(pairOptions, candidateSetData, candidate, id, evidence, suppSamples);
     }
 
@@ -59,7 +60,8 @@ std::unique_ptr<SVLocusScanner> buildSVLocusScanner(bam_header_info bamHeaderInf
     {
         ReadGroupLabel rgKey(("Bamfile" + std::to_string(j)).c_str(), std::to_string(j).c_str());
         ReadGroupStats rgStats;
-        for (unsigned i(0); i < 250; ++i) {
+        for (unsigned i(0); i < 250; ++i)
+        {
             rgStats.fragStats.addObservation(50);
             rgStats.fragStats.addObservation(75);
             rgStats.fragStats.addObservation(100);
@@ -420,8 +422,8 @@ BOOST_AUTO_TEST_CASE( test_processBamProcList )
     // search range end = 159 + (125-50) + 1 = 235
     // Test cases for search range are mentioned in test_nextBAMIndex in SVScorePairProcessorTest.cpp
     std::shared_ptr<SVScorePairRefProcessor> processor(new SVScorePairRefProcessor(bamFileInfo,
-                                                                                    scanner.operator*(), options1,
-                                                                                    candidate, true, evidence));
+                                                                                   scanner.operator*(), options1,
+                                                                                   candidate, true, evidence));
     std::vector<SVScorer::pairProcPtr> pairProcList = {processor};
     std::vector<SVScorer::streamPtr> bamStreams = {bamStream1, bamStream2};
     SVId id;
@@ -545,7 +547,8 @@ BOOST_AUTO_TEST_CASE( test_processExistingAltPairInfo )
 
     float expected(0.24999994);
     // Check 1st bam file
-    for (const SVCandidateSetSequenceFragment &fragment : group1) {
+    for (const SVCandidateSetSequenceFragment& fragment : group1)
+    {
         SVFragmentEvidence fragmentEvidence(evidence.getSampleEvidence(0)[fragment.qname()]);
         SVFragmentEvidenceAllele alt(fragmentEvidence.alt);
         // Whether read-1 is scanned
@@ -573,7 +576,8 @@ BOOST_AUTO_TEST_CASE( test_processExistingAltPairInfo )
     }
 
     // Check 2nd bam file
-    for (const SVCandidateSetSequenceFragment &fragment : group2) {
+    for (const SVCandidateSetSequenceFragment& fragment : group2)
+    {
         SVFragmentEvidence fragmentEvidence(evidence.getSampleEvidence(1)[fragment.qname()]);
         SVFragmentEvidenceAllele alt(fragmentEvidence.alt);
         // Whether read-1 is scanned

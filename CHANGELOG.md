@@ -1,3 +1,10 @@
+## Unreleased
+
+### Changed
+- Accelerate SV discovery and genotyping (MANTA-1521)
+  - Changes the SV discovering and genotyping phase from a multi-process to a multi-thread design. As a result Manta will run at least 25% faster on a typical modern server.
+  - SGE support is removed with this change.
+
 ## v1.5.1 - 2019-02-15
 This is a minor update from v1.5.0.
 	

@@ -139,10 +139,10 @@ isSVInv(const index_t idx)
 {
     switch (idx)
     {
-        case INVERSION:
-            return true;
-        default:
-            return false;
+    case INVERSION:
+        return true;
+    default:
+        return false;
     }
 }
 

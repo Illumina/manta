@@ -54,7 +54,8 @@ private:
 };
 
 /// Synchronizes access to a file stream from multiple threads:
-class SynchronizedOutputStream : private boost::noncopyable {
+class SynchronizedOutputStream : private boost::noncopyable
+{
 public:
     explicit
     SynchronizedOutputStream(const std::string& outputFile);

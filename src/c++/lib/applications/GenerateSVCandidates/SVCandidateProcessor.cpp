@@ -241,9 +241,9 @@ scoreSV(
     if (! isAnyFalse(isJunctionFiltered)) return;
 
     _svScorer.scoreSV(svData, mjAssemblyData, mjSV, junctionSVId,
-                    isJunctionFiltered, _opt.isSomatic(), _opt.isTumorOnly(),
-                    _mjModelScoreInfo, _mjJointModelScoreInfo,
-                    isMJEvent, _svEvidenceWriterData);
+                      isJunctionFiltered, _opt.isSomatic(), _opt.isTumorOnly(),
+                      _mjModelScoreInfo, _mjJointModelScoreInfo,
+                      isMJEvent, _svEvidenceWriterData);
 }
 
 
@@ -291,7 +291,7 @@ scoreAndWriteSV(
     // finally, write out to all VCF streams
     //
     _svWriter.writeSV(svData, mjAssemblyData, mjSV, isCandidateJunctionFiltered, isScoredJunctionFiltered,
-        junctionSVId, _mjModelScoreInfo, _mjJointModelScoreInfo, isMultiJunctionEvent);
+                      junctionSVId, _mjModelScoreInfo, _mjJointModelScoreInfo, isMultiJunctionEvent);
 }
 
 
@@ -446,13 +446,13 @@ evaluateCandidate(
                 std::vector<bool> isJunctionFilteredHack(junctionCount,true);
                 isJunctionFilteredHack[junctionIndex] = false;
                 scoreAndWriteSV(edge, svData, mjAssemblyData, mjAssembledCandidateSV,
-                                  isJunctionFilteredHack);
+                                isJunctionFilteredHack);
             }
         }
         else
         {
             scoreAndWriteSV(edge, svData, mjAssemblyData, mjAssembledCandidateSV,
-                              isJunctionFiltered);
+                            isJunctionFiltered);
         }
     }
 }

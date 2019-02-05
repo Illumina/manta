@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE( test_GetNodeRef)
     BOOST_REQUIRE_EQUAL(refSeq.seq().size(), 102);
     // check the sequence
     BOOST_REQUIRE_EQUAL(refSeq.seq(), "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGG"
-                                      "TATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
+                        "TATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
 }
 
 // test candidates must have at least evidence of 2
@@ -442,7 +442,7 @@ BOOST_AUTO_TEST_CASE( test_IsFilterSingleJunctionCandidate )
 
     // test for SEMI_MAPPED candidate as filtration state
     BOOST_REQUIRE_EQUAL(isFilterSingleJunctionCandidate(false, spanningNoiseRate, assemblyNoiseRate, fatSVCandidate1, 1),
-                                                        SINGLE_JUNCTION_FILTER::SEMI_MAPPED);
+                        SINGLE_JUNCTION_FILTER::SEMI_MAPPED);
 
     svCandidate.bp1.state = SVBreakendState::index_t::RIGHT_OPEN ;
     svCandidate.bp2.state = SVBreakendState::index_t::LEFT_OPEN ;
@@ -462,13 +462,13 @@ BOOST_AUTO_TEST_CASE( test_IsFilterSingleJunctionCandidate )
     spanningNoiseRate.clear();
     spanningNoiseRate.push_back(0.008);
     BOOST_REQUIRE_EQUAL(isFilterSingleJunctionCandidate(false, spanningNoiseRate, assemblyNoiseRate, fatSVCandidate2, 1),
-                                                        SINGLE_JUNCTION_FILTER::NONE);
+                        SINGLE_JUNCTION_FILTER::NONE);
 
     spanningNoiseRate.clear();
     spanningNoiseRate.push_back(0.1);
     // test for SPANNING_LOW_SIGNAL as filtration state
     BOOST_REQUIRE_EQUAL(isFilterSingleJunctionCandidate(false, spanningNoiseRate, assemblyNoiseRate, fatSVCandidate2, 1),
-                                                        SINGLE_JUNCTION_FILTER::SPANNING_LOW_SIGNAL);
+                        SINGLE_JUNCTION_FILTER::SPANNING_LOW_SIGNAL);
 
     // test for COMPLEX_LOW_COUNT as filtration state
     svCandidate.bp1.state = SVBreakendState::index_t::COMPLEX ;
@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE( test_IsFilterSingleJunctionCandidate )
     svCandidate.bp1.lowresEvidence.add(0, 2);
     FatSVCandidate fatSVCandidate3(svCandidate,1);
     BOOST_REQUIRE_EQUAL(isFilterSingleJunctionCandidate(false, spanningNoiseRate, assemblyNoiseRate, fatSVCandidate3, 1),
-                                                        SINGLE_JUNCTION_FILTER::COMPLEX_LOW_COUNT);
+                        SINGLE_JUNCTION_FILTER::COMPLEX_LOW_COUNT);
 
     // test for COMPLEX_LOW_SIGNAL as filtration state
     svCandidate.bp1.state = SVBreakendState::index_t::COMPLEX ;
@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE( test_IsFilterSingleJunctionCandidate )
     svCandidate.bp1.lowresEvidence.add(2, 3);
     FatSVCandidate fatSVCandidate4(svCandidate,1);
     BOOST_REQUIRE_EQUAL(isFilterSingleJunctionCandidate(false, spanningNoiseRate, assemblyNoiseRate, fatSVCandidate4, 1),
-                                                        SINGLE_JUNCTION_FILTER::COMPLEX_LOW_SIGNAL);
+                        SINGLE_JUNCTION_FILTER::COMPLEX_LOW_SIGNAL);
 }
 
 
@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE( test_SVCandidates )
         // Deserialize SV locus graph
         const SVLocusSet cset(options.graphFilename.c_str(), isSkipLocusSetIndexCreation);
         SVFinder finder(options, scanner.operator*(), cset.getBamHeader(), cset.getAllSampleReadCounts(),
-            edgeTrackerPtr, edgeStatMan);
+                        edgeTrackerPtr, edgeStatMan);
         finder.findCandidateSV(cset, edgeInfo, svData, svs);
         // Min edge criteria is not satisfied as minimum
         // number of edges required is 10

@@ -77,8 +77,8 @@ BOOST_FIXTURE_TEST_SUITE( SVSupports_test_suite, BamStream )
 // 2. ZM tag : SV information for that read
 // The format of ZM tag should be {SVID1|supportType1|supportType2, SVID2|supportType1|supportType2}
 // For example: if a spanning candidate supports deletion, ZM tag will be {DEL_1|PR}
-static void checkEvidenceBam(const GenomeInterval &genomeInterval,
-                             const std::string &bamFileName,
+static void checkEvidenceBam(const GenomeInterval& genomeInterval,
+                             const std::string& bamFileName,
                              std::string expectedZMTagValue, std::string expectedReadName)
 {
     // Get the test reference file name

@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE( test_Exception )
     // scan end = max(0, min(range1.end(), targetSize - querySize)) = 67
     // scanEnd < scanStart.
     BOOST_CHECK_THROW(splitReadAligner(2, querySeq1, qscoreSnp, qual.get(), targetSeq2, range2, alignmentInfo2),
-                                       illumina::common::GeneralException);
+                      illumina::common::GeneralException);
 
     // all good means case-1 and case-2 are satisfied. All the metrics are calculated
     // as described in test_getRefAlignment

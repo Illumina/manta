@@ -953,7 +953,7 @@ struct ReadGroupManager
 
     ReadGroupTracker&
     getTracker(
-        const bam_record &bamRead,
+        const bam_record& bamRead,
         const std::string& defaultStatsFilename="")
     {
         const char* readGroup(getReadGroup(bamRead));
@@ -963,7 +963,7 @@ struct ReadGroupManager
 
     ReadGroupTracker&
     getTracker(
-        const char *readGroup,
+        const char* readGroup,
         const std::string& defaultStatsFilename="")
     {
         ReadGroupLabel rgKey(_statsBamFile.c_str(), readGroup, false);

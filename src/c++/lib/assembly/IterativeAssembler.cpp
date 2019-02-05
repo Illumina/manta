@@ -852,7 +852,7 @@ selectContigs(
             const unsigned currNewSupport = newSupportReads.size();
             const unsigned currContigLen = contig.seq.size();
             const bool isBetterContig((currNewSupport > maxSupport) ||
-                                ((currNewSupport == maxSupport) && (currContigLen > maxLength)));
+                                      ((currNewSupport == maxSupport) && (currContigLen > maxLength)));
             if (isBetterContig)
             {
                 selectedContig = contig;

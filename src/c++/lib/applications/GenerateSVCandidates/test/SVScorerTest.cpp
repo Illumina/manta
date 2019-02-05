@@ -2036,7 +2036,7 @@ BOOST_AUTO_TEST_CASE( test_ScoreSV )
     candidateAssemblyData1.spanningAlignments.push_back(jumpAlignmentResultType1);
     candidateAssemblyData1.isSpanning = true;
     candidateAssemblyData1.extendedContigs.push_back("GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                                                    "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
+                                                     "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
     mjAssemblyData.push_back(candidateAssemblyData1);
     scorer.scoreSV(svData, mjAssemblyData, mjSV, mjSVId, isJunctionFiltered,
                    false, true, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent, svEvidenceWriterData);
@@ -2076,12 +2076,12 @@ BOOST_AUTO_TEST_CASE( test_ScoreSV )
     candidateAssemblyData2.spanningAlignments.push_back(jumpAlignmentResultType2);
     candidateAssemblyData2.isSpanning = true;
     candidateAssemblyData2.extendedContigs.push_back("GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-    "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
+                                                     "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
     mjAssemblyData.push_back(candidateAssemblyData2);
     //SVScorer scorer2(options, buildSVLocusScannerForSomatic(bamHeader).operator*(), bamHeader);
     //fSVScorer.setSampleCount(scorer2, 1, 1);
     scorer.scoreSV(svData, mjAssemblyData, mjSV, mjSVId, isJunctionFiltered,
-    false, true, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent, svEvidenceWriterData);
+                   false, true, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent, svEvidenceWriterData);
     BOOST_REQUIRE(isMJEvent);
 }
 

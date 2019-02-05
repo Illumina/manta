@@ -37,7 +37,8 @@ struct OpenBamStreamsFixture
 {
     OpenBamStreamsFixture()
         : readValues(
-    { {0, 10}, {0, 130}, {1, 20}, {1, 140}
+    {
+        {0, 10}, {0, 130}, {1, 20}, {1, 140}
     })
     {
         const bam_header_info bamHeader(buildTestBamHeader());

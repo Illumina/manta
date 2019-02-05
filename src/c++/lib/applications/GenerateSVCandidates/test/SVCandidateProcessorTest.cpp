@@ -47,7 +47,8 @@ std::unique_ptr<SVLocusScanner> buildSomaticSVLocusScanner(bam_header_info bamHe
     {
         ReadGroupLabel rgKey(("Bamfile" + std::to_string(j)).c_str(), std::to_string(j).c_str());
         ReadGroupStats rgStats;
-        for (unsigned i(0); i < 250; ++i) {
+        for (unsigned i(0); i < 250; ++i)
+        {
             rgStats.fragStats.addObservation(50);
             rgStats.fragStats.addObservation(75);
             rgStats.fragStats.addObservation(100);
@@ -83,10 +84,10 @@ BOOST_AUTO_TEST_CASE( test_JunctionFilter )
     SVCandidate candidate1;
     candidate1.setPrecise();
     candidate1.bp1.state = SVBreakendState::RIGHT_OPEN;
-    candidate1.bp1.interval = GenomeInterval(0 , 40, 50);
+    candidate1.bp1.interval = GenomeInterval(0, 40, 50);
     candidate1.bp1.lowresEvidence.add(0, 1);
     candidate1.bp2.state = SVBreakendState::LEFT_OPEN;
-    candidate1.bp2.interval = GenomeInterval(1 , 65, 75);
+    candidate1.bp2.interval = GenomeInterval(1, 65, 75);
     // Adding a pair evidence to this candidate
     candidate1.bp2.lowresEvidence.add(0, 1);
     SVMultiJunctionCandidate junctionCandidate;
@@ -107,10 +108,10 @@ BOOST_AUTO_TEST_CASE( test_JunctionFilter )
     // did not produce a successful contig alignment.
     SVCandidate candidate2;
     candidate2.bp1.state = SVBreakendState::COMPLEX;
-    candidate2.bp1.interval = GenomeInterval(0 , 40, 50);
+    candidate2.bp1.interval = GenomeInterval(0, 40, 50);
     candidate2.bp1.lowresEvidence.add(0, 1);
     candidate2.bp2.state = SVBreakendState::UNKNOWN;
-    candidate2.bp2.interval = GenomeInterval(0 , 65, 75);
+    candidate2.bp2.interval = GenomeInterval(0, 65, 75);
     candidate2.bp2.lowresEvidence.add(0, 1);
     junctionCandidate.junction.clear();
     junctionCandidate.junction.push_back(candidate2);
@@ -127,10 +128,10 @@ BOOST_AUTO_TEST_CASE( test_JunctionFilter )
     options.minCandidateSpanningCount = 1;
     SVCandidate candidate3;
     candidate3.bp1.state = SVBreakendState::RIGHT_OPEN;
-    candidate3.bp1.interval = GenomeInterval(0 , 40, 50);
+    candidate3.bp1.interval = GenomeInterval(0, 40, 50);
     candidate3.bp1.lowresEvidence.add(0, 1);
     candidate3.bp2.state = SVBreakendState::LEFT_OPEN;
-    candidate3.bp2.interval = GenomeInterval(0 , 65, 75);
+    candidate3.bp2.interval = GenomeInterval(0, 65, 75);
     candidate3.bp2.lowresEvidence.add(0, 1);
     junctionCandidate.junction.clear();
     junctionCandidate.junction.push_back(candidate2);
@@ -252,10 +253,10 @@ BOOST_AUTO_TEST_CASE( test_tumorOnly )
     SVCandidate candidate1;
     candidate1.setPrecise();
     candidate1.bp1.state = SVBreakendState::RIGHT_OPEN;
-    candidate1.bp1.interval = GenomeInterval(0 , 40, 50);
+    candidate1.bp1.interval = GenomeInterval(0, 40, 50);
     candidate1.bp1.lowresEvidence.add(0, 1);
     candidate1.bp2.state = SVBreakendState::LEFT_OPEN;
-    candidate1.bp2.interval = GenomeInterval(1 , 65, 75);
+    candidate1.bp2.interval = GenomeInterval(1, 65, 75);
     candidate1.bp2.lowresEvidence.add(0, 1);
     SVCandidateAssemblyData candidateAssemblyData1;
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
@@ -299,7 +300,7 @@ BOOST_AUTO_TEST_CASE( test_tumorOnly )
         const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
         SVEvidenceWriter svEvidenceWriter(options);
         SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, svEvidenceWriter,
-            edgeTrackerPtr, edgeStatMan);
+                                                edgeTrackerPtr, edgeStatMan);
         candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData);
     }
 
@@ -367,10 +368,10 @@ BOOST_AUTO_TEST_CASE( test_RNA )
     SVCandidate candidate1;
     candidate1.setPrecise();
     candidate1.bp1.state = SVBreakendState::RIGHT_OPEN;
-    candidate1.bp1.interval = GenomeInterval(0 , 40, 50);
+    candidate1.bp1.interval = GenomeInterval(0, 40, 50);
     candidate1.bp1.lowresEvidence.add(0, 1);
     candidate1.bp2.state = SVBreakendState::LEFT_OPEN;
-    candidate1.bp2.interval = GenomeInterval(1 , 65, 75);
+    candidate1.bp2.interval = GenomeInterval(1, 65, 75);
     candidate1.bp2.lowresEvidence.add(0, 1);
     SVCandidateAssemblyData candidateAssemblyData1;
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
@@ -414,7 +415,7 @@ BOOST_AUTO_TEST_CASE( test_RNA )
         const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
         SVEvidenceWriter svEvidenceWriter(options);
         SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, svEvidenceWriter,
-            edgeTrackerPtr, edgeStatMan);
+                                                edgeTrackerPtr, edgeStatMan);
         candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData);
     }
 
@@ -483,10 +484,10 @@ BOOST_AUTO_TEST_CASE( test_Diploid )
     SVCandidate candidate1;
     candidate1.setPrecise();
     candidate1.bp1.state = SVBreakendState::RIGHT_OPEN;
-    candidate1.bp1.interval = GenomeInterval(0 , 40, 50);
+    candidate1.bp1.interval = GenomeInterval(0, 40, 50);
     candidate1.bp1.lowresEvidence.add(0, 1);
     candidate1.bp2.state = SVBreakendState::LEFT_OPEN;
-    candidate1.bp2.interval = GenomeInterval(1 , 65, 75);
+    candidate1.bp2.interval = GenomeInterval(1, 65, 75);
     candidate1.bp2.lowresEvidence.add(0, 1);
     SVCandidateAssemblyData candidateAssemblyData1;
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
@@ -605,21 +606,21 @@ BOOST_AUTO_TEST_CASE( test_Somatic )
     SVCandidate candidate1;
     candidate1.setPrecise();
     candidate1.bp1.state = SVBreakendState::RIGHT_OPEN;
-    candidate1.bp1.interval = GenomeInterval(0 , 40, 50);
+    candidate1.bp1.interval = GenomeInterval(0, 40, 50);
     candidate1.bp1.lowresEvidence.add(0, 9);
     candidate1.bp1.lowresEvidence.add(1, 9);
     candidate1.bp2.state = SVBreakendState::LEFT_OPEN;
-    candidate1.bp2.interval = GenomeInterval(1 , 65, 75);
+    candidate1.bp2.interval = GenomeInterval(1, 65, 75);
     candidate1.bp2.lowresEvidence.add(0, 9);
     candidate1.bp2.lowresEvidence.add(1, 9);
 
     SVCandidate candidate2;
     candidate2.setPrecise();
     candidate2.bp1.state = SVBreakendState::RIGHT_OPEN;
-    candidate2.bp1.interval = GenomeInterval(0 , 10, 20);
+    candidate2.bp1.interval = GenomeInterval(0, 10, 20);
     candidate2.bp1.lowresEvidence.add(0, 1);
     candidate2.bp2.state = SVBreakendState::RIGHT_OPEN;
-    candidate2.bp2.interval = GenomeInterval(1 , 100, 110);
+    candidate2.bp2.interval = GenomeInterval(1, 100, 110);
     candidate2.bp2.lowresEvidence.add(0, 1);
 
     SVCandidateAssemblyData candidateAssemblyData1;
@@ -669,7 +670,7 @@ BOOST_AUTO_TEST_CASE( test_Somatic )
         const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
         SVEvidenceWriter svEvidenceWriter(options);
         SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, svEvidenceWriter,
-            edgeTrackerPtr, edgeStatMan);
+                                                edgeTrackerPtr, edgeStatMan);
         candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData);
     }
 
@@ -697,23 +698,25 @@ BOOST_AUTO_TEST_CASE( test_Somatic )
             {
                 count ++;
             }
-            if (count >= 1) {
-                switch (count) {
-                    case 1:
-                        BOOST_REQUIRE(line.find("C[chrBar:66[") != std::string::npos);
-                        break;
-                    case 2:
-                        BOOST_REQUIRE(line.find("]chrFoo:41]T") != std::string::npos);
-                        break;
-                    case 3:
-                        BOOST_REQUIRE(line.find("C]chrBar:110]") != std::string::npos);
-                        break;
-                    case 4:
-                        BOOST_REQUIRE(line.find("G]chrFoo:20]") != std::string::npos);
-                        break;
-                    default:
-                        BOOST_THROW_EXCEPTION(illumina::common::GeneralException("less than 1 or more than 4 "
-                                                                                 "records are not possible in the VCF"));
+            if (count >= 1)
+            {
+                switch (count)
+                {
+                case 1:
+                    BOOST_REQUIRE(line.find("C[chrBar:66[") != std::string::npos);
+                    break;
+                case 2:
+                    BOOST_REQUIRE(line.find("]chrFoo:41]T") != std::string::npos);
+                    break;
+                case 3:
+                    BOOST_REQUIRE(line.find("C]chrBar:110]") != std::string::npos);
+                    break;
+                case 4:
+                    BOOST_REQUIRE(line.find("G]chrFoo:20]") != std::string::npos);
+                    break;
+                default:
+                    BOOST_THROW_EXCEPTION(illumina::common::GeneralException("less than 1 or more than 4 "
+                                                                             "records are not possible in the VCF"));
                 }
             }
 
@@ -743,23 +746,25 @@ BOOST_AUTO_TEST_CASE( test_Somatic )
             {
                 count ++;
             }
-            if (count >= 1) {
-                switch (count) {
-                    case 1:
-                        BOOST_REQUIRE(line.find("C[chrBar:66[") != std::string::npos);
-                        break;
-                    case 2:
-                        BOOST_REQUIRE(line.find("]chrFoo:41]T") != std::string::npos);
-                        break;
-                    case 3:
-                        BOOST_REQUIRE(line.find("C]chrBar:110]") != std::string::npos);
-                        break;
-                    case 4:
-                        BOOST_REQUIRE(line.find("G]chrFoo:20]") != std::string::npos);
-                        break;
-                    default:
-                        BOOST_THROW_EXCEPTION(illumina::common::GeneralException("less than 1 or more than 4 "
-                                                                                 "records are not possible in the VCF"));
+            if (count >= 1)
+            {
+                switch (count)
+                {
+                case 1:
+                    BOOST_REQUIRE(line.find("C[chrBar:66[") != std::string::npos);
+                    break;
+                case 2:
+                    BOOST_REQUIRE(line.find("]chrFoo:41]T") != std::string::npos);
+                    break;
+                case 3:
+                    BOOST_REQUIRE(line.find("C]chrBar:110]") != std::string::npos);
+                    break;
+                case 4:
+                    BOOST_REQUIRE(line.find("G]chrFoo:20]") != std::string::npos);
+                    break;
+                default:
+                    BOOST_THROW_EXCEPTION(illumina::common::GeneralException("less than 1 or more than 4 "
+                                                                             "records are not possible in the VCF"));
                 }
             }
         }

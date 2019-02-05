@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE( test_nextBAMIndex )
     SVEvidence evidence;
     // isBP1 = true. So search range is calculated around BP1.
     SVScorePairRefProcessor processor1(bamFileInfo,
-                                      scanner.operator*(), options, candidate, true, evidence);
+                                       scanner.operator*(), options, candidate, true, evidence);
     // center positin of BP1 = 100
     // So range start = 100 - (125-50) = 25
     // range end = 100 + (125-50) + 1 = 176

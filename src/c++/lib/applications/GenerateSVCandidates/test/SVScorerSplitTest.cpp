@@ -178,16 +178,16 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_When_Reference_Haplotype_Wins )
 {
     // Reference sequence at breakpoint-1
     std::string refSeqBp1 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                               "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+                            "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Alt Contig sequence at breakpoint-1
     std::string altContigSeqBp1 = "GATCACAGGTCGATATCCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                               "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+                                  "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Reference sequence at breakpoint-2
     std::string refSeqBp2 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                               "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+                            "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Alt Contig sequence at breakpoint-2
     std::string altContigSeqBp2 = "GATCACAGGTCGATATCCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                               "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+                                  "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Options for  snp prior probability
     CallOptionsShared optionsShared;
     // A pair of ids for both ends of a single SV junction
@@ -249,16 +249,16 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_When_Allele_Haplotype_Wins )
 {
     // Reference sequence at breakpoint-1
     std::string refSeqBp1 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                               "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+                            "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Contig sequence at breakpoint-1
     std::string altContigSeqBp1 = "GATCACAGGTCGATATCCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                               "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+                                  "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Reference sequence at breakpoint-2
     std::string refSeqBp2 = "GATCACAGGTCGATATCCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                               "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+                            "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Contig sequence at breakpoint-2
     std::string altContigSeqBp2 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                               "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+                                  "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Options for  snp prior probability
     CallOptionsShared optionsShared;
     SVId id; // A pair of ids for both ends of a single SV junction
@@ -320,16 +320,16 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_For_RNA )
 {
     // Reference sequence at breakpoint-1
     std::string refSeqBp1 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                               "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+                            "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Contig sequence at breakpoint-1
     std::string altContigSeqBp1 = "GATCACAGGTCGATATCCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                               "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+                                  "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Reference sequence at breakpoint-2
     std::string refSeqBp2 = "GATCACAGGTCTATCACCCATTTTACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                               "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+                            "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Contig sequence at breakpoint-2
     std::string altContigSeqBp2 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                               "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+                                  "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Options for  snp prior probability
     CallOptionsShared optionsShared;
     SVId id; // A pair of ids for both ends of a single SV junction

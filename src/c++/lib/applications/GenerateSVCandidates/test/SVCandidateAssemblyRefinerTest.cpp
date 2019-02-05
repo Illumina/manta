@@ -1045,13 +1045,13 @@ BOOST_AUTO_TEST_CASE( test_findCandidateVariantsFromComplexSVContigAlignment )
     // Case-1 is designed here. Minimum indel size = 10. But cigar(35=5I30=6D10=3I) does not have any indel
     // with size more than 10.
     BOOST_REQUIRE(!findCandidateVariantsFromComplexSVContigAlignment(100, scores, alignment1,
-                   contigSeq, refSeq, 10, candidateSegments));
+                                                                     contigSeq, refSeq, 10, candidateSegments));
 
     // Case-2 is designed here. Min indel size = 6. So only one segment (6D) more than this.
     // So before this segment, cigar is 35=5I30= which is low quality as alignment score 0.75(49/70)
     // which is less than 0.75.
     BOOST_REQUIRE(!findCandidateVariantsFromComplexSVContigAlignment(100, scores, alignment1,
-                   contigSeq, refSeq, 6, candidateSegments));
+                                                                     contigSeq, refSeq, 6, candidateSegments));
 
     // Min indel threshold is 3. So Indel segments are [(0,0), (2,2), (4,4), (6,6)].
     // Before 1st 3I(0,0), there is no segment, so the segment before (0,0) is low quality.
@@ -1064,7 +1064,7 @@ BOOST_AUTO_TEST_CASE( test_findCandidateVariantsFromComplexSVContigAlignment )
     cigar_to_apath(testCigar2.c_str(), alignment2.apath);
     alignment2.beginPos = 50;
     BOOST_REQUIRE(findCandidateVariantsFromComplexSVContigAlignment(100, scores, alignment2,
-                  contigSeq, refSeq, 3, candidateSegments));
+                                                                    contigSeq, refSeq, 3, candidateSegments));
 }
 
 // The api constructs a usable candidate SV from a smallIndel alignment section.
@@ -1087,8 +1087,8 @@ BOOST_AUTO_TEST_CASE( test_setSmallCandSV )
                       "TCTCTCTCTCTCTCTCTCTCGCTCTCTCCTCCCCTAGTTTATCCTGGACTCATGCTGAGCTCAGCAACCCTTGAACTCATTTTCT"
                       "ATCTGACATGT";
     const std:: string readSequence("ATTCCTTTGCATCGTATTCCTCAGTCTCTGCGGAAGGCACTGCTCCTTCCTTTCCTTTCTAAATCTCTCTCTGTCTCT"
-                              "CTCTCTCTCTCTCTCTCTCTCTCTCTCGCTCTCTCCTCCCCTAGTTTATCCTGGACTCATGCTGAGCTCAGCAACCCTT"
-                              "GAACTCATTTTCTATCTGAC");
+                                    "CTCTCTCTCTCTCTCTCTCTCTCTCTCGCTCTCTCCTCCCCTAGTTTATCCTGGACTCATGCTGAGCTCAGCAACCCTT"
+                                    "GAACTCATTTTCTATCTGAC");
     // If an alignment cigar is 73=6I98=, our segment interest is 6I, api constructs a sv region
     // around that 6I. It will discard 73= and 98= segments. Let's say reference range for 6I is [x, y).
     // While doing this computation at the corresponding reference range, api checks that how far it can
@@ -1103,7 +1103,7 @@ BOOST_AUTO_TEST_CASE( test_setSmallCandSV )
     SVCandidate candidate;
     GSCOptions options;
     options.isOutputContig = true;
-    std::pair<unsigned , unsigned > segment(std::pair<unsigned,unsigned >(1, 1));
+    std::pair<unsigned, unsigned > segment(std::pair<unsigned,unsigned >(1, 1));
     setSmallCandSV(reference, readSequence, alignment, segment, candidate, options);
     // ref region is [747 +73-1, 747 + 73) = [819, 820)
     // insertion location is [73, 74)
@@ -1474,9 +1474,9 @@ BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
     SVCandidateAssemblyRefiner refiner1(options, bamHeader, counts, edgeTrackerPtr);
     SVCandidate candidate1;
     candidate1.bp1.state = SVBreakendState::RIGHT_OPEN;
-    candidate1.bp1.interval = GenomeInterval(0 , 310, 320);
+    candidate1.bp1.interval = GenomeInterval(0, 310, 320);
     candidate1.bp2.state = SVBreakendState::LEFT_OPEN;
-    candidate1.bp2.interval = GenomeInterval(0 , 330, 350);
+    candidate1.bp2.interval = GenomeInterval(0, 330, 350);
     SVCandidateAssemblyData candidateAssemblyData1;
     refiner1.getCandidateAssemblyData(candidate1, false, candidateAssemblyData1);
     BOOST_REQUIRE_EQUAL(candidateAssemblyData1.smallSVAlignments.size(), 1);
@@ -1497,9 +1497,9 @@ BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
     // and BP2 is supported by reads with read indices 3,4 and 5.
     SVCandidate candidate2;
     candidate2.bp1.state = SVBreakendState::RIGHT_OPEN;
-    candidate2.bp1.interval = GenomeInterval(0 , 40, 50);
+    candidate2.bp1.interval = GenomeInterval(0, 40, 50);
     candidate2.bp2.state = SVBreakendState::LEFT_OPEN;
-    candidate2.bp2.interval = GenomeInterval(1 , 65, 75);
+    candidate2.bp2.interval = GenomeInterval(1, 65, 75);
     SVCandidateAssemblyData candidateAssemblyData2;
     refiner1.getCandidateAssemblyData(candidate2, false, candidateAssemblyData2);
     // Two contigs are generated for BP1 and BP2.
@@ -1523,9 +1523,9 @@ BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
     // test case.
     SVCandidate candidate3;
     candidate3.bp1.state = SVBreakendState::RIGHT_OPEN;
-    candidate3.bp1.interval = GenomeInterval(0 , 40, 50);
+    candidate3.bp1.interval = GenomeInterval(0, 40, 50);
     candidate3.bp2.state = SVBreakendState::LEFT_OPEN;
-    candidate3.bp2.interval = GenomeInterval(1 , 65, 75);
+    candidate3.bp2.interval = GenomeInterval(1, 65, 75);
     SVCandidateAssemblyData candidateAssemblyData3;
     options.isRNA = true; // This is a RNA sample.
     SVCandidateAssemblyRefiner refiner2(options, bamHeader, counts, edgeTrackerPtr);
@@ -1549,9 +1549,9 @@ BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
     // expected.
     SVCandidate candidate4;
     candidate4.bp1.state = SVBreakendState::COMPLEX;
-    candidate4.bp1.interval = GenomeInterval(0 , 310, 320);
+    candidate4.bp1.interval = GenomeInterval(0, 310, 320);
     candidate4.bp2.state = SVBreakendState::UNKNOWN;
-    candidate4.bp2.interval = GenomeInterval(0 , 330, 350);
+    candidate4.bp2.interval = GenomeInterval(0, 330, 350);
     SVCandidateAssemblyData candidateAssemblyData4;
     SVCandidateAssemblyRefiner refiner3(options, bamHeader, counts, edgeTrackerPtr);
     refiner3.getCandidateAssemblyData(candidate4, true, candidateAssemblyData4);

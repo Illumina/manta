@@ -39,7 +39,10 @@
 struct GSCEdgeStatsManager : private boost::noncopyable
 {
     explicit
-    GSCEdgeStatsManager() { lifeTime.resume(); }
+    GSCEdgeStatsManager()
+    {
+        lifeTime.resume();
+    }
 
     GSCEdgeStats
     returnStats()

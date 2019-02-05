@@ -194,9 +194,9 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
                                                      "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
     // Processor for Breakpoint-1
     SVScorePairAltProcessor processor1(
-            bamHeader, scannerOptions, refinerOptions, tumorNormalInfo,
-            scanner.operator*(), options1, candidateAssemblyData1,
-            candidate1, true, evidence1);
+        bamHeader, scannerOptions, refinerOptions, tumorNormalInfo,
+        scanner.operator*(), options1, candidateAssemblyData1,
+        candidate1, true, evidence1);
     SVId id;
     SVEvidenceWriterSampleData suppFrags;
     // The test cases below are for large insertions, which has insert sequence size larger than
@@ -278,9 +278,9 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     candidateAssemblyData2.extendedContigs.push_back("GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                                      "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
     SVScorePairAltProcessor processor2(
-            bamHeader, scannerOptions, refinerOptions, tumorNormalInfo,
-            scanner.operator*(), options1, candidateAssemblyData2, candidate2,
-            true, evidence2);
+        bamHeader, scannerOptions, refinerOptions, tumorNormalInfo,
+        scanner.operator*(), options1, candidateAssemblyData2, candidate2,
+        true, evidence2);
     // As we are interested in BP1,
     // search range start = 159 - (125-50) = 84
     // search range end = 159 + (125-50) + 1 = 235
@@ -414,8 +414,8 @@ BOOST_AUTO_TEST_CASE( test_alignShadowRead )
     candidate.bp1.interval.range = known_pos_range2(40, 45);
     candidate.bp2.interval.range = known_pos_range2(54, 55);
     SVScorePairAltProcessor processor1(bamHeader, scannerOptions, refinerOptions, tumorNormalInfo,
-                                                       scanner.operator*(), options1, candidateAssemblyData,
-                                                       candidate, true, evidence);
+                                       scanner.operator*(), options1, candidateAssemblyData,
+                                       candidate, true, evidence);
     processor1.nextBamIndex(0);
     std::string querySeq1 = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
 
@@ -442,9 +442,9 @@ BOOST_AUTO_TEST_CASE( test_alignShadowRead )
                                                     "TGATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                                     "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
     SVScorePairAltProcessor processor2(
-            bamHeader, scannerOptions, refinerOptions, tumorNormalInfo,
-            scanner.operator*(), options1, candidateAssemblyData,
-            candidate, true, evidence);
+        bamHeader, scannerOptions, refinerOptions, tumorNormalInfo,
+        scanner.operator*(), options1, candidateAssemblyData,
+        candidate, true, evidence);
     // Clipped length should be greater than 40
     // Clipping is happening at the end.
     // Contig begin offset = 0
@@ -459,9 +459,9 @@ BOOST_AUTO_TEST_CASE( test_alignShadowRead )
     candidate.bp1.interval.range = known_pos_range2(40, 41);
     candidate.bp2.interval.range = known_pos_range2(50, 51);
     SVScorePairAltProcessor processor3(
-            bamHeader, scannerOptions, refinerOptions, tumorNormalInfo,
-            scanner.operator*(), options1, candidateAssemblyData,
-            candidate, true, evidence);
+        bamHeader, scannerOptions, refinerOptions, tumorNormalInfo,
+        scanner.operator*(), options1, candidateAssemblyData,
+        candidate, true, evidence);
     // shadow bam read
     bam_record bamRecord3;
     buildTestBamRecord(bamRecord3, 0, 30, 0, 30, 50, 0, "", "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCGGA");
@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE( test_alignShadowRead )
                                        candidate, true, evidence);
     bam_record bamRecord5;
     buildTestBamRecord(bamRecord5, 0, 30, 0, 30, 75, 0, "", "ACTCACGGGAGCTCTCCATGCATTTGGTATTTTCGTCTGGGGGGTG"
-                                                            "TGCACGCGATAGCATTGCGAGACGCTGGA");
+                       "TGCACGCGATAGCATTGCGAGACGCTGGA");
     BOOST_REQUIRE(altProcessor.alignShadowRead(processor4, bamRecord5, altTemplateSize));
 
     // Designed case-3 where shadow alignment happens in reverse strand.
@@ -539,12 +539,12 @@ BOOST_AUTO_TEST_CASE( test_alignShadowRead )
                                                     "GGTGTGCACGCGATAGCATTGCGAGACGCTGGAGATCACAGGTCTATCACCCTATTAACCAC"
                                                     "TCACGGGAGCTCTC");
     SVScorePairAltProcessor processor5(
-            bamHeader, scannerOptions, refinerOptions, tumorNormalInfo,
-            scanner.operator*(), options1, candidateAssemblyData,
-            candidate, true, evidence);
+        bamHeader, scannerOptions, refinerOptions, tumorNormalInfo,
+        scanner.operator*(), options1, candidateAssemblyData,
+        candidate, true, evidence);
     bam_record bamRecord6;
     buildTestBamRecord(bamRecord6, 0, 125, 0, 125, 50, 0, "", "GAGAGCTCCCGTGAGTGGTTAATAGGGTGATAGACCTGTGATCTCCAGCGTCTCG"
-                                                              "CAATGCTATCGCGTGCACACCCCCCAGACGAAAATACC");
+                       "CAATGCTATCGCGTGCACACCCCCCAGACGAAAATACC");
     bamRecord6.toggle_is_mate_fwd_strand();
     BOOST_REQUIRE(altProcessor.alignShadowRead(processor5, bamRecord6, altTemplateSize));
 

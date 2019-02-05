@@ -48,7 +48,7 @@ struct EdgeRuntimeTracker : private boost::noncopyable
     /// Simpler construction method for single-thread use
     explicit
     EdgeRuntimeTracker(const std::string& outputFilename)
-      : EdgeRuntimeTracker(std::make_shared<SynchronizedOutputStream>(outputFilename))
+        : EdgeRuntimeTracker(std::make_shared<SynchronizedOutputStream>(outputFilename))
     {}
 
     void

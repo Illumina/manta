@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     // All the first 4 points satisfied here. As a result of this, the fragment is
     // supporting allele on BP1.
     bam_record bamRecord8;
-    buildTestBamRecord(bamRecord8, 0, 180, 0, 109, 84, 15, "84M", "" , 100);
+    buildTestBamRecord(bamRecord8, 0, 180, 0, 109, 84, 15, "84M", "", 100);
     bamRecord8.set_qname("bamRecord8");
     processor1.processClearedRecord(id, bamRecord8, suppFrags);
     BOOST_REQUIRE(evidence.getSampleEvidence(0)[bamRecord8.qname()].ref.bp1.isFragmentSupport);
