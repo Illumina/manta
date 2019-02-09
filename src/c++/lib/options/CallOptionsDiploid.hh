@@ -48,7 +48,7 @@ struct CallOptionsDiploid
     std::string failedSampleFTLabel = "SampleFT";
 
     /// below this GQ value, the SAMPLE filter is marked in the VCF
-    unsigned minPassGTScore = 10;
+    unsigned minPassGTScore = 15;
     std::string minGTFilterLabel = "MinGQ";
 
     /// the SAMPLE filter for home-ref calls
