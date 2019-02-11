@@ -12,16 +12,49 @@
 % - hide hyperref links with white pdfborder (this is more portable than the hidelinks option)
 \usepackage[pdfborder={0 0 0}]{hyperref}
 
+% for comment environment:
+\usepackage{verbatim}
+
 % for pseudocode
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
 
+% Defining this variable turns on extra sections which should be useful from a development
+% perspective, but would not typically be included in a theoretical methods description.
+% Comment/remove this line to render a more concise methods summary.
+\let\IncludeDevelopmentDetail
 
-\title{Methods for Manta Structural Variant and Indel Caller}
 
+% GLOBALLY change all typewriter fonts to enable hyphenation:
+\DeclareFontFamily{\encodingdefault}{\ttdefault}{\hyphenchar\font=`\-}
+
+%---------------------------------------------------------------------
+% Custom commands and environments:
+%
+
+% 'raggedParagraph' is an environment to enable raggedright for a single paragraph
+%
+% This is used for all "Implementation details" sections so that code symbols entered
+% with the verbatim command, such as "\verb|FooClass::foo_method|" will not spill into
+% the right margin.
+%
+\newenvironment{raggedParagraph}[1]
+{
+\begin{paragraph} {#1}
+\raggedright
+}
+{
+\end{paragraph}
+}
 
 % simple scientific notation:
 \newcommand{\e}[1]{\ensuremath{\times 10^{#1}}}
+
+
+%---------------------------------------------------------------------
+
+\title{Methods for Manta Structural Variant and Indel Caller}
+
 
 \begin{document}
 
@@ -307,7 +340,7 @@ Before proceeding to downstream refinement steps, filters are applied to the sta
 \begin{enumerate}
     \item Standard SV candidates are filtered out if they are supported only by \textit{semi-mapped} anomalous read pairs. A \textit{semi-mapped} read pair refers to pairs where one read has a mapping quality of zero.
     \item Standard SV candidates are filtered out if they have fewer than 3 supporting spanning observations. A multi-junction SV candidate will fail this filter only if all individual junctions fail the filter.
-    \item Standard SV candidates are filtered if the frequency of spanning read evidence is insufficient to reject (at $\alpha = 0.05$) a null model based on the \textit{spanning evidence noise rate} according to a one-sided binomial exact test. The estimation of \textit{spanning evidence noise rate} is described below. This test result is ignored if an SV candidate is grouped into a multi-junction event. This filter is skipped for RNA-Seq analysis. Note that this filter is intended to conservatively reject only very unlikely candidates, and is an import part of controlling total runtime in noisy samples (such as FFPE), where high background chimera rates could otherwise create very large numbers of spurious SV candidates.
+    \item Standard SV candidates are filtered if the frequency of spanning read evidence is insufficient to reject (at $\alpha = 0.03$) a null model based on the \textit{spanning evidence noise rate} according to a one-sided binomial exact test. The estimation of \textit{spanning evidence noise rate} is described below. This test result is ignored if an SV candidate is grouped into a multi-junction event. This filter is skipped for RNA-Seq analysis. Note that this filter is intended to conservatively reject only very unlikely candidates, and is an important part of controlling total runtime in noisy samples (such as FFPE), where high background chimera rates could otherwise create very large numbers of spurious SV candidates.
 \end{enumerate}
 
 Filters for complex SVs are:
@@ -342,13 +375,13 @@ The contig assembly procedure gathers SV-associated reads from the candidate reg
 
 As a first step, expanded breakend regions are defined, which will be scanned for assembly evidence and used for aligning any assembled contigs back to the reference. These regions are an expansion of the breakend regions of the low-resolution input SV candidate. Regions are expanded by 250 bases for conventional SV candidates and 700 bases for complex region candidates.
 
-Candidate assembly reads are gathered from all expanded breakend regions. The input reads are assembled without considering their reverse complement sequences, because their orientation in the alternate contig can be inferred from either the mapped portion of the read or a mapped mate pair. In cases where the orientation of the two breakends is not the same (such as for an inversion), input read orientation is standardized to be consistent with the first breakend. Reads are selected as input to the assembly process by similar criteria to those used for hypothesis generation, but specific to the expected breakend direction and otherwise somewhat more permissive than the criteria used elsewhere. Relaxed filtration criteria include: no minimum mapping quality level, reads with poorly aligned read edge segments are accepted at length 4 (compared to length 8 elsewhere in the workflow), and unmapped reads which have a mapped partner in the target region are included. To improve the assembly of mobile element insertions, mate reads are recovered for chimeric read pairs when the local read of a chimeric read pair (found in the target assembly region) has a mapping quality of at least 20 and the remote read of the pair has a mapping quality of 0. This search for chimeric mate reads is disabled when Manta is run for tumor/normal subtraction due to high spurious chimera rates in FFPE tumor samples.
+Candidate assembly reads are gathered from all expanded breakend regions. The input reads are assembled without considering their reverse complement sequences, because their orientation in the alternate contig can be inferred from either the mapped portion of the read or a mapped mate pair. In cases where the orientation of the two breakends is not the same (such as for an inversion), input read orientation is standardized to be consistent with the first breakend. Reads are selected as input to the assembly process by similar criteria to those used for hypothesis generation, but specific to the expected breakend direction and otherwise somewhat more permissive than the criteria used elsewhere. Relaxed filtration criteria include: no minimum mapping quality level, reads with poorly aligned read edge segments are accepted at length 4 (compared to length 8 elsewhere in the workflow), and unmapped reads which have a mapped partner in the target region are included. To improve the assembly of mobile element insertions, mate reads are recovered for chimeric read pairs when the local read of a chimeric read pair (found in the target assembly region) has a mapping quality of at least 15 and the remote read of the pair has a mapping quality of 0. This search for chimeric mate reads is disabled when Manta is run for tumor/normal subtraction due to high spurious chimera rates in FFPE tumor samples.
 
 The selected reads are assembled using a simple algorithm implicitly based on the popular de Bruijn graph approach originated by Pevzner \citep{pevzner2001}. We note here that the orientation of each unmapped assembly read is determined by the orientation of its mapped partner, avoiding the need to deduce this during the assembly. Assembly is attempted over a series of word sizes, starting from a minimum value which is increased until repeat filtration criteria are met or the maximum word size is reached. The method currently uses a minimum word size of 41 and maximum size 76, the word size is incremented by 5.
 
 For a given word size $k$, a word list is made of all $k$-mers present in the input reads. A seed list, as a subset of the word list, is also made by excluding the $k$-mers that form a cycle of size less than 50 in the graph. The most frequent $k$-mer in the seed list, given it has the most supporting reads, is selected as a seed for the resulting contig assembly. The contig is extended from that seed in each direction by choosing $k$-mers from the word list having a $k-1$ overlap with the contig end. To avoid haplotype switching, reads that support the contig are tracked at each extension point. When there are multiple potential extensions, a $k$-mer is selected so that the current extension has the highest consistency of supporting reads with the previous extensions. The extension ends when there is no overlapping $k$-mer from a previous supporting read, or when the selected $k$-mer has already occurred in the contig (i.e. being repetitive). The contig is then collected, and each $k$-mer used to contruct the contig is removed from the seed list if contained. The contig construction procedure is repeated to generate multiple contigs until all seeds in the list are exhausted. If any of the returned contigs ends at a repetitive $k$-mer, the word size is incremented by one step, and the contig assembly procedure is restarted. All the contigs generated with the previous word size is considered as psuedo reads to roll in the next iteration of contig assembly, similar to the assembly method described in \cite{tigra2014}.
 
-Finally, a greedy procedure is applied to select the constructed contigs in the order of the number of effective supporting reads and contig length. An effective supporting read cannot be a psuedo read, nor support any contigs that have been selected previously. The selection process is repeated until there is no more contig available with the minimum number of effective supporting reads (defaults to 2), or the maximum number of assembled contigs (defaults to 10) is met.
+Finally, a greedy procedure is applied to select the constructed contigs in the order of the number of effective supporting reads and contig length. An effective supporting read cannot be a psuedo read, nor support any contigs that have been selected previously. The selection process is repeated until there is no more contig available with the minimum number of effective supporting reads (defaults to 1), or the maximum number of assembled contigs (defaults to 10) is met.
 
 \subsubsection{Contig alignment for large SVs} For large SV candidates spanning two distinct regions of the genome, the reference sequences are extracted from the two expected breakend regions, and the order and/or orientation of the references is adjusted such that if the candidate SV exists, the left-most segment of the SV contig should align to the first transformed reference region and the right-most contig segment should align to the second reference region. The contig is aligned across the two reference regions using a variant of Smith-Waterman-Gotoh alignment (\cite{smith1981,gotoh1982}) where a `jump' state is included which can only be entered from the match state for the first reference segment and only exits to the match or insert states of the second reference segment. The state transitions of this alignment scheme are shown in Figure \ref{fig:jumpstate}.
 
@@ -384,11 +417,21 @@ Following alignment of either complex region or standard SV candidates, the homo
 Candidates are filtered following SV hypothesis refinement as follows:
 
 \begin{enumerate}
-    \item Standard SV candidates are filtered out if they have fewer than 3 supporting spanning observations. A multi-junction SV candidate will fail this filter only if all individual junctions fail the filter.
-    \item Standard SV candidates (either successfully assembled or imprecise) are filtered if they have fewer than 2 supporting spanning observations. Multi-junction status has no effect on this filtration step, each component junction will be tested and filtered indepedently.
-    \item Any complex SV candidates which failed to assembled are filtered
-    \item SV candidate is below the minimum candidate SV size (8 by default) are filtered
+    \item Standard SV candidates are filtered out if they have fewer than 3 supporting spanning observations.
+    \item Multi-junction SV candidates are filtered if every SV candidate junction in the candidate has fewer than 3 supporting spanning observations; each individual junction is filtered if it has fewer than 2 supporting spanning observations.
+    \item Any complex SV candidates which failed to assemble are filtered.
+    \item SV candidates below the minimum candidate SV size (8 by default) are filtered.
 \end{enumerate}
+
+\ifx\IncludeDevelopmentDetail
+
+\begin{raggedParagraph}{Implementation details}
+
+All late sv filtration logic is implemented in \verb|checkJunctionsToFilter|.
+
+\end{raggedParagraph}
+
+\fi % IncludeDevelopmentDetail
 
 \paragraph{Candidate output}
 
@@ -531,7 +574,7 @@ P(D_{J} \vert S) = \prod_{j \in J} P(D_{j} \vert S)
 
 \paragraph{Somatic calling tiers}
 
-An additional feature of the somatic scoring model is that it uses two calling tiers to reduce false positives. Tier 1 uses relatively stringent noise filtration parameters, while the Tier 2 is more permissive. All calls are initially made using Tier 1 settings, after which the variant is called again using Tier 2. Manta reports the minimum of the two somatic call qualities $Q = \min(Q_{\text{Tier 1}},Q_{\text{Tier 2}})$ as the final somatic quality score. The parameters used for each tier are described in the allele likelihood discussion below. The motivation for this scheme is to reduce false positive calls which could occur due to weak evidence for the alternative allele in the normal. Such evidence should be found under Tier 2 caller settings to reduce the confidence in events that are more likely to represent germline variation.
+An additional feature of the somatic scoring model is that it uses two calling tiers to reduce false positives. Tier 1 uses relatively stringent noise filtration parameters, while Tier 2 is more permissive. All calls are initially made using Tier 1 settings, after which the variant is called again using Tier 2. Manta reports the minimum of the two somatic call qualities $Q = \min(Q_{\text{Tier 1}},Q_{\text{Tier 2}})$ as the final somatic quality score. The parameters used for each tier are described in the allele likelihood discussion below. The motivation for this scheme is to reduce false positive calls which could occur due to weak evidence for the alternative allele in the normal. Such evidence should be found under Tier 2 caller settings to reduce the confidence in events that are more likely to represent germline variation.
 
 \subsubsection{Allele likelihood computation}
 

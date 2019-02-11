@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2018 Illumina, Inc.
+// Copyright (c) 2013-2019 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ struct CallOptionsDiploid
     std::string failedSampleFTLabel = "SampleFT";
 
     /// below this GQ value, the SAMPLE filter is marked in the VCF
-    unsigned minPassGTScore = 10;
+    unsigned minPassGTScore = 15;
     std::string minGTFilterLabel = "MinGQ";
 
     /// the SAMPLE filter for home-ref calls

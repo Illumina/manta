@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2018 Illumina, Inc.
+# Copyright (c) 2013-2019 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ class VcfRecord:
 
     def __init__(self, inline):
         tokens = inline.strip().split('\t')
-        
+
         self.chr = tokens[0]
         self.pos = int(tokens[1])
         self.vid = tokens[2]
@@ -76,14 +76,14 @@ class VcfRecord:
 
     def makeLine(self):
         infoStr = ";".join(self.info)
-        
-        self.line = "\t".join((self.chr, 
-                               str(self.pos), 
-                               self.vid, 
-                               self.ref, 
-                               self.alt, 
-                               self.qual, 
-                               self.filter, 
+
+        self.line = "\t".join((self.chr,
+                               str(self.pos),
+                               self.vid,
+                               self.ref,
+                               self.alt,
+                               self.qual,
+                               self.filter,
                                infoStr,
                                self.others
                            ))+"\n"
@@ -102,7 +102,7 @@ def scanVcf(vcfFile):
     for line in fpVcf:
         if line[0] == '#':
             continue
-        
+
         vcfRec = VcfRecord(line)
         vcfRec.checkInversion()
         if vcfRec.isINV3 or vcfRec.isINV5:
@@ -112,7 +112,7 @@ def scanVcf(vcfFile):
             else:
                 mateId = vcfRec.infoDict["MATEID"]
                 invMateDict[mateId] = ""
-            
+
     return invMateDict
 
 
@@ -123,7 +123,7 @@ def getReference(samtools, refFasta, chrom, start, end):
     for seq in samtoolsOut.split('\n'):
         if not seq.startswith(">"):
             refSeq += seq
-    
+
     return refSeq.upper()
 
 
@@ -158,13 +158,13 @@ def convertInversions(samtools, refFasta, vcfFile, invMateDict):
 
             sys.stdout.write(line)
             continue
-            
+
         vcfRec = VcfRecord(line)
-        
+
         # skip mate record
         if vcfRec.vid in invMateDict:
             continue
-            
+
         vcfRec.checkInversion()
         if vcfRec.isINV3 or vcfRec.isINV5:
             if vcfRec.isINV5:
@@ -173,18 +173,18 @@ def convertInversions(samtools, refFasta, vcfFile, invMateDict):
                 vcfRec.matePos -= 1
                 vcfRec.ref = getReference(samtools, refFasta,
                                           vcfRec.chr, vcfRec.pos, vcfRec.pos)
-            
+
             # update manta ID
             vidSuffix = vcfRec.vid.split("MantaBND")[1]
             idx = vidSuffix.rfind(':')
             vcfRec.vid = "MantaINV%s" % vidSuffix[:idx]
-            
+
             # symbolic ALT
             vcfRec.alt = "<INV>"
 
             # add END
             infoEndStr = "END=%d" % vcfRec.matePos
-            
+
             newInfo = [infoEndStr]
             for infoItem in vcfRec.info:
                 if infoItem.startswith("SVTYPE"):
@@ -204,20 +204,20 @@ def convertInversions(samtools, refFasta, vcfFile, invMateDict):
                         mateId = vcfRec.infoDict["MATEID"]
                         mateInfoDict = invMateDict[mateId]
                         infoCiEndStr = "CIEND=%s" % (mateInfoDict["CIPOS"])
-                        newInfo.append(infoCiEndStr)                                    
+                        newInfo.append(infoCiEndStr)
                     # for precise calls, set CIEND w.r.t HOMLEN
                     else:
                         if "HOMLEN" in vcfRec.infoDict:
                             infoCiEndStr = "CIEND=-%s,0" % vcfRec.infoDict["HOMLEN"]
                             newInfo.append(infoCiEndStr)
-                        
+
                 elif infoItem.startswith("HOMSEQ"):
                     # update HOMSEQ for INV5
                     if vcfRec.isINV5:
                         cipos = vcfRec.infoDict["CIPOS"].split(',')
                         homSeqStart = vcfRec.pos + int(cipos[0]) + 1
                         homSeqEnd = vcfRec.pos + int(cipos[1])
-                        refSeq = getReference(samtools, refFasta, vcfRec.chr, 
+                        refSeq = getReference(samtools, refFasta, vcfRec.chr,
                                               homSeqStart, homSeqEnd)
                         infoHomSeqStr = "HOMSEQ=%s" % refSeq
                         newInfo.append(infoHomSeqStr)
@@ -240,13 +240,13 @@ def convertInversions(samtools, refFasta, vcfFile, invMateDict):
                 # apply all other tags
                 else:
                     newInfo.append(infoItem)
-                    
+
             # add INV3/INV5 tag
             if vcfRec.isINV3:
                 newInfo.append("INV3")
             elif vcfRec.isINV5:
                 newInfo.append("INV5")
-                
+
             vcfRec.info = newInfo
 
         vcfRec.makeLine()
