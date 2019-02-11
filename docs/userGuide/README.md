@@ -672,7 +672,7 @@ These options are useful for Manta development and debugging:
 * The `--default-stats-file` option can be used to provide a file
   containing read group statistics for Manta to fall back on when stats
   estimation fails due to insufficient high-confidence read pairs.
-  
+
 
 ### Extended use cases
 

@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2018 Illumina, Inc.
+// Copyright (c) 2013-2019 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,9 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-/// \file
-/// \author Atanu Pal
-///
+//
 
 #include "boost/test/unit_test.hpp"
 #include "test/testAlignmentDataUtil.hh"
@@ -213,7 +211,7 @@ BOOST_AUTO_TEST_CASE( test_getSampleSplitReadLnLhood )
     BOOST_REQUIRE_CLOSE(refLnLhood, refSplitLnLhoodBP1, eps);
     // maximum of (altSplitLnLhoodBP1, altSplitLnLhoodBP2)
     BOOST_REQUIRE_CLOSE(altLnLhood, altSplitLnLhoodBP1, eps);
-    
+
     // Read-1 is supporting split evidence of alt allele only on BP1
     fragmentEvidence.alt.bp1.read1.isSplitSupport = true;
     fragmentEvidence.ref.bp2.read1.isSplitSupport = false;
@@ -230,7 +228,7 @@ BOOST_AUTO_TEST_CASE( test_getSampleSplitReadLnLhood )
     BOOST_REQUIRE_CLOSE(refLnLhood, refSplitLnLhoodBP2, eps);
     BOOST_REQUIRE_CLOSE(altLnLhood, altSplitLnLhoodBP2, eps);
 
-    // Both the breakpoints are not supporting split read evidence 
+    // Both the breakpoints are not supporting split read evidence
     // for ref and alt alllele. API returns the default value of refLnLhood
     // and altLnLhood which is 1.
     fragmentEvidence.alt.bp1.read1.isSplitSupport = false;
@@ -252,7 +250,7 @@ BOOST_AUTO_TEST_CASE( test_getSampleSplitReadLnLhood )
 //    then it is a confident split read count for alt allele.
 // 2. If altLnLhood is greater than refLnLhood but normalized probability
 //    (explained in test_lnToProb) of altLnLhood is not greater than splitSupportProb(0.999f),
-//    then it is not a confident split read count for alt allele. 
+//    then it is not a confident split read count for alt allele.
 // 3. If refLnLhood is greater than altLnLhood and normalized probability
 //    of altLnLhood is greater than splitSupportProb(0.999f), then it is
 //    a confident split read count for ref allele.
@@ -280,7 +278,7 @@ BOOST_AUTO_TEST_CASE( test_addConservativeSplitReadSupport )
     // // So it is a confident split read evidence for alt allele.
     addConservativeSplitReadSupport(fragmentEvidence, true, sampleInfo1);
     BOOST_REQUIRE_EQUAL(sampleInfo1.alt.confidentSplitReadCount, 1);
-    
+
     // Designed the case-2
     fragmentEvidence.alt.bp1.read1.splitLnLhood = -7.9;
     fragmentEvidence.alt.bp2.read1.splitLnLhood = -8.9;
@@ -295,7 +293,7 @@ BOOST_AUTO_TEST_CASE( test_addConservativeSplitReadSupport )
     // So it is not a confident split read evidence for alt allele.
     addConservativeSplitReadSupport(fragmentEvidence, true, sampleInfo2);
     BOOST_REQUIRE_EQUAL(sampleInfo2.alt.confidentSplitReadCount, 0);
-    
+
     // Designed the case-3
     SVSampleInfo sampleInfo3;
     fragmentEvidence.ref.bp1.read1.splitLnLhood = -7.9;
@@ -313,7 +311,7 @@ BOOST_AUTO_TEST_CASE( test_addConservativeSplitReadSupport )
     BOOST_REQUIRE_EQUAL(sampleInfo3.ref.confidentSplitReadCount, 1);
     // Designed the case-4 where ref allele supports split evidence on BP1.
     BOOST_REQUIRE_EQUAL(sampleInfo3.ref.confidentSplitReadAndPairCountRefBp1, 1);
-    
+
     // Designed the case-3
     SVSampleInfo sampleInfo4;
     fragmentEvidence.ref.bp1.read1.splitLnLhood = -8.9;
@@ -341,7 +339,7 @@ BOOST_AUTO_TEST_CASE( test_addConservativeSplitReadSupport )
 //    probability of breakpoint-2
 // 3. If a fragment supports both breakpoint-1 and breakpoint-2, return maximum
 //    of fragment size probability of breakpoint-1 and breakpoint-2
-// 4. If a fragment does not support breakpoint-1 or breakpoint-2, return 0. 
+// 4. If a fragment does not support breakpoint-1 or breakpoint-2, return 0.
 BOOST_AUTO_TEST_CASE( test_getSpanningPairAlleleLhood )
 {
     float fragLengthProb1(0.4);
@@ -353,7 +351,7 @@ BOOST_AUTO_TEST_CASE( test_getSpanningPairAlleleLhood )
     fragmentEvidenceAllele.bp1.isFragmentSupport = true;
     fragmentEvidenceAllele.bp1.fragLengthProb = fragLengthProb1;
     BOOST_REQUIRE_CLOSE(getSpanningPairAlleleLhood(fragmentEvidenceAllele), fragLengthProb1, eps);
-    
+
     // Designed the case-2 where a fragment supports allele only in BP2
     fragmentEvidenceAllele.bp1.isFragmentSupport = false;
     fragmentEvidenceAllele.bp2.isFragmentSupport = true;
@@ -408,7 +406,7 @@ BOOST_AUTO_TEST_CASE( test_addSpanningPairSupport )
     BOOST_REQUIRE_EQUAL(sampleInfo4.alt.spanningPairCount, 1);
     BOOST_REQUIRE_EQUAL(sampleInfo4.ref.spanningPairCount, 0);
 
-    // Fragment supports alt allele as well as supports both BP1 and BP2 
+    // Fragment supports alt allele as well as supports both BP1 and BP2
     // of ref allele.
     SVSampleInfo sampleInfo5;
     fragmentEvidence.ref.bp1.isFragmentSupport = true;
@@ -417,7 +415,7 @@ BOOST_AUTO_TEST_CASE( test_addSpanningPairSupport )
     BOOST_REQUIRE_EQUAL(sampleInfo5.alt.spanningPairCount, 1);
     BOOST_REQUIRE_EQUAL(sampleInfo5.ref.spanningPairCount, 1);
 
-    // Fragment supports alt allele as well as supports only BP1 
+    // Fragment supports alt allele as well as supports only BP1
     // of ref allele.
     SVSampleInfo sampleInfo6;
     fragmentEvidence.ref.bp1.isFragmentSupport = true;
@@ -426,7 +424,7 @@ BOOST_AUTO_TEST_CASE( test_addSpanningPairSupport )
     BOOST_REQUIRE_EQUAL(sampleInfo6.alt.spanningPairCount, 1);
     BOOST_REQUIRE_EQUAL(sampleInfo6.ref.spanningPairCount, 1);
 
-    // Fragment supports alt allele as well as supports only BP2 
+    // Fragment supports alt allele as well as supports only BP2
     // of ref allele.
     SVSampleInfo sampleInfo7;
     fragmentEvidence.ref.bp1.isFragmentSupport = false;
@@ -436,9 +434,9 @@ BOOST_AUTO_TEST_CASE( test_addSpanningPairSupport )
     BOOST_REQUIRE_EQUAL(sampleInfo7.ref.spanningPairCount, 1);
 }
 
-// Following cases need to be tested for confidentSemiMappedSpanningPairCount, 
+// Following cases need to be tested for confidentSemiMappedSpanningPairCount,
 // confidentSpanningPairCount of alt allele and for confidentSemiMappedSpanningPairCount,
-// confidentSpanningPairCount, confidentSplitReadAndPairCountRefBp1, 
+// confidentSpanningPairCount, confidentSplitReadAndPairCountRefBp1,
 // confidentSplitReadAndPairCountRefBp2 of ref allele:
 // 1. When a fragment does not support BP1 or BP2 of both ref and allele. So all the counts are 0.
 // 2. If fragment size probability of alt allele is greater than fragment size probability of
@@ -470,7 +468,7 @@ BOOST_AUTO_TEST_CASE( test_addConservativeSpanningPairSupport )
     BOOST_REQUIRE_EQUAL(sampleInfo1.ref.confidentSpanningPairCount, 0);
     BOOST_REQUIRE_EQUAL(sampleInfo1.ref.confidentSplitReadAndPairCountRefBp1, 0);
     BOOST_REQUIRE_EQUAL(sampleInfo1.ref.confidentSplitReadAndPairCountRefBp2, 0);
-    
+
     // Designed the case-2
     // Here altFragProbability = 0.4 and refFragProbability = 0
     // so altFragProbability > refFragProbability
@@ -485,7 +483,7 @@ BOOST_AUTO_TEST_CASE( test_addConservativeSpanningPairSupport )
     BOOST_REQUIRE_EQUAL(sampleInfo2.ref.confidentSpanningPairCount, 0);
     BOOST_REQUIRE_EQUAL(sampleInfo2.ref.confidentSplitReadAndPairCountRefBp1, 0);
     BOOST_REQUIRE_EQUAL(sampleInfo2.ref.confidentSplitReadAndPairCountRefBp2, 0);
-    
+
     // Designed the case-3
     // Here altFragProbability = 0.4 and refFragProbability = 0
     // so altFragProbability > refFragProbability
@@ -505,7 +503,7 @@ BOOST_AUTO_TEST_CASE( test_addConservativeSpanningPairSupport )
     BOOST_REQUIRE_EQUAL(sampleInfo3.ref.confidentSpanningPairCount, 0);
     BOOST_REQUIRE_EQUAL(sampleInfo3.ref.confidentSplitReadAndPairCountRefBp1, 0);
     BOOST_REQUIRE_EQUAL(sampleInfo3.ref.confidentSplitReadAndPairCountRefBp2, 0);
-    
+
     // Designed the case-4
     // Here refFragProbability = 0.4 and altFragProbability = 0
     // so refFragProbability > altFragProbability
@@ -565,7 +563,7 @@ BOOST_AUTO_TEST_CASE( test_addConservativeSpanningPairSupport )
     BOOST_REQUIRE_EQUAL(sampleInfo6.ref.confidentSplitReadAndPairCountRefBp1, 0);
     //fragment supports BP2 of ref allele
     BOOST_REQUIRE_EQUAL(sampleInfo6.ref.confidentSplitReadAndPairCountRefBp2, 1);
-    
+
     // Designed the case-7 where both alt and ref fragment size probability = 0.
     // It will throw an exception
     fragmentEvidence2.ref.bp2.fragLengthProb = 0;
@@ -686,7 +684,7 @@ BOOST_AUTO_TEST_CASE( test_getSVSupportSummary )
     sample1["Fragment-2"] = fragmentEvidence2;
     SVEvidence evidence;
     evidence.samples.push_back(sample1);
-    
+
     // Data for sample-2
     SVEvidence::evidenceTrack_t sample2;
     // Here for fragment-1 of sample-2, altFragProbability = 0.6 and refFragProbability = 0.04
@@ -716,7 +714,7 @@ BOOST_AUTO_TEST_CASE( test_getSVSupportSummary )
     SVScoreInfo scoreInfo;
     scoreInfo.samples.resize(2);
     getSVSupportSummary(evidence, scoreInfo);
-    
+
     // check informations for sample-1
     // Total number of confidentSemiMappedSpanningPairCount and confidentSpanningPairCount
     // of alt allele is 1 (for fragment-1).
@@ -792,7 +790,7 @@ BOOST_AUTO_TEST_CASE( test_resolvePairSplitConflicts )
     resolvePairSplitConflicts(candidate, evidence);
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[fragLabel].ref.bp1.isFragmentSupport);
     BOOST_REQUIRE_EQUAL(evidence.getSampleEvidence(0)[fragLabel].ref.bp1.fragLengthProb, 0);
-    
+
     // Designed the case-3 where read-2 supports split evidence
     SVFragmentEvidence fragmentEvidence3;
     // Here for this fragment, altFragProbability = 0.4 and refFragProbability = 0
@@ -814,7 +812,7 @@ BOOST_AUTO_TEST_CASE( test_resolvePairSplitConflicts )
     resolvePairSplitConflicts(candidate, evidence);
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[fragLabel].ref.bp1.isFragmentSupport);
     BOOST_REQUIRE_EQUAL(evidence.getSampleEvidence(0)[fragLabel].ref.bp1.fragLengthProb, 0);
-    
+
     // Designed the case-4 where read-2 supports split evidence
     SVFragmentEvidence fragmentEvidence4;
     // Here for this fragment, refFragProbability = 0.4 and altFragProbability = 0
@@ -861,7 +859,7 @@ BOOST_AUTO_TEST_CASE( test_incrementSpanningPairAlleleLnLhood )
     double bpLnLhood1(0);
     incrementSpanningPairAlleleLnLhood(selfChimeraProb, otherChimeraProb, fragmentEvidenceAllele, 2, bpLnLhood1);
     BOOST_REQUIRE_CLOSE(bpLnLhood1, bpLnLhood1Expected, eps);
-    
+
     // Case-2 when fragment supports only BP2
     double bpLnLhood2Expected(-1.3862943134361756);
     double bpLnLhood2(0);
@@ -958,7 +956,7 @@ BOOST_AUTO_TEST_CASE( test_incrementSplitReadLhood )
     ProbSet refMapProb(0.5);
     ProbSet altMapProb(0.2);
     static const double eps(0.00000001);
-    
+
     // Designed the case-1. In this case read-1 does not support split evidence on any of the breakpoints.
     SVFragmentEvidence fragmentEvidence;
     fragmentEvidence.alt.bp1.read1.splitLnLhood = -6;
@@ -971,14 +969,14 @@ BOOST_AUTO_TEST_CASE( test_incrementSplitReadLhood )
                             refSplitLnLhood, altSplitLnLhood, isReadEvaluated);
     BOOST_REQUIRE_CLOSE(refSplitLnLhood, -10.3, eps);
     BOOST_REQUIRE_CLOSE(altSplitLnLhood, -20.4, eps);
-    
+
     // Designed the case-2 when In this case read-1 does not support any tier2 split evidence
     // on any of the breakpoints.
     incrementSplitReadLhood(fragLabel, fragmentEvidence, refMapProb, altMapProb, true, true,
                             refSplitLnLhood, altSplitLnLhood, isReadEvaluated);
     BOOST_REQUIRE_CLOSE(refSplitLnLhood, -10.3, eps);
     BOOST_REQUIRE_CLOSE(altSplitLnLhood, -20.4, eps);
-    
+
     // Designed the case-3 read-1 supports split evidence on both the breakpoints and splitLnLhood of BP2
     // greater than splitLnLhood of BP1. Here alignLnLhood = -5.
     // So, fragLnLHood = log_sum(selfMapProb.lnComp+alignLnLhood), otherMapProb.lnProb),
@@ -1015,13 +1013,13 @@ BOOST_AUTO_TEST_CASE( test_getFragLnLhood )
 
     // Designed the case-1 where evaluation is done based on read-1.
     BOOST_REQUIRE_CLOSE(getFragLnLhood(lnLhood, true, false), lnLhood.read1Split + lnLhood.fragPair, eps);
-    
+
     // Designed the case-2 where evaluation is done based on read-2.
     BOOST_REQUIRE_CLOSE(getFragLnLhood(lnLhood, false, true), lnLhood.read2Split + lnLhood.fragPair, eps);
-    
+
     // Designed the case-3 where evaluation is done based on both read-1 and read-2.
     BOOST_REQUIRE_CLOSE(getFragLnLhood(lnLhood, true, true), lnLhood.read2Split + lnLhood.fragPair, eps);
-    
+
     // Designed the case-4 where evaluation is done without read-1 and read-2.
     BOOST_REQUIRE_CLOSE(getFragLnLhood(lnLhood, false, false), lnLhood.fragPair, eps);
 }
@@ -1048,7 +1046,7 @@ BOOST_AUTO_TEST_CASE( test_getSpanningPairWeight )
     candidate.bp1.interval = GenomeInterval(0, 1000, 1200);
     candidate.bp2.interval = GenomeInterval(1, 1000, 1200);
     BOOST_REQUIRE_CLOSE(getSpanningPairWeight(candidate), 1, eps);
-    
+
     // Designed the case-2 where SV type is a deletion
     // _min = 300, _max = 500
     // val = center size = 550
@@ -1146,7 +1144,7 @@ BOOST_AUTO_TEST_CASE( test_getRefAltFromFrag )
     BOOST_REQUIRE(!getRefAltFromFrag(spanningPairWeight, semiMappedPower, refChimeraProb, altChimeraProb,
                                      refSplitMapProb, altSplitMapProb, true, fragLabel, evidence,
                                      refLnLhoodSet,altLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
-    
+
     // Fragment supports alt allele on BP1
     evidence.read1.isScanned = true;
     evidence.read2.isScanned = true;
@@ -1285,7 +1283,7 @@ BOOST_AUTO_TEST_CASE( test_scoreDiploidSV )
     CallOptionsDiploidDeriv diploidDeriv(diploidOpt);
     // dummy depth file that means depth file is not present
     ChromDepthFilterUtil dFilter("", 2, bamHeader);
-    
+
     // Diploid sample info
     SVScoreInfoDiploid diploidInfo;
     diploidInfo.setSampleCount(1); // diploid sample count = 1
@@ -1300,7 +1298,7 @@ BOOST_AUTO_TEST_CASE( test_scoreDiploidSV )
     evidenceTrack[fragLabel] = fragmentEvidence;
     SVEvidence evidence;
     evidence.samples.push_back(evidenceTrack);
-    
+
     // Diploid score info
     SVScoreInfo scoreInfo;
     SVSampleInfo diploidSampleInfo;
@@ -1312,7 +1310,7 @@ BOOST_AUTO_TEST_CASE( test_scoreDiploidSV )
     JunctionCallInfo callInfo;
     callInfo.init(candidate, evidence, scoreInfo, 0.2);
     std::vector<JunctionCallInfo> junctionData = {callInfo};
-    
+
     scoreDiploidSV(diploidOpt, scanner.operator*(), diploidDeriv, dFilter, junctionData, diploidInfo);
     // Designed the case-1 and case-2
     // Here phred score of the variant is 0 which is less than 20. Add a filter label minAltFilterLabel to this record.
@@ -1365,7 +1363,7 @@ BOOST_AUTO_TEST_CASE( test_scoreDiploidSV )
     BOOST_REQUIRE_EQUAL(diploidInfo.samples[0].filters.size(), 2);
     BOOST_REQUIRE_EQUAL(*(diploidInfo.samples[0].filters.begin()), diploidOpt.homRefLabel);
     BOOST_REQUIRE_EQUAL(*(std::next(diploidInfo.samples[0].filters.begin(), 1)), diploidOpt.minGTFilterLabel);
-    
+
     // Designed the case-5 where BP depth is more than chromosome depth
     const std::shared_ptr<TestChromosomeDepthFileMaker> depthFileMaker(new TestChromosomeDepthFileMaker());
     const std::string depthFileName(depthFileMaker.operator*().getFilename());
@@ -1425,7 +1423,7 @@ BOOST_AUTO_TEST_CASE( test_scoreTumorSV )
     scoreTumorSV(optionsTumor, depthFilterUtil1, callInfos, scoreInfoTumor);
     BOOST_REQUIRE_EQUAL(scoreInfoTumor.filters.size(), 1);
     BOOST_REQUIRE_EQUAL(*(scoreInfoTumor.filters.begin()), optionsTumor.maxMQ0FracLabel);
-    
+
     // Designed the case-1 for BP1
     callInfos.clear();
     scoreInfoTumor.filters.clear();
@@ -1436,8 +1434,8 @@ BOOST_AUTO_TEST_CASE( test_scoreTumorSV )
     scoreTumorSV(optionsTumor, depthFilterUtil1, callInfos, scoreInfoTumor);
     BOOST_REQUIRE_EQUAL(scoreInfoTumor.filters.size(), 1);
     BOOST_REQUIRE_EQUAL(*(scoreInfoTumor.filters.begin()), optionsTumor.maxMQ0FracLabel);
-    
-    // Designed the case-1 for both BP1 and BP2 
+
+    // Designed the case-1 for both BP1 and BP2
     callInfos.clear();
     scoreInfoTumor.filters.clear();
     scoreInfo1.bp1MQ0Frac = 0.5f;
@@ -1447,7 +1445,7 @@ BOOST_AUTO_TEST_CASE( test_scoreTumorSV )
     scoreTumorSV(optionsTumor, depthFilterUtil1, callInfos, scoreInfoTumor);
     BOOST_REQUIRE_EQUAL(scoreInfoTumor.filters.size(), 1);
     BOOST_REQUIRE_EQUAL(*(scoreInfoTumor.filters.begin()), optionsTumor.maxMQ0FracLabel);
-    
+
     // Designed the case-2 where BP depth is more than chromosome depth
     callInfos.clear();
     scoreInfoTumor.filters.clear();
@@ -1479,7 +1477,7 @@ BOOST_AUTO_TEST_CASE( test_scoreRNASV )
     // Designed the case-1 where candidate sv is imprecise.
     BOOST_REQUIRE_EQUAL(scoreInfoRna.filters.size(), 1);
     BOOST_REQUIRE_EQUAL(*(scoreInfoRna.filters.begin()), SVScoreInfoRna::impreciseLabel);
-    
+
     // Designed the case-2 difference between two breakpoints is less than Min length for
     // passing fusions (100000)
     candidate.setPrecise();
@@ -1513,7 +1511,7 @@ BOOST_AUTO_TEST_CASE( test_scoreRNASV )
     scoreRNASV(sampleInfo, candidate, scoreInfoRna);
     BOOST_REQUIRE_EQUAL(scoreInfoRna.filters.size(), 1);
     BOOST_REQUIRE_EQUAL(*(scoreInfoRna.filters.begin()), SVScoreInfoRna::rnaFilterLabel);
-    
+
     // Designed the case-3 when splitReadCount = 1 and confidentSpanningPairCount = 0
     scoreInfoRna.filters.clear();
     candidate.bp1.interval = GenomeInterval(0, 100, 200);
@@ -1523,7 +1521,7 @@ BOOST_AUTO_TEST_CASE( test_scoreRNASV )
     scoreRNASV(sampleInfo, candidate, scoreInfoRna);
     BOOST_REQUIRE_EQUAL(scoreInfoRna.filters.size(), 1);
     BOOST_REQUIRE_EQUAL(*(scoreInfoRna.filters.begin()), SVScoreInfoRna::rnaFilterLabel);
-    
+
     // Designed the case-3 when splitReadCount = 0 and confidentSpanningPairCount = 0
     scoreInfoRna.filters.clear();
     candidate.bp1.interval = GenomeInterval(0, 100, 200);
@@ -1573,7 +1571,7 @@ BOOST_AUTO_TEST_CASE( test_estimateSomaticMutationFreq )
 {
     SVCandidate candidate;
     SVEvidence evidence;
-    
+
     // All counts are zero so fraction should be also 0.
     std::vector<JunctionCallInfo> callInfos;
     callInfos.resize(1);
@@ -1583,7 +1581,7 @@ BOOST_AUTO_TEST_CASE( test_estimateSomaticMutationFreq )
     scoreInfo1.samples.push_back(sampleInfo);
     callInfos[0].init(candidate, evidence, scoreInfo1, 0.2);
     BOOST_REQUIRE_EQUAL(estimateSomaticMutationFreq(0, callInfos, false), 0);
-    
+
     // alt support count > 0 and ref support count is 0. So fraction of
     // alt support = 1
     sampleInfo.alt.confidentSpanningPairCount = 100;
@@ -1639,7 +1637,7 @@ BOOST_AUTO_TEST_CASE( test_estimateNoiseMutationFreq )
     scoreInfo1.samples.push_back(tumorSampleInfo);
     callInfos[0].init(candidate, evidence, scoreInfo1, 0.2);
     BOOST_REQUIRE_EQUAL(estimateNoiseMutationFreq(0, 1, callInfos, false), 0);
-    
+
     // alt support count (tumor + normal) > 0 and ref support count is 0. So fraction of somatic
     // alt support = 1
     normalSampleInfo.alt.confidentSpanningPairCount = 100;
@@ -1734,7 +1732,7 @@ BOOST_AUTO_TEST_CASE( test_computeSomaticSampleLoghood )
     {
         BOOST_REQUIRE_EQUAL(loglhood[gt], 0);
     }
-    
+
     // fragment was evaluated for alt allele
     fragmentEvidence1.read1.isScanned = true;
     fragmentEvidence1.read2.isScanned = true;
@@ -1843,11 +1841,11 @@ BOOST_AUTO_TEST_CASE( test_getBreakendMaxMappedDepthAndMQ0 )
     breakend.state = SVBreakendState::RIGHT_OPEN;
     float mq0Frac(0);
     unsigned maxDepth(1000);
-    // No depth cutoff in this test cases 
+    // No depth cutoff in this test cases
     // Total 18 reads have mapping quality 0 out of 20 reads. So fraction is 18/20 = 0.9
     fSVScorer.getBreakendMaxMappedDepthAndMQ0(scorer, false, false, 100, breakend, maxDepth, mq0Frac);
     BOOST_REQUIRE_CLOSE(mq0Frac, 0.9f, eps);
-    
+
     // depth cutoff is 12. If depth of a location more than 12, it will return the fraction.
     // So here total 11 reads have mapping quality 0 out of 13 reads. So fraction is 11/13 = ~0.85.
     fSVScorer.getBreakendMaxMappedDepthAndMQ0(scorer, false, true, 12, breakend, maxDepth, mq0Frac);
@@ -1902,7 +1900,7 @@ BOOST_AUTO_TEST_CASE( test_computeAllScoreModel )
     scoreInfo.samples.resize(1);
     callInfo.init(candidate, evidence, scoreInfo, 0.2);
     callInfos.push_back(callInfo);
-    
+
     // Only Diploid scoring model
     fSVScorer.computeAllScoreModels(scorer, ! isSomatic, ! isTumorOnly, callInfos, modelScoreInfo);
     BOOST_REQUIRE_EQUAL(modelScoreInfo.diploid.filters.size(), 4);
@@ -1980,7 +1978,7 @@ BOOST_AUTO_TEST_CASE( test_ScoreSV )
     BOOST_CHECK_THROW(scorer.scoreSV(svData, mjAssemblyData, mjSV, mjSVId, isJunctionFiltered,
                                      false, true, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent, svSupports),
                                      illumina::common::GeneralException);
-    
+
     // Designed case-2. Here number of unfiltered multi-junction event is 1.
     // So isMJEvent should be false here.
     SVCandidate candidate1;
