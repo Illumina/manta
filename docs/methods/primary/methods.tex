@@ -12,16 +12,49 @@
 % - hide hyperref links with white pdfborder (this is more portable than the hidelinks option)
 \usepackage[pdfborder={0 0 0}]{hyperref}
 
+% for comment environment:
+\usepackage{verbatim}
+
 % for pseudocode
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
 
+% Defining this variable turns on extra sections which should be useful from a development
+% perspective, but would not typically be included in a theoretical methods description.
+% Comment/remove this line to render a more concise methods summary.
+\let\IncludeDevelopmentDetail
 
-\title{Methods for Manta Structural Variant and Indel Caller}
 
+% GLOBALLY change all typewriter fonts to enable hyphenation:
+\DeclareFontFamily{\encodingdefault}{\ttdefault}{\hyphenchar\font=`\-}
+
+%---------------------------------------------------------------------
+% Custom commands and environments:
+%
+
+% 'raggedParagraph' is an environment to enable raggedright for a single paragraph
+%
+% This is used for all "Implementation details" sections so that code symbols entered
+% with the verbatim command, such as "\verb|FooClass::foo_method|" will not spill into
+% the right margin.
+%
+\newenvironment{raggedParagraph}[1]
+{
+\begin{paragraph} {#1}
+\raggedright
+}
+{
+\end{paragraph}
+}
 
 % simple scientific notation:
 \newcommand{\e}[1]{\ensuremath{\times 10^{#1}}}
+
+
+%---------------------------------------------------------------------
+
+\title{Methods for Manta Structural Variant and Indel Caller}
+
 
 \begin{document}
 
@@ -307,7 +340,7 @@ Before proceeding to downstream refinement steps, filters are applied to the sta
 \begin{enumerate}
     \item Standard SV candidates are filtered out if they are supported only by \textit{semi-mapped} anomalous read pairs. A \textit{semi-mapped} read pair refers to pairs where one read has a mapping quality of zero.
     \item Standard SV candidates are filtered out if they have fewer than 3 supporting spanning observations. A multi-junction SV candidate will fail this filter only if all individual junctions fail the filter.
-    \item Standard SV candidates are filtered if the frequency of spanning read evidence is insufficient to reject (at $\alpha = 0.03$) a null model based on the \textit{spanning evidence noise rate} according to a one-sided binomial exact test. The estimation of \textit{spanning evidence noise rate} is described below. This test result is ignored if an SV candidate is grouped into a multi-junction event. This filter is skipped for RNA-Seq analysis. Note that this filter is intended to conservatively reject only very unlikely candidates, and is an import part of controlling total runtime in noisy samples (such as FFPE), where high background chimera rates could otherwise create very large numbers of spurious SV candidates.
+    \item Standard SV candidates are filtered if the frequency of spanning read evidence is insufficient to reject (at $\alpha = 0.03$) a null model based on the \textit{spanning evidence noise rate} according to a one-sided binomial exact test. The estimation of \textit{spanning evidence noise rate} is described below. This test result is ignored if an SV candidate is grouped into a multi-junction event. This filter is skipped for RNA-Seq analysis. Note that this filter is intended to conservatively reject only very unlikely candidates, and is an important part of controlling total runtime in noisy samples (such as FFPE), where high background chimera rates could otherwise create very large numbers of spurious SV candidates.
 \end{enumerate}
 
 Filters for complex SVs are:
@@ -384,10 +417,21 @@ Following alignment of either complex region or standard SV candidates, the homo
 Candidates are filtered following SV hypothesis refinement as follows:
 
 \begin{enumerate}
-    \item Standard SV candidates are filtered out if they have fewer than 3 supporting spanning observations. A multi-junction SV candidate will fail this filter only if all individual junctions fail the filter.
-    \item Any complex SV candidates which failed to assembled are filtered
-    \item SV candidate is below the minimum candidate SV size (8 by default) are filtered
+    \item Standard SV candidates are filtered out if they have fewer than 3 supporting spanning observations.
+    \item Multi-junction SV candidates are filtered if every SV candidate junction in the candidate has fewer than 3 supporting spanning observations; each individual junction is filtered if it has fewer than 2 supporting spanning observations. 
+    \item Any complex SV candidates which failed to assemble are filtered.
+    \item SV candidates below the minimum candidate SV size (8 by default) are filtered.
 \end{enumerate}
+
+\ifx\IncludeDevelopmentDetail
+
+\begin{raggedParagraph}{Implementation details}
+
+All late sv filtration logic is implemented in \verb|checkJunctionsToFilter|.
+
+\end{raggedParagraph}
+
+\fi % IncludeDevelopmentDetail
 
 \paragraph{Candidate output}
 
