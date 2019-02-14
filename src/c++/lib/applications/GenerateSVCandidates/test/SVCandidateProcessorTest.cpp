@@ -298,9 +298,9 @@ BOOST_AUTO_TEST_CASE( test_tumorOnly )
     // block-scope svWriter to force file flush at end of scope:
     {
         const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
-        SVEvidenceWriter svEvidenceWriter(options);
-        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, svEvidenceWriter,
-                                                edgeTrackerPtr, edgeStatMan);
+        auto svEvidenceWriterSharedData(std::make_shared<SVEvidenceWriterSharedData>(options));
+        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter,
+            svEvidenceWriterSharedData, edgeTrackerPtr, edgeStatMan);
         candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData);
     }
 
@@ -413,9 +413,9 @@ BOOST_AUTO_TEST_CASE( test_RNA )
     // block-scope svWriter to force file flush at end of scope:
     {
         const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
-        SVEvidenceWriter svEvidenceWriter(options);
-        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, svEvidenceWriter,
-                                                edgeTrackerPtr, edgeStatMan);
+        auto svEvidenceWriterSharedData(std::make_shared<SVEvidenceWriterSharedData>(options));
+        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter,
+            svEvidenceWriterSharedData, edgeTrackerPtr, edgeStatMan);
         candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData);
     }
 
@@ -529,9 +529,9 @@ BOOST_AUTO_TEST_CASE( test_Diploid )
     // block-scope svWriter to force file flush at end of scope:
     {
         const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
-        SVEvidenceWriter svEvidenceWriter(options);
-        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, svEvidenceWriter,
-                                                edgeTrackerPtr, edgeStatMan);
+        auto svEvidenceWriterSharedData(std::make_shared<SVEvidenceWriterSharedData>(options));
+        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter,
+            svEvidenceWriterSharedData, edgeTrackerPtr, edgeStatMan);
         candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData);
     }
 
@@ -668,9 +668,9 @@ BOOST_AUTO_TEST_CASE( test_Somatic )
     // block-scope svWriter to force file flush at end of scope:
     {
         const SVWriter svWriter(options, bamHeader, programName.c_str(), version.c_str());
-        SVEvidenceWriter svEvidenceWriter(options);
-        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter, svEvidenceWriter,
-                                                edgeTrackerPtr, edgeStatMan);
+        auto svEvidenceWriterSharedData(std::make_shared<SVEvidenceWriterSharedData>(options));
+        SVCandidateProcessor candidateProcessor(options, scanner.operator*(), set1, svWriter,
+            svEvidenceWriterSharedData, edgeTrackerPtr, edgeStatMan);
         candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData);
     }
 

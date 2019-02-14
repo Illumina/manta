@@ -43,7 +43,7 @@ struct SVCandidateProcessor
         const SVLocusScanner& readScanner,
         const SVLocusSet& cset,
         const SVWriter& svWriter,
-        SVEvidenceWriter& svEvidenceWriter,
+        std::shared_ptr<SVEvidenceWriterSharedData> svEvidenceWriterSharedData,
         std::shared_ptr<EdgeRuntimeTracker> edgeTrackerPtr,
         GSCEdgeStatsManager& edgeStatMan);
 
@@ -84,7 +84,7 @@ private:
     const GSCOptions& _opt;
     const SVLocusSet& _cset;
     const SVWriter& _svWriter;
-    SVEvidenceWriter& _svEvidenceWriter;
+    SVEvidenceWriter _svEvidenceWriter;
     std::shared_ptr<EdgeRuntimeTracker> _edgeTrackerPtr;
     GSCEdgeStatsManager& _edgeStatMan;
     SVCandidateAssemblyRefiner _svRefine;

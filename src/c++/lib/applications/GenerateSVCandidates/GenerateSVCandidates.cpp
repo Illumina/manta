@@ -154,6 +154,7 @@ struct EdgeThreadLocalData
     GSCEdgeStatsManager edgeStatMan;
     std::unique_ptr<SVFinder> svFindPtr;
     std::unique_ptr<SVCandidateProcessor> svProcessorPtr;
+    std::unique_ptr<SVEvidenceWriter> svEvidenceWriterPtr;
     SVCandidateSetData svData;
     std::vector<SVCandidate> svs;
     std::vector<SVMultiJunctionCandidate> mjSVs;
@@ -256,7 +257,7 @@ runGSC(
     }
 
     const SVWriter svWriter(opt, bamHeader, progName, progVersion);
-    SVEvidenceWriter svEvidenceWriter(opt);
+    auto svEvidenceWriterSharedData(std::make_shared<SVEvidenceWriterSharedData>(opt));
 
     // Initialize all thread-local edge data:
     std::shared_ptr<SynchronizedOutputStream> edgeTrackerStreamPtr;
@@ -272,7 +273,7 @@ runGSC(
         edgeData.svFindPtr.reset(new SVFinder(opt, readScanner, bamHeader, cset.getAllSampleReadCounts(),
                                               edgeData.edgeTrackerPtr, edgeData.edgeStatMan));
         edgeData.svProcessorPtr.reset(
-            new SVCandidateProcessor(opt, readScanner, cset, svWriter, svEvidenceWriter,
+            new SVCandidateProcessor(opt, readScanner, cset, svWriter, svEvidenceWriterSharedData,
                                      edgeData.edgeTrackerPtr, edgeData.edgeStatMan));
     }
 

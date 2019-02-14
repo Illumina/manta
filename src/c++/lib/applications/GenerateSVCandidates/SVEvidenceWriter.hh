@@ -25,14 +25,13 @@
 
 #include <map>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 
 #include "manta/SVCandidateSetData.hh"
 #include "GSCOptions.hh"
 #include "htsapi/bam_streamer.hh"
-#include "htsapi/bam_dumper.hh"
+#include "SynchronizedBamWriter.hh"
 
 
 /// Records a single read that supports one or more SVs for evidence-BAM output
@@ -219,6 +218,28 @@ std::ostream&
 operator<<( std::ostream& os, const SVEvidenceWriterData& data);
 
 
+
+/// Data that are shared by multiple SVEvidenceWriters (potentially operating on multiple threads)
+class SVEvidenceWriterSharedData {
+public:
+    explicit
+    SVEvidenceWriterSharedData(
+        const GSCOptions& opt);
+
+    SynchronizedBamWriter&
+    getBamWriter(const unsigned bamIndex)
+    {
+        assert(bamIndex < m_evidenceBamWriterPtrs.size());
+        assert(m_evidenceBamWriterPtrs[bamIndex]);
+        return *(m_evidenceBamWriterPtrs[bamIndex]);
+    }
+
+private:
+    std::vector<std::shared_ptr<SynchronizedBamWriter>> m_evidenceBamWriterPtrs;
+};
+
+
+
 /// \brief Coordinate all bookkeeping and data structures required to output evidence BAMs
 ///
 /// Evidence BAMs are intended for visualization in debugging scenarios only. They are not part of the standard
@@ -226,9 +247,9 @@ operator<<( std::ostream& os, const SVEvidenceWriterData& data);
 class SVEvidenceWriter
 {
 public:
-    explicit
     SVEvidenceWriter(
-        const GSCOptions& opt);
+        const GSCOptions& opt,
+        std::shared_ptr<SVEvidenceWriterSharedData> sharedData);
 
     /// Write SV evidence reads into bam files
     void
@@ -238,26 +259,24 @@ public:
     // Everything below is conceptually private, but kept here for unit testing until a fix can be written:
 
     typedef std::shared_ptr<bam_streamer> bam_streamer_ptr;
-    typedef std::shared_ptr<bam_dumper> bam_dumper_ptr;
 
     static
     void
     processBamRecords(bam_streamer& origBamStream,
                       const GenomeInterval& interval,
                       const support_fragments_t& supportFrags,
-                      bam_dumper& bamDumper);
+                      SynchronizedBamWriter& bamWriter);
 
     static
     void
     writeSupportBam(const bam_streamer_ptr& origBamStream,
                     const SVEvidenceWriterSampleData& svSupportFrags,
-                    const bam_dumper_ptr& supportBamDumper);
+                    SynchronizedBamWriter& bamWriter);
 
 private:
 
-    bool m_isGenerateSupportBam;
+    bool m_isGenerateEvidenceBam;
     unsigned m_sampleSize;
     std::vector<bam_streamer_ptr> m_origBamStreamPtrs;
-    std::vector<bam_dumper_ptr> m_supportBamDumperPtrs;
-    std::mutex m_writerMutex;
+    std::shared_ptr<SVEvidenceWriterSharedData> m_sharedData;
 };

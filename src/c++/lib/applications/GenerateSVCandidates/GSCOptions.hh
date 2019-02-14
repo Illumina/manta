@@ -51,6 +51,12 @@ struct GSCOptions
         return (! tumorOutputFilename.empty());
     }
 
+    bool
+    isGenerateEvidenceBam() const
+    {
+        return (! evidenceBamStub.empty());
+    }
+
     AlignmentFileOptions alignFileOpt;
     EdgeOptions edgeOpt;
     ReadScannerOptions scanOpt;
@@ -75,7 +81,7 @@ struct GSCOptions
     std::string somaticOutputFilename;
     std::string tumorOutputFilename;
     std::string rnaOutputFilename;
-    std::string supportBamStub;
+    std::string evidenceBamStub;
 
     bool isVerbose = false; ///< provide some high-level log info to assist in debugging
 

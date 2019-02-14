@@ -23,48 +23,32 @@
 
 #pragma once
 
-#include <iosfwd>
-#include <memory>
 #include <mutex>
 
 #include "boost/noncopyable.hpp"
 
-
-void
-open_ifstream(
-    std::ifstream& ifs,
-    const char* filename);
+#include "htsapi/bam_dumper.hh"
 
 
-/// use this class to set scope specific stream formatting
-///
-/// see unit test for example usage
-///
-struct StreamScoper
-{
-    explicit
-    StreamScoper(
-        std::ostream& os);
-
-    ~StreamScoper();
-
-private:
-    std::ostream& _os;
-    std::unique_ptr<std::ofstream> _tmp_os;
-};
-
-/// Synchronizes access to a file stream from multiple threads:
-class SynchronizedOutputStream : private boost::noncopyable
+/// Extends the standard BAM writer to allow synchronized writing to the same file from multiple threads
+class SynchronizedBamWriter : private boost::noncopyable
 {
 public:
-    explicit
-    SynchronizedOutputStream(const std::string& outputFile);
+    SynchronizedBamWriter(
+        const char* filename,
+        const bam_hdr_t& header)
+        : m_bamWriter(filename, header)
+    {}
 
+    /// Add another BAM record to the file. File must not be closed.
     void
-    write(const std::string& msg);
+    put_record(const bam1_t* brec)
+    {
+        std::lock_guard<std::mutex> lock(m_writeMutex);
+        m_bamWriter.put_record(brec);
+    }
 
 private:
-    std::unique_ptr<std::ostream> m_osPtr;
+    bam_dumper m_bamWriter;
     std::mutex m_writeMutex;
 };
-

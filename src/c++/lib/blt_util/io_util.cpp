@@ -91,6 +91,6 @@ void
 SynchronizedOutputStream::
 write(const std::string& msg)
 {
-    std::lock_guard<std::mutex> lock(m_writerMutex);
+    std::lock_guard<std::mutex> lock(m_writeMutex);
     *m_osPtr << msg;
 }

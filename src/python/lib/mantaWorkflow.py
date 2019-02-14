@@ -336,14 +336,9 @@ class listFileWorkflow(WorkflowRunner) :
 
 
 
-def sortBams(self, sortBamTasks, taskPrefix="", binStr="", isNormal=True, bamIdx=0, dependencies=None):
+def sortEvidenceBams(self, sortBamTasks, taskPrefix="", binStr="", dependencies=None):
 
-    if isNormal:
-        bamList = self.params.normalBamList
-    else:
-        bamList = self.params.tumorBamList
-
-    for _ in bamList:
+    for bamIdx, _ in enumerate(self.params.normalBamList + self.params.tumorBamList):
         supportBam = self.paths.getSupportBamPath(bamIdx, binStr)
         sortedBam = self.paths.getSortedSupportBamPath(bamIdx, binStr)
 
@@ -355,9 +350,6 @@ def sortBams(self, sortBamTasks, taskPrefix="", binStr="", isNormal=True, bamIdx
 
         sortBamTask = preJoin(taskPrefix, "sortEvidenceBam_%s_%s" % (binStr, bamIdx))
         sortBamTasks.add(self.addTask(sortBamTask, sortBamCmd, dependencies=dependencies))
-        bamIdx += 1
-
-    return bamIdx
 
 
 def sortAllVcfs(self, taskPrefix="", dependencies=None) :
@@ -451,36 +443,28 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
     return nextStepWait
 
 
-def mergeSupportBams(self, mergeBamTasks, taskPrefix="", isNormal=True, bamIdx=0, dependencies=None) :
 
-    if isNormal:
-        bamList = self.params.normalBamList
-    else:
-        bamList = self.params.tumorBamList
+def mergeEvidenceBams(self, mergeBamTasks, taskPrefix="", dependencies=None) :
 
-    for bamPath in bamList:
+    for bamIdx, bamPath in enumerate(self.params.normalBamList + self.params.tumorBamList) :
         # merge support bams
-        supportBamFile = self.paths.getFinalSupportBamPath(bamPath, bamIdx)
+        evidenceBamFile = self.paths.getFinalSupportBamPath(bamPath, bamIdx)
         mergeCmd = [ sys.executable, self.params.mantaMergeBam,
                      self.params.samtoolsBin,
                      self.paths.getSortedSupportBamMask(bamIdx),
-                     supportBamFile,
+                     evidenceBamFile,
                      self.paths.getSupportBamListPath(bamIdx) ]
 
         mergeBamTask=self.addTask(preJoin(taskPrefix,"merge_evidenceBam_%s" % (bamIdx)),
                                   mergeCmd, dependencies=dependencies)
-        mergeBamTasks.add(mergeBamTask)
 
         # index the filtered bam
         ### TODO still needs to handle the case where supportBamFile does not exist
-        indexCmd = [ self.params.samtoolsBin, "index", supportBamFile ]
+        indexCmd = [ self.params.samtoolsBin, "index", evidenceBamFile ]
         indexBamTask = self.addTask(preJoin(taskPrefix,"index_evidenceBam_%s" % (bamIdx)),
                                     indexCmd, dependencies=mergeBamTask)
         mergeBamTasks.add(indexBamTask)
 
-        bamIdx += 1
-
-    return bamIdx
 
 
 def runHyGen(self, taskPrefix="", dependencies=None) :
@@ -502,7 +486,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
     hygenTasks=set()
     if self.params.isGenerateSupportBam :
-        sortBamVcfTasks = set()
+        sortEvidenceBamTasks = set()
 
     self.candidateVcfPaths = []
     self.diploidVcfPaths = []
@@ -598,41 +582,27 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         hygenTask = preJoin(taskPrefix,"generateCandidateSV_"+binStr)
         hygenTasks.add(self.addTask(hygenTask,hygenCmd,dependencies=dirTask, nCores=self.getNCores(), memMb=self.params.hyGenMemMb))
 
-        # TODO: if the bam is large, for efficiency, consider
-        # 1) filtering the bin-specific bam first w.r.t. the final candidate vcf
-        # 2) then sort the bin-specific bam and merge them
-        # This would require moving the filter/sort bam jobs outside the hygen loop
         if self.params.isGenerateSupportBam :
-            bamIndex = 0
-            # sort supporting bams extracted from normal samples
-            bamIndex  = sortBams(self, sortBamVcfTasks,
-                                 taskPrefix=taskPrefix, binStr=binStr,
-                                 isNormal=True, bamIdx=bamIndex,
-                                 dependencies=hygenTask)
-            # sort supporting bams extracted from tumor samples
-            bamIndex = sortBams(self, sortBamVcfTasks,
-                                taskPrefix=taskPrefix, binStr=binStr,
-                                isNormal=False, bamIdx=bamIndex,
-                                dependencies=hygenTask)
+            # sort evidence bams
+            #
+            # TODO: if the bam is large, for efficiency, consider
+            # 1) filtering the bin-specific bam first w.r.t. the final candidate vcf
+            # 2) then sort the bin-specific bam and merge them
+            # This would require moving the filter/sort bam jobs outside the hygen loop
+            sortEvidenceBams(self, sortEvidenceBamTasks, taskPrefix=taskPrefix, binStr=binStr, dependencies=hygenTask)
 
-    vcfTasks = sortAllVcfs(self,taskPrefix=taskPrefix,dependencies=hygenTasks)
     nextStepWait = copy.deepcopy(hygenTasks)
 
+    vcfTasks = sortAllVcfs(self,taskPrefix=taskPrefix,dependencies=hygenTasks)
+    nextStepWait = nextStepWait.union(vcfTasks)
+
     if self.params.isGenerateSupportBam :
-        sortBamVcfTasks.union(vcfTasks)
         mergeBamTasks = set()
-        bamCount = 0
-        # merge supporting bams for each normal sample
-        bamCount = mergeSupportBams(self, mergeBamTasks, taskPrefix=taskPrefix,
-                                    isNormal=True, bamIdx=bamCount,
-                                    dependencies=sortBamVcfTasks)
 
-        # merge supporting bams for each tumor sample
-        bamCount = mergeSupportBams(self, mergeBamTasks, taskPrefix=taskPrefix,
-                                    isNormal=False, bamIdx=bamCount,
-                                    dependencies=sortBamVcfTasks)
+        # merge evidence bams
+        mergeEvidenceBams(self, mergeBamTasks, taskPrefix=taskPrefix,
+                          dependencies=sortEvidenceBamTasks)
 
-        nextStepWait = nextStepWait.union(sortBamVcfTasks)
         nextStepWait = nextStepWait.union(mergeBamTasks)
 
     #

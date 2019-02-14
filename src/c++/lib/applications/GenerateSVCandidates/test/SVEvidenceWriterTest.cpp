@@ -300,11 +300,15 @@ BOOST_AUTO_TEST_CASE( test_ProcessRecords )
     suppFragments.supportFrags[readsToAdd[0].qname()] = suppFragment1;
     suppFragments.supportFrags[readsToAdd[1].qname()] = suppFragment2;
 
-    bam_dumper bamDumper1(bamFileName.c_str(), bamHeaderManager.get());
-    // Process the bam record and add ZM tag for all reads which are intersection to genomeInterval1
-    SVEvidenceWriter::processBamRecords(bamStream.operator*(), genomeInterval1, suppFragments.supportFrags, bamDumper1);
-    bamDumper1.close();
-    // creating bam index
+    {
+        // this code block forces bamWriter to flush at block end:
+        SynchronizedBamWriter bamWriter(bamFileName.c_str(), bamHeaderManager.get());
+        // Process the bam record and add ZM tag for all reads which are intersection to genomeInterval1
+        SVEvidenceWriter::processBamRecords(bamStream.operator*(), genomeInterval1, suppFragments.supportFrags,
+                                            bamWriter);
+    }
+
+    // create bam index
     const int indexStatus1 = bam_index_build(bamFileName.c_str(), 0);
     // check whether .bai file for bam file is build successfully or not.
     BOOST_REQUIRE(indexStatus1 >=0);
@@ -312,10 +316,15 @@ BOOST_AUTO_TEST_CASE( test_ProcessRecords )
     // check the evidence bam for bamRecord1 as genomeInterval1 intersects with bamRecord1.
     checkEvidenceBam(genomeInterval1, bamFileName, "INS_1|PR", "bamRecord1");
 
-    bam_dumper bamDumper2(bamFileName.c_str(), bamHeaderManager.get());
-    // Process the bam record and add ZM tag for all reads which are intersection to genomeInterval2
-    SVEvidenceWriter::processBamRecords(bamStream.operator*(), genomeInterval1, suppFragments.supportFrags, bamDumper2);
-    bamDumper2.close();
+    {
+        // this code block forces bamWriter to flush at block end:
+        SynchronizedBamWriter bamWriter(bamFileName.c_str(), bamHeaderManager.get());
+        // Process the bam record and add ZM tag for all reads which are intersection to genomeInterval2
+        SVEvidenceWriter::processBamRecords(bamStream.operator*(), genomeInterval1, suppFragments.supportFrags,
+                                            bamWriter);
+    }
+
+    // create bam index
     const int indexStatus2 = bam_index_build(bamFileName.c_str(), 0);
     // check whether .bai file for bam file is build successfully or not.
     BOOST_REQUIRE(indexStatus2 >=0);
@@ -347,11 +356,12 @@ BOOST_AUTO_TEST_CASE( test_writeEvidenceBam )
     suppFragments.supportFrags[readsToAdd[1].qname()] = suppFragment2;
 
     {
-        SVEvidenceWriter::bam_dumper_ptr bamDumperPtr(new bam_dumper(bamFileName.c_str(), bamHeaderManager.get()));
-        // Write both the bamRecord1 and bamRecord2 in the evidence bam
-        SVEvidenceWriter::writeSupportBam(bamStream, suppFragments, bamDumperPtr);
+        // this code block forces bamWriter to flush at block end:
+        SynchronizedBamWriter bamWriter(bamFileName.c_str(), bamHeaderManager.get());
+        SVEvidenceWriter::writeSupportBam(bamStream, suppFragments, bamWriter);
     }
-    // creating bam index
+
+    // create bam index
     const int indexStatus = bam_index_build(bamFileName.c_str(), 0);
     // check whether .bai file for bam file is build successfully or not.
     BOOST_REQUIRE(indexStatus >=0);

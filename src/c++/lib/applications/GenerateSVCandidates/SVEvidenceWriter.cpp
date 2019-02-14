@@ -91,7 +91,7 @@ processBamRecords(
     bam_streamer& origBamStream,
     const GenomeInterval& interval,
     const support_fragments_t& supportFrags,
-    bam_dumper& bamDumper)
+    SynchronizedBamWriter& bamWriter)
 {
 #ifdef DEBUG_SUPPORT
     log_os << __FUNCTION__ << "  target interval: "
@@ -147,7 +147,8 @@ processBamRecords(
                 // Update bam record bin value
                 bam_update_bin(br);
                 // write to bam
-                bamDumper.put_record(&br);
+
+                bamWriter.put_record(&br);
             }
         }
     }
@@ -156,9 +157,10 @@ processBamRecords(
 
 void
 SVEvidenceWriter::
-writeSupportBam(const bam_streamer_ptr& origBamStreamPtr,
-                const SVEvidenceWriterSampleData& svSupportFrags,
-                const bam_dumper_ptr& supportBamDumperPtr)
+writeSupportBam(
+    const bam_streamer_ptr& origBamStreamPtr,
+    const SVEvidenceWriterSampleData& svSupportFrags,
+    SynchronizedBamWriter& bamWriter)
 {
     std::vector<SVEvidenceWriterRead> supportReads;
     const support_fragments_t& supportFrags(svSupportFrags.supportFrags);
@@ -193,37 +195,49 @@ writeSupportBam(const bam_streamer_ptr& origBamStreamPtr,
     }
 
     bam_streamer& origBamStream(*origBamStreamPtr);
-    bam_dumper& supportBamDumper(*supportBamDumperPtr);
     for (const auto& interval : intervals)
     {
-        processBamRecords(origBamStream, interval,
-                          supportFrags, supportBamDumper);
+        processBamRecords(origBamStream, interval, supportFrags, bamWriter);
     }
 
 }
 
 
 
-SVEvidenceWriter::
-SVEvidenceWriter(
-    const GSCOptions& opt) :
-    m_isGenerateSupportBam(opt.supportBamStub.size() > 0),
-    m_sampleSize(opt.alignFileOpt.alignmentFilenames.size())
+SVEvidenceWriterSharedData::
+SVEvidenceWriterSharedData(
+    const GSCOptions& opt)
 {
-    if (! m_isGenerateSupportBam) return;
+    if (! opt.isGenerateEvidenceBam()) return;
 
-    openBamStreams(opt.referenceFilename, opt.alignFileOpt.alignmentFilenames, m_origBamStreamPtrs);
-
-    assert(m_origBamStreamPtrs.size() == m_sampleSize);
-    for (unsigned sampleIndex(0); sampleIndex<m_sampleSize; ++sampleIndex)
+    const unsigned sampleSize(opt.alignFileOpt.alignmentFilenames.size());
+    for (unsigned sampleIndex(0); sampleIndex<sampleSize; ++sampleIndex)
     {
-        std::string supportBamName(opt.supportBamStub
+        const std::string evidenceBamName(opt.evidenceBamStub
                                    + ".bam_" + std::to_string(sampleIndex)
                                    + ".bam");
-        const bam_hdr_t& header(m_origBamStreamPtrs[sampleIndex]->get_header());
-        bam_dumper_ptr bamDumperPtr(new bam_dumper(supportBamName.c_str(), header));
-        m_supportBamDumperPtrs.push_back(bamDumperPtr);
+        const bam_streamer bamStreamer(
+            opt.alignFileOpt.alignmentFilenames[sampleIndex].c_str(), opt.referenceFilename.c_str());
+
+        m_evidenceBamWriterPtrs.push_back(
+            std::make_shared<SynchronizedBamWriter>(evidenceBamName.c_str(), bamStreamer.get_header()));
     }
+
+}
+
+
+SVEvidenceWriter::
+SVEvidenceWriter(
+    const GSCOptions& opt,
+    std::shared_ptr<SVEvidenceWriterSharedData> sharedData) :
+    m_isGenerateEvidenceBam(opt.isGenerateEvidenceBam()),
+    m_sampleSize(opt.alignFileOpt.alignmentFilenames.size()),
+    m_sharedData(sharedData)
+{
+    if (! m_isGenerateEvidenceBam) return;
+
+    openBamStreams(opt.referenceFilename, opt.alignFileOpt.alignmentFilenames, m_origBamStreamPtrs);
+    assert(m_origBamStreamPtrs.size() == m_sampleSize);
 }
 
 
@@ -233,15 +247,12 @@ SVEvidenceWriter::
 write(
     const SVEvidenceWriterData& svEvidenceWriterData)
 {
-    if (! m_isGenerateSupportBam) return;
-
-    /// TODO more specific I/O lock could be needed to make the SV caller faster when evidence BAM output is turned on:
-    std::lock_guard<std::mutex> lock(m_writerMutex);
+    if (! m_isGenerateEvidenceBam) return;
 
     for (unsigned sampleIndex(0); sampleIndex<m_sampleSize; ++sampleIndex)
     {
         writeSupportBam(m_origBamStreamPtrs[sampleIndex],
                         svEvidenceWriterData.sampleData[sampleIndex],
-                        m_supportBamDumperPtrs[sampleIndex]);
+                        m_sharedData->getBamWriter(sampleIndex));
     }
 }

@@ -115,7 +115,7 @@ parseGSCOptions(
      "minimum number of supporting spanning observations required to become an SV candidate")
     ("min-scored-sv-size", po::value(&opt.minScoredVariantSize)->default_value(opt.minScoredVariantSize),
      "minimum size for variants which are scored and output following initial candidate generation")
-    ("evidence-bam-stub", po::value(&opt.supportBamStub)->default_value(opt.supportBamStub),
+    ("evidence-bam-stub", po::value(&opt.evidenceBamStub)->default_value(opt.evidenceBamStub),
      "Directory and prefix of bams storing the supporting reads of SVs")
     ("output-contigs", po::value(&opt.isOutputContig)->zero_tokens(),
      "Output assembled contig sequences in VCF files")
