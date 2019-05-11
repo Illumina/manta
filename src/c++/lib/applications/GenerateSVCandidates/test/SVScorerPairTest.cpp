@@ -23,12 +23,12 @@
 
 #include "boost/make_unique.hpp"
 #include "boost/test/unit_test.hpp"
-#include "manta/BamStreamerUtils.hh"
-#include "test/testAlignmentDataUtil.hh"
-#include "test/testFileMakers.hh"
-#include "test/testSVLocusScanner.hh"
+#include "manta/BamStreamerUtils.hpp"
+#include "test/testAlignmentDataUtil.hpp"
+#include "test/testFileMakers.hpp"
+#include "test/testSVLocusScanner.hpp"
 
-#include "SVScorer.hh"
+#include "SVScorer.hpp"
 #include "SVScorerPair.cpp"
 
 /// TestSVScorer is a friend of SVScorer. So that can access private

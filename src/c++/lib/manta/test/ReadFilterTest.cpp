@@ -24,11 +24,11 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "ReadFilter.hh"
+#include "ReadFilter.hpp"
 
-#include "blt_util/align_path.hh"
-#include "htsapi/align_path_bam_util.hh"
-#include "test/testAlignmentDataUtil.hh"
+#include "blt_util/align_path.hpp"
+#include "htsapi/align_path_bam_util.hpp"
+#include "test/testAlignmentDataUtil.hpp"
 
 BOOST_AUTO_TEST_SUITE(test_ReadFilter)
 

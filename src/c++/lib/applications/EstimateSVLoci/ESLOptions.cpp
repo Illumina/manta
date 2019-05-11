@@ -21,14 +21,14 @@
 /// \author Chris Saunders
 ///
 
-#include "ESLOptions.hh"
+#include "ESLOptions.hpp"
 
-#include "blt_util/log.hh"
-#include "common/ProgramUtil.hh"
-#include "options/AlignmentFileOptionsParser.hh"
-#include "options/ReadScannerOptionsParser.hh"
-#include "options/SVLocusSetOptionsParser.hh"
-#include "options/optionsUtil.hh"
+#include "blt_util/log.hpp"
+#include "common/ProgramUtil.hpp"
+#include "options/AlignmentFileOptionsParser.hpp"
+#include "options/ReadScannerOptionsParser.hpp"
+#include "options/SVLocusSetOptionsParser.hpp"
+#include "options/optionsUtil.hpp"
 
 #include "boost/program_options.hpp"
 

@@ -17,12 +17,12 @@
 //
 //
 
-#include "AlignmentStatsOptions.hh"
+#include "AlignmentStatsOptions.hpp"
 
-#include "blt_util/log.hh"
-#include "common/ProgramUtil.hh"
-#include "options/AlignmentFileOptionsParser.hh"
-#include "options/optionsUtil.hh"
+#include "blt_util/log.hpp"
+#include "common/ProgramUtil.hpp"
+#include "options/AlignmentFileOptionsParser.hpp"
+#include "options/optionsUtil.hpp"
 
 #include "boost/program_options.hpp"
 

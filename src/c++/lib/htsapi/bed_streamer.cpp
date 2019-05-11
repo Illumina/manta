@@ -21,8 +21,8 @@
 /// \author Chris Saunders
 ///
 
-#include "bed_streamer.hh"
-#include "common/Exceptions.hh"
+#include "bed_streamer.hpp"
+#include "common/Exceptions.hpp"
 
 #include <iostream>
 #include <sstream>

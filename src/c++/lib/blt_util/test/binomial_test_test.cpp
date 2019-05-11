@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "blt_util/binomial_test.hh"
+#include "blt_util/binomial_test.hpp"
 
 template <class T, size_t N>
 static size_t carray_size(T (&)[N])

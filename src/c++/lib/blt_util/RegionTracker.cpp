@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/RegionTracker.hh"
+#include "blt_util/RegionTracker.hpp"
 
 bool RegionTracker::isIntersectRegionImpl(const pos_t beginPos, const pos_t endPos) const
 {

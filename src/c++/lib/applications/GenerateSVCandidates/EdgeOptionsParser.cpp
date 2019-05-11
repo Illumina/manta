@@ -21,10 +21,10 @@
 /// \author Chris Saunders
 ///
 
-#include "EdgeOptionsParser.hh"
+#include "EdgeOptionsParser.hpp"
 
-#include "blt_util/parse_util.hh"
-#include "blt_util/string_util.hh"
+#include "blt_util/parse_util.hpp"
+#include "blt_util/string_util.hpp"
 
 namespace {
 const char locusIndexKey[] = "locus-index";

@@ -21,8 +21,8 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/prob_util.hh"
-#include "blt_util/log.hh"
+#include "blt_util/prob_util.hpp"
+#include "blt_util/log.hpp"
 
 #include <cstdlib>
 

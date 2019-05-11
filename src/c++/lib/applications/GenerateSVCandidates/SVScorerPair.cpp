@@ -21,16 +21,16 @@
 /// \author Chris Saunders and Xiaoyu Chen
 ///
 
-#include "SVScorePairAltProcessor.hh"
-#include "SVScorePairRefProcessor.hh"
-#include "SVScorer.hh"
+#include "SVScorePairAltProcessor.hpp"
+#include "SVScorePairRefProcessor.hpp"
+#include "SVScorer.hpp"
 
-#include "common/Exceptions.hh"
-#include "htsapi/align_path_bam_util.hh"
-#include "htsapi/bam_record_util.hh"
-#include "htsapi/bam_streamer.hh"
-#include "manta/SVCandidateUtil.hh"
-#include "svgraph/GenomeIntervalUtil.hh"
+#include "common/Exceptions.hpp"
+#include "htsapi/align_path_bam_util.hpp"
+#include "htsapi/bam_record_util.hpp"
+#include "htsapi/bam_streamer.hpp"
+#include "manta/SVCandidateUtil.hpp"
+#include "svgraph/GenomeIntervalUtil.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -45,7 +45,7 @@
 //#define DEBUG_SUPPORT
 
 #if defined(DEBUG_PAIR) || defined(DEBUG_SUPPORT)
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #endif
 
 static void processBamProcList(

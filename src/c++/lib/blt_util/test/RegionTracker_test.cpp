@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "RegionTracker.hh"
+#include "RegionTracker.hpp"
 
 BOOST_AUTO_TEST_SUITE(test_RegionTracker)
 

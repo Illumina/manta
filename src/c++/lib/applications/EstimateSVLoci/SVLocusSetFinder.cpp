@@ -21,13 +21,13 @@
 /// \author Chris Saunders
 ///
 
-#include "SVLocusSetFinder.hh"
+#include "SVLocusSetFinder.hpp"
 
-#include "blt_util/log.hh"
-#include "common/Exceptions.hh"
-#include "htsapi/align_path_bam_util.hh"
-#include "manta/ChromDepthFilterUtil.hh"
-#include "manta/ReadFilter.hh"
+#include "blt_util/log.hpp"
+#include "common/Exceptions.hpp"
+#include "htsapi/align_path_bam_util.hpp"
+#include "manta/ChromDepthFilterUtil.hpp"
+#include "manta/ReadFilter.hpp"
 
 #include <iostream>
 #include <sstream>

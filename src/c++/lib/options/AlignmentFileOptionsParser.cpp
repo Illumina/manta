@@ -17,8 +17,8 @@
 //
 //
 
-#include "options/AlignmentFileOptionsParser.hh"
-#include "options/optionsUtil.hh"
+#include "options/AlignmentFileOptionsParser.hpp"
+#include "options/optionsUtil.hpp"
 
 #include <set>
 

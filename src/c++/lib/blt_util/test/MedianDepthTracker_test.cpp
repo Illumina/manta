@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "MedianDepthTracker.hh"
+#include "MedianDepthTracker.hpp"
 
 BOOST_AUTO_TEST_SUITE(test_MedianDepthTracker)
 

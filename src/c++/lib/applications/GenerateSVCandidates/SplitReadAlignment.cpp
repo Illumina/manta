@@ -22,12 +22,12 @@
 /// \author Felix Schlesinger
 ///
 
-#include "SplitReadAlignment.hh"
-#include "blt_util/blt_types.hh"
-#include "blt_util/log.hh"
-#include "blt_util/seq_printer.hh"
-#include "common/Exceptions.hh"
-#include "htsapi/SimpleAlignment_bam_util.hh"
+#include "SplitReadAlignment.hpp"
+#include "blt_util/blt_types.hpp"
+#include "blt_util/log.hpp"
+#include "blt_util/seq_printer.hpp"
+#include "common/Exceptions.hpp"
+#include "htsapi/SimpleAlignment_bam_util.hpp"
 
 #include <cassert>
 #include <cmath>

@@ -21,8 +21,8 @@
 /// \author Ole Schulz-Trieglaff
 ///
 
-#include "alignment/AlignmentUtil.hh"
-#include "blt_util/seq_util.hh"
+#include "alignment/AlignmentUtil.hpp"
+#include "blt_util/seq_util.hpp"
 
 #include <cassert>
 
@@ -30,7 +30,7 @@
 
 #ifdef DEBUG_RS
 #include <iostream>
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #endif
 
 /// tests if prefix of sequence is aligned

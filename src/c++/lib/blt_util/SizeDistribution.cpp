@@ -21,9 +21,9 @@
 /// \author Xiaoyu Chen
 ///
 
-#include "SizeDistribution.hh"
+#include "SizeDistribution.hpp"
 
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 
 #include "boost/foreach.hpp"
 

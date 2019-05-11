@@ -17,7 +17,7 @@
 //
 //
 
-#include "applications/GetChromDepth/GetChromDepth.hh"
+#include "applications/GetChromDepth/GetChromDepth.hpp"
 
 int main(int argc, char* argv[])
 {

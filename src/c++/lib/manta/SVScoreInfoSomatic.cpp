@@ -21,8 +21,8 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/SVScoreInfoSomatic.hh"
-#include "blt_util/log.hh"
+#include "manta/SVScoreInfoSomatic.hpp"
+#include "blt_util/log.hpp"
 
 #include <iostream>
 

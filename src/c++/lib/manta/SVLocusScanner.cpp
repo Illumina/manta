@@ -23,17 +23,17 @@
 /// \author Bret Barnes
 ///
 
-#include "manta/SVLocusScanner.hh"
-#include "blt_util/align_path_util.hh"
-#include "blt_util/parse_util.hh"
-#include "blt_util/string_util.hh"
-#include "common/Exceptions.hh"
-#include "htsapi/SimpleAlignment_bam_util.hh"
-#include "htsapi/align_path_bam_util.hh"
-#include "htsapi/bam_record_util.hh"
-#include "manta/RemoteMateReadUtil.hh"
-#include "manta/SVCandidateUtil.hh"
-#include "manta/SVLocusScannerSemiAligned.hh"
+#include "manta/SVLocusScanner.hpp"
+#include "blt_util/align_path_util.hpp"
+#include "blt_util/parse_util.hpp"
+#include "blt_util/string_util.hpp"
+#include "common/Exceptions.hpp"
+#include "htsapi/SimpleAlignment_bam_util.hpp"
+#include "htsapi/align_path_bam_util.hpp"
+#include "htsapi/bam_record_util.hpp"
+#include "manta/RemoteMateReadUtil.hpp"
+#include "manta/SVCandidateUtil.hpp"
+#include "manta/SVLocusScannerSemiAligned.hpp"
 
 #include <iostream>
 
@@ -42,7 +42,7 @@
 //#define DEBUG_IS_SHADOW
 
 #ifdef DEBUG_SCANNER
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #endif
 
 /// \brief Utilities pertaining to classifying anomolous fragments based on size so that they can be

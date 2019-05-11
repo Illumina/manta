@@ -19,15 +19,15 @@
 
 /// \file
 
-#include "MergeAlignmentStatsOptions.hh"
-#include "blt_util/log.hh"
-#include "options/AlignmentFileOptionsParser.hh"
-#include "options/optionsUtil.hh"
+#include "MergeAlignmentStatsOptions.hpp"
+#include "blt_util/log.hpp"
+#include "options/AlignmentFileOptionsParser.hpp"
+#include "options/optionsUtil.hpp"
 
 #include "boost/program_options.hpp"
 
 #include <iostream>
-#include "../../common/ProgramUtil.hh"
+#include "../../common/ProgramUtil.hpp"
 
 typedef std::vector<std::string> files_t;
 

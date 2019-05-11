@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "observer.hh"
+#include "observer.hpp"
 
 #include <string>
 

@@ -21,8 +21,8 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/SVScoreInfoDiploid.hh"
-#include "blt_util/log.hh"
+#include "manta/SVScoreInfoDiploid.hpp"
+#include "blt_util/log.hpp"
 
 #include <iostream>
 

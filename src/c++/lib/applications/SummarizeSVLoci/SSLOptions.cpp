@@ -21,14 +21,14 @@
 /// \author Chris Saunders
 ///
 
-#include "SSLOptions.hh"
+#include "SSLOptions.hpp"
 
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
 
 #include <iostream>
-#include "../../common/ProgramUtil.hh"
+#include "../../common/ProgramUtil.hpp"
 
 static void usage(
     std::ostream&                                      os,

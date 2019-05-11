@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "htsapi/bam_seq.hh"
+#include "htsapi/bam_seq.hpp"
 
 #include <iostream>
 

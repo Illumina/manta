@@ -17,7 +17,7 @@
 //
 //
 
-#include "applications/GetAlignmentStats/GetAlignmentStats.hh"
+#include "applications/GetAlignmentStats/GetAlignmentStats.hpp"
 
 int main(int argc, char* argv[])
 {

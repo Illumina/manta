@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "format/VcfWriterDiploidSV.hh"
+#include "format/VcfWriterDiploidSV.hpp"
 
 void VcfWriterDiploidSV::addHeaderInfo(std::ostream& os) const
 {

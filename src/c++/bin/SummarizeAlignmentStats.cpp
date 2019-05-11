@@ -17,7 +17,7 @@
 //
 //
 
-#include "applications/SummarizeAlignmentStats/SummarizeAlignmentStats.hh"
+#include "applications/SummarizeAlignmentStats/SummarizeAlignmentStats.hpp"
 
 int main(int argc, char* argv[])
 {

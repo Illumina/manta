@@ -22,7 +22,7 @@
 /// \author Naoki Nariai
 ///
 
-#include "manta/SVCandidateUtil.hh"
+#include "manta/SVCandidateUtil.hpp"
 
 bool isSVBelowMinSize(const SVCandidate& sv, const unsigned minSize)
 {

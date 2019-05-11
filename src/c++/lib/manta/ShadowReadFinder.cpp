@@ -21,13 +21,13 @@
 /// \author Ole Schulz-Trieglaff
 ///
 
-#include "ShadowReadFinder.hh"
+#include "ShadowReadFinder.hpp"
 
-#include "htsapi/bam_record_util.hh"
+#include "htsapi/bam_record_util.hpp"
 
 #ifdef DEBUG_IS_SHADOW
 #include <iostream>
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #endif
 
 static bool isGoodShadow(const bam_record& bamRead, const std::string& lastQname)

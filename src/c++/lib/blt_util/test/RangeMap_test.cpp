@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "blt_util/RangeMap.hh"
+#include "blt_util/RangeMap.hpp"
 
 BOOST_AUTO_TEST_SUITE(test_RangeMap)
 

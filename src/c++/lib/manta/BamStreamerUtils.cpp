@@ -17,10 +17,10 @@
 //
 //
 
-#include "BamStreamerUtils.hh"
+#include "BamStreamerUtils.hpp"
 
-#include "common/Exceptions.hh"
-#include "htsapi/bam_header_util.hh"
+#include "common/Exceptions.hpp"
+#include "htsapi/bam_header_util.hpp"
 
 #include <sstream>
 

@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "EdgeOptionsParser.hh"
+#include "EdgeOptionsParser.hpp"
 
 using namespace std;
 

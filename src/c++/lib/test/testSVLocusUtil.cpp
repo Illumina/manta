@@ -21,7 +21,7 @@
 /// \author Trevor Ramsay
 ///
 
-#include "testSVLocusUtil.hh"
+#include "testSVLocusUtil.hpp"
 
 void locusAddPair(
     SVLocus&       locus,

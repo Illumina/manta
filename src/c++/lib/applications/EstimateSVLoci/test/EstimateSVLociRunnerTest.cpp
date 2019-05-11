@@ -23,11 +23,11 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "EstimateSVLociRunner.hh"
+#include "EstimateSVLociRunner.hpp"
 
-#include "test/testAlignmentDataUtil.hh"
-#include "test/testFileMakers.hh"
-#include "test/testUtil.hh"
+#include "test/testAlignmentDataUtil.hpp"
+#include "test/testFileMakers.hpp"
+#include "test/testUtil.hpp"
 
 #include "boost/make_unique.hpp"
 

@@ -17,7 +17,7 @@
 //
 //
 
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 
 #include <iostream>
 

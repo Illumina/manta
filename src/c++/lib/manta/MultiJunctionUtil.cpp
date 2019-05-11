@@ -21,10 +21,10 @@
 /// \author Chris Saunders
 ///
 
-#include "MultiJunctionUtil.hh"
+#include "MultiJunctionUtil.hpp"
 
-#include "blt_util/log.hh"
-#include "manta/SVCandidateUtil.hh"
+#include "blt_util/log.hpp"
+#include "manta/SVCandidateUtil.hpp"
 
 #include <limits>
 

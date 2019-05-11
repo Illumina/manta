@@ -22,12 +22,12 @@
 ///
 
 #include "boost/test/unit_test.hpp"
-#include "test/testAlignmentDataUtil.hh"
-#include "test/testSVLocusScanner.hh"
+#include "test/testAlignmentDataUtil.hpp"
+#include "test/testSVLocusScanner.hpp"
 
 #include "SVScorePairProcessor.cpp"
-#include "SVScorePairProcessor.hh"
-#include "SVScorePairRefProcessor.hh"
+#include "SVScorePairProcessor.hpp"
+#include "SVScorePairRefProcessor.hpp"
 
 BOOST_AUTO_TEST_SUITE(SVScorePairProcessor_test_suite)
 

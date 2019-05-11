@@ -21,9 +21,9 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/SVReferenceUtil.hh"
-#include "common/Exceptions.hh"
-#include "htsapi/samtools_fasta_util.hh"
+#include "manta/SVReferenceUtil.hpp"
+#include "common/Exceptions.hpp"
+#include "htsapi/samtools_fasta_util.hpp"
 
 #if 0
 static

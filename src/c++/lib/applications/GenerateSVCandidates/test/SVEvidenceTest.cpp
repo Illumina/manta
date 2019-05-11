@@ -20,7 +20,7 @@
 #include <iostream>
 #include "boost/test/unit_test.hpp"
 
-#include "SVEvidence.hh"
+#include "SVEvidence.hpp"
 
 BOOST_AUTO_TEST_SUITE(SVEvidence_test_suite)
 

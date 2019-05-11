@@ -21,17 +21,17 @@
 /// \author Chris Saunders
 ///
 
-#include "ReadChromDepthUtil.hh"
-#include "manta/SVLocusScanner.hh"
+#include "ReadChromDepthUtil.hpp"
+#include "manta/SVLocusScanner.hpp"
 
-#include "blt_util/MedianDepthTracker.hh"
-#include "blt_util/depth_buffer.hh"
-#include "blt_util/log.hh"
-#include "common/Exceptions.hh"
-#include "htsapi/bam_header_info.hh"
-#include "htsapi/bam_streamer.hh"
-#include "manta/ReadFilter.hh"
-#include "manta/SVLocusScanner.hh"
+#include "blt_util/MedianDepthTracker.hpp"
+#include "blt_util/depth_buffer.hpp"
+#include "blt_util/log.hpp"
+#include "common/Exceptions.hpp"
+#include "htsapi/bam_header_info.hpp"
+#include "htsapi/bam_streamer.hpp"
+#include "manta/ReadFilter.hpp"
+#include "manta/SVLocusScanner.hpp"
 
 #include <iostream>
 #include <sstream>

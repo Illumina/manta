@@ -17,7 +17,7 @@
 //
 //
 
-#include "options/SVLocusSetOptionsParser.hh"
+#include "options/SVLocusSetOptionsParser.hpp"
 
 boost::program_options::options_description getOptionsDescription(SVLocusSetOptions& opt)
 {

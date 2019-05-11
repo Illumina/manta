@@ -20,10 +20,10 @@
 #include "boost/test/unit_test.hpp"
 
 #include "EdgeRetrieverJumpBin.cpp"
-#include "EdgeRetrieverJumpBin.hh"
+#include "EdgeRetrieverJumpBin.hpp"
 
-#include "svgraph/SVLocusSet.hh"
-#include "test/testSVLocusUtil.hh"
+#include "svgraph/SVLocusSet.hpp"
+#include "test/testSVLocusUtil.hpp"
 
 BOOST_AUTO_TEST_SUITE(EdgeRetrieverJumpBin_test_suite)
 

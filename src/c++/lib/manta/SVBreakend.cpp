@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/SVBreakend.hh"
+#include "manta/SVBreakend.hpp"
 
 #include <iostream>
 

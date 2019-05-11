@@ -24,18 +24,18 @@
 /// \author Naoki Nariai
 ///
 
-#include "SVCandidateAssemblyRefiner.hh"
+#include "SVCandidateAssemblyRefiner.hpp"
 
-#include "alignment/AlignmentScoringUtil.hh"
-#include "alignment/AlignmentUtil.hh"
-#include "blt_util/align_path.hh"
-#include "blt_util/log.hh"
-#include "blt_util/seq_printer.hh"
-#include "blt_util/seq_util.hh"
-#include "common/Exceptions.hh"
-#include "htsapi/samtools_fasta_util.hh"
-#include "manta/SVCandidateUtil.hh"
-#include "manta/SVReferenceUtil.hh"
+#include "alignment/AlignmentScoringUtil.hpp"
+#include "alignment/AlignmentUtil.hpp"
+#include "blt_util/align_path.hpp"
+#include "blt_util/log.hpp"
+#include "blt_util/seq_printer.hpp"
+#include "blt_util/seq_util.hpp"
+#include "common/Exceptions.hpp"
+#include "htsapi/samtools_fasta_util.hpp"
+#include "manta/SVCandidateUtil.hpp"
+#include "manta/SVReferenceUtil.hpp"
 
 #include <iostream>
 #include <unordered_set>
@@ -46,7 +46,7 @@
 //#define DEBUG_VARR
 
 #ifdef DEBUG_REFINER
-#include "blt_util/seq_printer.hh"
+#include "blt_util/seq_printer.hpp"
 #endif
 
 /// process assembly/align info into simple reference coordinates that can be reported in the output vcf:

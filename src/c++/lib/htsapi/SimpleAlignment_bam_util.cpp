@@ -21,8 +21,8 @@
 ///
 ///
 
-#include "SimpleAlignment_bam_util.hh"
-#include "htsapi/align_path_bam_util.hh"
+#include "SimpleAlignment_bam_util.hpp"
+#include "htsapi/align_path_bam_util.hpp"
 
 void getAlignment(const bam_record& bamRead, SimpleAlignment& al)
 {

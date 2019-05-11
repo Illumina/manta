@@ -17,7 +17,7 @@
 //
 //
 
-#include "applications/CheckSVLoci/CheckSVLoci.hh"
+#include "applications/CheckSVLoci/CheckSVLoci.hpp"
 
 int main(int argc, char* argv[])
 {

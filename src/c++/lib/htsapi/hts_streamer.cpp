@@ -21,8 +21,8 @@
 /// \author Chris Saunders
 ///
 
-#include "hts_streamer.hh"
-#include "common/Exceptions.hh"
+#include "hts_streamer.hpp"
+#include "common/Exceptions.hpp"
 
 #include <iostream>
 #include <sstream>

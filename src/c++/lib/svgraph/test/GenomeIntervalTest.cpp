@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "svgraph/GenomeInterval.hh"
+#include "svgraph/GenomeInterval.hpp"
 
 // Test public functionality of the GenomeInterval
 BOOST_AUTO_TEST_SUITE(test_GenomeInterval)

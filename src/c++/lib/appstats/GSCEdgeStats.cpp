@@ -21,8 +21,8 @@
 /// \author Chris Saunders
 ///
 
-#include "GSCEdgeStats.hh"
-#include "blt_util/math_util.hh"
+#include "GSCEdgeStats.hpp"
+#include "blt_util/math_util.hpp"
 
 #include "boost/archive/xml_iarchive.hpp"
 #include "boost/archive/xml_oarchive.hpp"

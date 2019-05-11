@@ -19,8 +19,8 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "svgraph/GenomeIntervalUtil.hh"
-#include "test/testAlignmentDataUtil.hh"
+#include "svgraph/GenomeIntervalUtil.hpp"
+#include "test/testAlignmentDataUtil.hpp"
 
 BOOST_AUTO_TEST_SUITE(GenomeIntervalUtil_test_suite)
 

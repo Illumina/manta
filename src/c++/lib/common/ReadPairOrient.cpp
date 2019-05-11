@@ -26,7 +26,7 @@
  ** \author Richard Shaw
  **/
 
-#include "common/ReadPairOrient.hh"
+#include "common/ReadPairOrient.hpp"
 
 #include <iostream>
 

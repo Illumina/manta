@@ -21,24 +21,24 @@
 /// \author Chris Saunders
 ///
 
-#include "GenerateSVCandidates.hh"
-#include "EdgeRetrieverBin.hh"
-#include "EdgeRetrieverLocus.hh"
-#include "GSCOptions.hh"
-#include "SVCandidateProcessor.hh"
-#include "SVEvidenceWriter.hh"
-#include "SVFinder.hh"
+#include "GenerateSVCandidates.hpp"
+#include "EdgeRetrieverBin.hpp"
+#include "EdgeRetrieverLocus.hpp"
+#include "GSCOptions.hpp"
+#include "SVCandidateProcessor.hpp"
+#include "SVEvidenceWriter.hpp"
+#include "SVFinder.hpp"
 
-#include "blt_util/log.hh"
-#include "common/Exceptions.hh"
-#include "manta/BamStreamerUtils.hh"
-#include "manta/MultiJunctionUtil.hh"
-#include "manta/SVCandidateUtil.hh"
+#include "blt_util/log.hpp"
+#include "common/Exceptions.hpp"
+#include "manta/BamStreamerUtils.hpp"
+#include "manta/MultiJunctionUtil.hpp"
+#include "manta/SVCandidateUtil.hpp"
 
 // A bus error on PPC64 (DRAGEN-1789) seems to be occurring in the boost lockfree queue logic
-// of the boost version of CTPL, although this was not traced down to a specific error mechanism.
+// of the boost version of CTPL, although this was not traced down to a specific error mechanism. 
 // To avoid this error under the assumption that there is a problem with boost CTPL, switch to
-// the STL version of CTPL instead:
+// the STL version of CTPL instead: 
 #include "ctpl_stl.h"
 
 #include <iostream>

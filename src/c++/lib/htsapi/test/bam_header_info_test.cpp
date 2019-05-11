@@ -19,8 +19,8 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "htsapi/bam_header_info.hh"
-#include "test/testAlignmentDataUtil.hh"
+#include "htsapi/bam_header_info.hpp"
+#include "test/testAlignmentDataUtil.hpp"
 
 BOOST_AUTO_TEST_SUITE(bam_header_info_test_suite)
 

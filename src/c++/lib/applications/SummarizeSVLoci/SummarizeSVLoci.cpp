@@ -21,11 +21,11 @@
 /// \author Chris Saunders
 ///
 
-#include "SummarizeSVLoci.hh"
-#include "SSLOptions.hh"
+#include "SummarizeSVLoci.hpp"
+#include "SSLOptions.hpp"
 
-#include "common/OutStream.hh"
-#include "svgraph/SVLocusSet.hh"
+#include "common/OutStream.hpp"
+#include "svgraph/SVLocusSet.hpp"
 
 #include <iostream>
 

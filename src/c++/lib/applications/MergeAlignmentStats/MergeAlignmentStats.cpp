@@ -17,16 +17,16 @@
 //
 //
 
-#include "MergeAlignmentStatsOptions.hh"
+#include "MergeAlignmentStatsOptions.hpp"
 
-#include "blt_util/log.hh"
-#include "common/OutStream.hh"
-#include "manta/ReadGroupStatsUtil.hh"
+#include "blt_util/log.hpp"
+#include "common/OutStream.hpp"
+#include "manta/ReadGroupStatsUtil.hpp"
 
 #include <cstdlib>
 
 #include <iostream>
-#include "MergeAlignmentStats.hh"
+#include "MergeAlignmentStats.hpp"
 
 static void mergeAlignmentStats(const MergeAlignmentStatsOptions& opt)
 {

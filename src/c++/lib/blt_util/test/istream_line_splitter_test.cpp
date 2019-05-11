@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "istream_line_splitter.hh"
+#include "istream_line_splitter.hpp"
 
 #include <sstream>
 #include <string>

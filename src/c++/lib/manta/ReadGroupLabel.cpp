@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/ReadGroupLabel.hh"
+#include "manta/ReadGroupLabel.hpp"
 
 #include <iostream>
 

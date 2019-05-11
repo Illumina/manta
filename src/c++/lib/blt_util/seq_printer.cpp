@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/seq_printer.hh"
+#include "blt_util/seq_printer.hpp"
 
 #include <cassert>
 #include <cstring>

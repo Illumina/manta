@@ -17,8 +17,8 @@
 //
 //
 
-#include "testSVLocusSetUtil.hh"
-#include "test/testFileMakers.hh"
+#include "testSVLocusSetUtil.hpp"
+#include "test/testFileMakers.hpp"
 
 #include "boost/make_unique.hpp"
 

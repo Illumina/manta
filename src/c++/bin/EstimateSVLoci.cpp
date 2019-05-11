@@ -17,7 +17,7 @@
 //
 //
 
-#include "applications/EstimateSVLoci/EstimateSVLoci.hh"
+#include "applications/EstimateSVLoci/EstimateSVLoci.hpp"
 
 int main(int argc, char* argv[])
 {

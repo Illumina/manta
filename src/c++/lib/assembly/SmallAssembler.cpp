@@ -21,8 +21,8 @@
 /// \author Ole Schulz-Trieglaff and Xiaoyu Chen
 ///
 
-#include "assembly/SmallAssembler.hh"
-#include "blt_util/set_util.hh"
+#include "assembly/SmallAssembler.hpp"
+#include "blt_util/set_util.hpp"
 
 #include <cassert>
 
@@ -37,7 +37,7 @@
 // stream used by DEBUG_ASBL:
 #ifdef DEBUG_ASBL
 #include <iostream>
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 
 static void print_readSet(const std::set<unsigned>& readSet)
 {

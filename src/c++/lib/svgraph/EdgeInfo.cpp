@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "EdgeInfo.hh"
+#include "EdgeInfo.hpp"
 
 #include <iostream>
 

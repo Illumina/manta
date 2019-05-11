@@ -23,15 +23,15 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "GlobalJumpIntronAligner.hh"
+#include "GlobalJumpIntronAligner.hpp"
 
-#include "blt_util/align_path.hh"
+#include "blt_util/align_path.hpp"
 
 #include <string>
 
 #ifdef DEBUG
 #include <iostream>
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #endif
 
 BOOST_AUTO_TEST_SUITE(test_GlobalJumpIntronAligner)

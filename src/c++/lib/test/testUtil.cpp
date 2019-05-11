@@ -21,9 +21,9 @@
 /// \author Trevor Ramsay
 ///
 
-#include "testUtil.hh"
+#include "testUtil.hpp"
 
-#include "blt_util/string_util.hh"
+#include "blt_util/string_util.hpp"
 
 #include "boost/filesystem.hpp"
 
@@ -58,17 +58,17 @@ std::string getValueFromTSVKeyValFile(const std::string& tsvFile, const std::str
 }
 
 #if 0
-#include "blt_util/align_path.hh"
-#include "htsapi/align_path_bam_util.hh"
+#include "blt_util/align_path.hpp"
+#include "htsapi/align_path_bam_util.hpp"
 
 #include <memory>
 
-#include "htsapi/SimpleAlignment_bam_util.hh"
-#include "htsapi/bam_dumper.hh"
-#include "htsapi/bam_record.hh"
-#include "htsapi/bam_record_util.hh"
-#include "htsapi/sam_util.hh"
-#include "manta/SVLocusScanner.hh"
+#include "htsapi/SimpleAlignment_bam_util.hpp"
+#include "htsapi/bam_dumper.hpp"
+#include "htsapi/bam_record.hpp"
+#include "htsapi/bam_record_util.hpp"
+#include "htsapi/sam_util.hpp"
+#include "manta/SVLocusScanner.hpp"
 
 #include "boost/algorithm/string.hpp"
 #include "boost/scoped_array.hpp"

@@ -23,10 +23,10 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "BamStreamerUtils.hh"
+#include "BamStreamerUtils.hpp"
 
-#include "test/testAlignmentDataUtil.hh"
-#include "test/testFileMakers.hh"
+#include "test/testAlignmentDataUtil.hpp"
+#include "test/testFileMakers.hpp"
 
 #include "boost/filesystem.hpp"
 

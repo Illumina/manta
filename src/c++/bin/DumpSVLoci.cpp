@@ -17,7 +17,7 @@
 //
 //
 
-#include "applications/DumpSVLoci/DumpSVLoci.hh"
+#include "applications/DumpSVLoci/DumpSVLoci.hpp"
 
 int main(int argc, char* argv[])
 {

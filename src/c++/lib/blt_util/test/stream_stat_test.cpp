@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "stream_stat.hh"
+#include "stream_stat.hpp"
 
 BOOST_AUTO_TEST_SUITE(test_stream_stat)
 

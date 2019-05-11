@@ -21,8 +21,8 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/ChromDepthFilterUtil.hh"
-#include "common/Exceptions.hh"
+#include "manta/ChromDepthFilterUtil.hpp"
+#include "common/Exceptions.hpp"
 
 #include <sstream>
 

@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/JunctionIdGenerator.hh"
+#include "manta/JunctionIdGenerator.hpp"
 
 void JunctionIdGenerator::getId(const EdgeInfo& edge, const SVCandidate& sv, const bool isRNA, SVId& svId)
 {

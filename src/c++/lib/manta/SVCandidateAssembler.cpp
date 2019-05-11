@@ -17,19 +17,19 @@
 //
 //
 
-#include "manta/SVCandidateAssembler.hh"
+#include "manta/SVCandidateAssembler.hpp"
 
-#include "assembly/IterativeAssembler.hh"
-#include "blt_util/CircularCounter.hh"
-#include "blt_util/log.hh"
-#include "blt_util/seq_util.hh"
-#include "htsapi/SimpleAlignment_bam_util.hh"
-#include "htsapi/align_path_bam_util.hh"
-#include "manta/BamStreamerUtils.hh"
-#include "manta/ReadFilter.hh"
-#include "manta/RemoteMateReadUtil.hh"
-#include "manta/SVLocusScannerSemiAligned.hh"
-#include "manta/ShadowReadFinder.hh"
+#include "assembly/IterativeAssembler.hpp"
+#include "blt_util/CircularCounter.hpp"
+#include "blt_util/log.hpp"
+#include "blt_util/seq_util.hpp"
+#include "htsapi/SimpleAlignment_bam_util.hpp"
+#include "htsapi/align_path_bam_util.hpp"
+#include "manta/BamStreamerUtils.hpp"
+#include "manta/ReadFilter.hpp"
+#include "manta/RemoteMateReadUtil.hpp"
+#include "manta/SVLocusScannerSemiAligned.hpp"
+#include "manta/ShadowReadFinder.hpp"
 
 #include <iostream>
 

@@ -19,11 +19,11 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "htsapi/SimpleAlignment_bam_util.hh"
+#include "htsapi/SimpleAlignment_bam_util.hpp"
 #include "manta/SVLocusScanner.cpp"
-#include "test/testAlignmentDataUtil.hh"
-#include "test/testSVLocusScanner.hh"
-#include "test/testUtil.hh"
+#include "test/testAlignmentDataUtil.hpp"
+#include "test/testSVLocusScanner.hpp"
+#include "test/testUtil.hpp"
 
 BOOST_AUTO_TEST_SUITE(test_SVLocusScanner)
 

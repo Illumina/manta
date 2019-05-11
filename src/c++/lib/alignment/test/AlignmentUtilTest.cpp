@@ -19,9 +19,9 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "AlignmentUtil.hh"
+#include "AlignmentUtil.hpp"
 
-#include "blt_util/align_path.hh"
+#include "blt_util/align_path.hpp"
 
 #include <string>
 

@@ -17,7 +17,7 @@
 //
 //
 
-#include "options/CallOptionsTumor.hh"
+#include "options/CallOptionsTumor.hpp"
 
 boost::program_options::options_description getOptionsDescription(CallOptionsTumor& opt)
 {

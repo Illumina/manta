@@ -21,12 +21,12 @@
 /// \author Bret Barnes
 ///
 
-#include "samtools_fasta_util.hh"
+#include "samtools_fasta_util.hpp"
 
-#include "blt_util/blt_exception.hh"
-#include "blt_util/parse_util.hh"
-#include "blt_util/seq_util.hh"
-#include "blt_util/string_util.hh"
+#include "blt_util/blt_exception.hpp"
+#include "blt_util/parse_util.hpp"
+#include "blt_util/seq_util.hpp"
+#include "blt_util/string_util.hpp"
 
 extern "C" {
 #include "htslib/faidx.h"

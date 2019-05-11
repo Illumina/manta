@@ -17,10 +17,10 @@
 //
 //
 
-#include "EstimateSVLoci.hh"
-#include "EstimateSVLociRunner.hh"
+#include "EstimateSVLoci.hpp"
+#include "EstimateSVLociRunner.hpp"
 
-#include "common/OutStream.hh"
+#include "common/OutStream.hpp"
 
 static void runEstimateSVLoci(const ESLOptions& opt)
 {

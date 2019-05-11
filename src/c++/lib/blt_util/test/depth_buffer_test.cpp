@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "depth_buffer.hh"
+#include "depth_buffer.hpp"
 
 BOOST_AUTO_TEST_SUITE(test_depth_buffer)
 

@@ -22,23 +22,23 @@
 /// \author Naoki Nariai
 ///
 
-#include "SVFinder.hh"
+#include "SVFinder.hpp"
 
-#include "blt_util/binomial_test.hh"
-#include "blt_util/log.hh"
-#include "common/Exceptions.hh"
-#include "manta/BamStreamerUtils.hh"
-#include "manta/ReadFilter.hh"
-#include "manta/SVCandidateUtil.hh"
-#include "manta/SVReferenceUtil.hh"
-#include "svgraph/EdgeInfoUtil.hh"
+#include "blt_util/binomial_test.hpp"
+#include "blt_util/log.hpp"
+#include "common/Exceptions.hpp"
+#include "manta/BamStreamerUtils.hpp"
+#include "manta/ReadFilter.hpp"
+#include "manta/SVCandidateUtil.hpp"
+#include "manta/SVReferenceUtil.hpp"
+#include "svgraph/EdgeInfoUtil.hpp"
 
 #include <iostream>
 
 //#define DEBUG_SVDATA
 
 #ifdef DEBUG_SVDATA
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #endif
 
 static double getSpanningNoiseRate(const AllSampleReadCounts& counts, const unsigned sampleIndex)

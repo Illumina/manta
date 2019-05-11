@@ -21,12 +21,12 @@
 /// \author Chris Saunders
 ///
 
-#include "htsapi/vcf_util.hh"
+#include "htsapi/vcf_util.hpp"
 
 #include <cassert>
 #include <cctype>
 #include <ctime>
-#include "blt_util/blt_exception.hh"
+#include "blt_util/blt_exception.hpp"
 
 #include <iostream>
 #include <sstream>

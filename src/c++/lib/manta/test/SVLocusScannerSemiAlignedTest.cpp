@@ -19,8 +19,8 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "htsapi/SimpleAlignment_bam_util.hh"
-#include "htsapi/align_path_bam_util.hh"
+#include "htsapi/SimpleAlignment_bam_util.hpp"
+#include "htsapi/align_path_bam_util.hpp"
 #include "manta/SVLocusScannerSemiAligned.cpp"
 
 #include "boost/scoped_array.hpp"

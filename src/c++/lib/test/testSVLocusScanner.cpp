@@ -22,9 +22,9 @@
 /// \author Trevor Ramsay
 ///
 
-#include "testSVLocusScanner.hh"
+#include "testSVLocusScanner.hpp"
 
-#include "test/testFileMakers.hh"
+#include "test/testFileMakers.hpp"
 
 #include "boost/make_unique.hpp"
 

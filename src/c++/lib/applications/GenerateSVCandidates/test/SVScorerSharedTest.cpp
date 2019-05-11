@@ -18,9 +18,9 @@
 //
 
 #include "boost/test/unit_test.hpp"
-#include "test/testAlignmentDataUtil.hh"
+#include "test/testAlignmentDataUtil.hpp"
 
-#include "SVScorerShared.hh"
+#include "SVScorerShared.hpp"
 
 BOOST_AUTO_TEST_SUITE(SVScorereSharedTest_test_suite)
 

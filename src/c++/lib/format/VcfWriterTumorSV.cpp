@@ -21,7 +21,7 @@
 /// \author Xiaoyu Chen
 ///
 
-#include "format/VcfWriterTumorSV.hh"
+#include "format/VcfWriterTumorSV.hpp"
 
 void VcfWriterTumorSV::addHeaderInfo(std::ostream& os) const
 {

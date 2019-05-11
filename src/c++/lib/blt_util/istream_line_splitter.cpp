@@ -21,8 +21,8 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/istream_line_splitter.hh"
-#include "blt_util/blt_exception.hh"
+#include "blt_util/istream_line_splitter.hpp"
+#include "blt_util/blt_exception.hpp"
 
 #include <cassert>
 #include <cstring>

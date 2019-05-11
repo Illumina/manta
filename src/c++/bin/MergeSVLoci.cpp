@@ -17,7 +17,7 @@
 //
 //
 
-#include "applications/MergeSVLoci/MergeSVLoci.hh"
+#include "applications/MergeSVLoci/MergeSVLoci.hpp"
 
 int main(int argc, char* argv[])
 {

@@ -22,7 +22,7 @@
 /// \author Chris Saunders
 ///
 
-#include "RemoteMateReadUtil.hh"
+#include "RemoteMateReadUtil.hpp"
 
 #include <cstdlib>
 

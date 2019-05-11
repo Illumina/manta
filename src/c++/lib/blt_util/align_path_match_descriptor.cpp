@@ -21,11 +21,11 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/align_path_match_descriptor.hh"
-#include "blt_util/blt_exception.hh"
-#include "blt_util/log.hh"
-#include "blt_util/parse_util.hh"
-#include "blt_util/seq_util.hh"
+#include "blt_util/align_path_match_descriptor.hpp"
+#include "blt_util/blt_exception.hpp"
+#include "blt_util/log.hpp"
+#include "blt_util/parse_util.hpp"
+#include "blt_util/seq_util.hpp"
 
 #include "boost/lexical_cast.hpp"
 

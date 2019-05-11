@@ -17,7 +17,7 @@
 //
 //
 
-#include "applications/SummarizeSVLoci/SummarizeSVLoci.hh"
+#include "applications/SummarizeSVLoci/SummarizeSVLoci.hpp"
 
 int main(int argc, char* argv[])
 {

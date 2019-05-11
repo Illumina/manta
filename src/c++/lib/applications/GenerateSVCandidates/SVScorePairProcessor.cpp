@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "SVScorePairProcessor.hh"
+#include "SVScorePairProcessor.hpp"
 
 SVScorePairInitParams::SVScorePairInitParams(
     const SVLocusScanner& readScanner, const SVCandidate& sv, const bool isBp1)

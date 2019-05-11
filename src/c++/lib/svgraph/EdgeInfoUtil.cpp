@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "svgraph/EdgeInfoUtil.hh"
+#include "svgraph/EdgeInfoUtil.hpp"
 
 bool testIsolatedEdge(const SVLocusSet& cset, const EdgeInfo& edge)
 {

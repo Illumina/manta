@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "math_util.hh"
+#include "math_util.hpp"
 
 #include <cmath>
 

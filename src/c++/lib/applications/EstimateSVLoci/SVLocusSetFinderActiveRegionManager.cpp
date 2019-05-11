@@ -22,10 +22,10 @@
 /// \author Trevor Ramsay
 ///
 
-#include "SVLocusSetFinderActiveRegionManager.hh"
+#include "SVLocusSetFinderActiveRegionManager.hpp"
 
-#include "blt_util/depth_buffer.hh"
-#include "svgraph/SVLocusSet.hh"
+#include "blt_util/depth_buffer.hpp"
+#include "svgraph/SVLocusSet.hpp"
 
 #include <cassert>
 

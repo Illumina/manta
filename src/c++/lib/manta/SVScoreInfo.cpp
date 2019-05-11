@@ -21,10 +21,10 @@
 /// \author Chris Saunders and Xiaoyu Chen
 ///
 
-#include "manta/SVScoreInfo.hh"
-#include "blt_util/log.hh"
-#include "blt_util/seq_printer.hh"
-#include "blt_util/seq_util.hh"
+#include "manta/SVScoreInfo.hpp"
+#include "blt_util/log.hpp"
+#include "blt_util/seq_printer.hpp"
+#include "blt_util/seq_util.hpp"
 
 #include <iostream>
 

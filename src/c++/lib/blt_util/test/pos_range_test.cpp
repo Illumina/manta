@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "blt_util/pos_range.hh"
+#include "blt_util/pos_range.hpp"
 
 BOOST_AUTO_TEST_SUITE(test_pos_range)
 

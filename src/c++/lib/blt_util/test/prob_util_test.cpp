@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "prob_util.hh"
+#include "prob_util.hpp"
 
 BOOST_AUTO_TEST_SUITE(prob_util)
 

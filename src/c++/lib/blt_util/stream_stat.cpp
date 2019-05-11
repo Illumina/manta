@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "stream_stat.hh"
+#include "stream_stat.hpp"
 
 #include <iostream>
 

@@ -21,9 +21,9 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/qscore_snp.hh"
-#include "blt_util/math_util.hh"
-#include "blt_util/qscore.hh"
+#include "blt_util/qscore_snp.hpp"
+#include "blt_util/math_util.hpp"
+#include "blt_util/qscore.hpp"
 
 qscore_snp::qscore_snp(const double snp_prob)
 {

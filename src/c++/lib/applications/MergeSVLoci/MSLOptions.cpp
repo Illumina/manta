@@ -21,10 +21,10 @@
 /// \author Chris Saunders
 ///
 
-#include "MSLOptions.hh"
+#include "MSLOptions.hpp"
 
-#include "blt_util/log.hh"
-#include "common/ProgramUtil.hh"
+#include "blt_util/log.hpp"
+#include "common/ProgramUtil.hpp"
 
 #include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"

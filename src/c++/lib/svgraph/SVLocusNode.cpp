@@ -21,8 +21,8 @@
 /// \author Chris Saunders
 ///
 
-#include "svgraph/SVLocusNode.hh"
-#include "common/Exceptions.hh"
+#include "svgraph/SVLocusNode.hpp"
+#include "common/Exceptions.hpp"
 
 #include <iostream>
 #include <sstream>

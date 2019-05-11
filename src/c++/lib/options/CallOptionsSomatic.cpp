@@ -17,7 +17,7 @@
 //
 //
 
-#include "options/CallOptionsSomatic.hh"
+#include "options/CallOptionsSomatic.hpp"
 
 boost::program_options::options_description getOptionsDescription(CallOptionsSomatic& opt)
 {

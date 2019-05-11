@@ -17,7 +17,7 @@
 //
 //
 
-#include "TestAssembler.hh"
+#include "TestAssembler.hpp"
 
 static void runTestAssembler(const TestAssemblerOptions& opt)
 {

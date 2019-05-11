@@ -20,9 +20,9 @@
 /// \file
 /// \author Chris Saunders
 
-#include "manta/SVCandidateSetData.hh"
-#include "common/Exceptions.hh"
-#include "htsapi/bam_record_util.hh"
+#include "manta/SVCandidateSetData.hpp"
+#include "common/Exceptions.hpp"
+#include "htsapi/bam_record_util.hpp"
 
 #include <cassert>
 
@@ -30,7 +30,7 @@
 #include <sstream>
 
 #ifdef DEBUG_SVDATA
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #endif
 
 std::ostream& operator<<(std::ostream& os, const SVCandidateSetRead& svr)

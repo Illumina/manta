@@ -17,11 +17,11 @@
 //
 //
 
-#include "extractAssemblyReads.hh"
-#include "htsapi/bam_streamer.hh"
-#include "manta/ReadFilter.hh"
-#include "manta/SVLocusScanner.hh"
-#include "manta/ShadowReadFinder.hh"
+#include "extractAssemblyReads.hpp"
+#include "htsapi/bam_streamer.hpp"
+#include "manta/ReadFilter.hpp"
+#include "manta/SVLocusScanner.hpp"
+#include "manta/ShadowReadFinder.hpp"
 
 void extractAssemblyReadsFromBam(
     const ReadScannerOptions& scanOpt,

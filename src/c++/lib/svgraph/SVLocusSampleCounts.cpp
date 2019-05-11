@@ -21,8 +21,8 @@
 /// \author Chris Saunders
 ///
 
-#include "svgraph/SVLocusSampleCounts.hh"
-#include "blt_util/io_util.hh"
+#include "svgraph/SVLocusSampleCounts.hpp"
+#include "blt_util/io_util.hpp"
 
 #include <iomanip>
 #include <iostream>

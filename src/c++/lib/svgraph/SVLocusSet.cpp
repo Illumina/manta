@@ -21,10 +21,10 @@
 /// \author Chris Saunders
 ///
 
-#include "svgraph/SVLocusSet.hh"
-#include "blt_util/SizeDistribution.hh"
-#include "blt_util/log.hh"
-#include "common/Exceptions.hh"
+#include "svgraph/SVLocusSet.hpp"
+#include "blt_util/SizeDistribution.hpp"
+#include "blt_util/log.hpp"
+#include "common/Exceptions.hpp"
 
 #include "blt_util/thirdparty_push.h"
 

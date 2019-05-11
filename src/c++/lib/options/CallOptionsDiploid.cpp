@@ -17,7 +17,7 @@
 //
 //
 
-#include "options/CallOptionsDiploid.hh"
+#include "options/CallOptionsDiploid.hpp"
 
 boost::program_options::options_description getOptionsDescription(CallOptionsDiploid& opt)
 {

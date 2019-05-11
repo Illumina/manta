@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "blt_util/SimpleAlignment.hh"
+#include "blt_util/SimpleAlignment.hpp"
 
 BOOST_AUTO_TEST_SUITE(SimpleAlignment_path)
 

@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "EdgeRuntimeTracker.hh"
+#include "EdgeRuntimeTracker.hpp"
 
 #include <iomanip>
 #include <iostream>

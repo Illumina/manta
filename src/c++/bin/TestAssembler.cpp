@@ -17,7 +17,7 @@
 //
 //
 
-#include "applications/TestAssembler/TestAssembler.hh"
+#include "applications/TestAssembler/TestAssembler.hpp"
 
 int main(int argc, char* argv[])
 {

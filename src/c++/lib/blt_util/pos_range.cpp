@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/pos_range.hh"
+#include "blt_util/pos_range.hpp"
 
 #include <iostream>
 

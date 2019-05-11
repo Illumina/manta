@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "SampleVector.hh"
+#include "SampleVector.hpp"
 
 #include <random>
 

@@ -17,13 +17,13 @@
 //
 //
 
-#include "GetAlignmentStats.hh"
+#include "GetAlignmentStats.hpp"
 
-#include "AlignmentStatsOptions.hh"
+#include "AlignmentStatsOptions.hpp"
 
-#include "blt_util/log.hh"
-#include "common/OutStream.hh"
-#include "manta/ReadGroupStatsUtil.hh"
+#include "blt_util/log.hpp"
+#include "common/OutStream.hpp"
+#include "manta/ReadGroupStatsUtil.hpp"
 
 #include <cstdlib>
 

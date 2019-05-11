@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "id_map.hh"
+#include "id_map.hpp"
 
 #include <string>
 

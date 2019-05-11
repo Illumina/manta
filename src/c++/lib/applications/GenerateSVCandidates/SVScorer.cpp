@@ -21,19 +21,19 @@
 /// \author Chris Saunders and Xiaoyu Chen
 ///
 
-#include "SVScorer.hh"
-#include "SVScorePairAltProcessor.hh"
+#include "SVScorer.hpp"
+#include "SVScorePairAltProcessor.hpp"
 
-#include "blt_util/LinearScaler.hh"
-#include "blt_util/log.hh"
-#include "blt_util/math_util.hh"
-#include "blt_util/prob_util.hh"
-#include "blt_util/qscore.hh"
-#include "common/Exceptions.hh"
-#include "htsapi/align_path_bam_util.hh"
-#include "manta/BamStreamerUtils.hh"
-#include "manta/ReadGroupStatsSet.hh"
-#include "manta/SVCandidateUtil.hh"
+#include "blt_util/LinearScaler.hpp"
+#include "blt_util/log.hpp"
+#include "blt_util/math_util.hpp"
+#include "blt_util/prob_util.hpp"
+#include "blt_util/qscore.hpp"
+#include "common/Exceptions.hpp"
+#include "htsapi/align_path_bam_util.hpp"
+#include "manta/BamStreamerUtils.hpp"
+#include "manta/ReadGroupStatsSet.hpp"
+#include "manta/SVCandidateUtil.hpp"
 
 #include <algorithm>
 #include <iostream>

@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "format/VcfWriterCandidateSV.hh"
+#include "format/VcfWriterCandidateSV.hpp"
 
 void VcfWriterCandidateSV::addHeaderInfo(std::ostream& os) const
 {

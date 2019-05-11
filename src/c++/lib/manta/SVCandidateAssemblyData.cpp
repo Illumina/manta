@@ -20,7 +20,7 @@
 /// \file
 /// \author Chris Saunders
 
-#include "manta/SVCandidateAssemblyData.hh"
+#include "manta/SVCandidateAssemblyData.hpp"
 
 #include <iostream>
 

@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "EdgeRetrieverJumpBin.hh"
+#include "EdgeRetrieverJumpBin.hpp"
 
 #include <cassert>
 
@@ -29,7 +29,7 @@
 
 #ifdef DEBUG_EDGER
 #include <iostream>
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #endif
 
 EdgeRetrieverJumpBin::EdgeRetrieverJumpBin(

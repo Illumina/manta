@@ -19,8 +19,8 @@
 
 #include "testConfig.h"
 
-#include "common/Exceptions.hh"
-#include "htsapi/bed_streamer.hh"
+#include "common/Exceptions.hpp"
+#include "htsapi/bed_streamer.hpp"
 
 #include "boost/test/unit_test.hpp"
 

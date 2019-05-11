@@ -21,10 +21,10 @@
 /// \author Chris Saunders
 ///
 
-#include "htsapi/bam_streamer.hh"
-#include "blt_util/blt_exception.hh"
-#include "blt_util/log.hh"
-#include "htsapi/bam_header_util.hh"
+#include "htsapi/bam_streamer.hpp"
+#include "blt_util/blt_exception.hpp"
+#include "blt_util/log.hpp"
+#include "htsapi/bam_header_util.hpp"
 
 #include <cassert>
 #include <cstdlib>

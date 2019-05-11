@@ -17,9 +17,9 @@
 //
 //
 
-#include "bam_record_util.hh"
-#include "align_path_bam_util.hh"
-#include "htsapi/SimpleAlignment_bam_util.hh"
+#include "bam_record_util.hpp"
+#include "align_path_bam_util.hpp"
+#include "htsapi/SimpleAlignment_bam_util.hpp"
 
 #include <iostream>
 

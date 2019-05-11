@@ -17,7 +17,7 @@
 //
 //
 
-#include "svgraph/GenomeInterval.hh"
+#include "svgraph/GenomeInterval.hpp"
 
 #include <iostream>
 

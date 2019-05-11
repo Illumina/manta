@@ -24,7 +24,7 @@
  ** \author Come Raczy
  **/
 
-#include "Exceptions.hh"
+#include "Exceptions.hpp"
 
 #include <boost/date_time.hpp>
 #include <cerrno>

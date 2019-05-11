@@ -17,11 +17,11 @@
 //
 //
 
-#include "ChromDepthOptions.hh"
+#include "ChromDepthOptions.hpp"
 
-#include "blt_util/log.hh"
-#include "common/ProgramUtil.hh"
-#include "options/optionsUtil.hh"
+#include "blt_util/log.hpp"
+#include "common/ProgramUtil.hpp"
+#include "options/optionsUtil.hpp"
 
 #include "boost/program_options.hpp"
 

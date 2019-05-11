@@ -18,10 +18,10 @@
 //
 
 #include "boost/test/unit_test.hpp"
-#include "htsapi/SimpleAlignment_bam_util.hh"
-#include "manta/BamStreamerUtils.hh"
-#include "test/testAlignmentDataUtil.hh"
-#include "test/testFileMakers.hh"
+#include "htsapi/SimpleAlignment_bam_util.hpp"
+#include "manta/BamStreamerUtils.hpp"
+#include "test/testAlignmentDataUtil.hpp"
+#include "test/testFileMakers.hpp"
 // test static function in TU:
 #include "applications/GenerateSVCandidates/SVCandidateAssemblyRefiner.cpp"
 

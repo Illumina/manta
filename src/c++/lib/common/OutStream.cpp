@@ -21,9 +21,9 @@
 /// \author Chris Saunders
 ///
 
-#include "common/OutStream.hh"
+#include "common/OutStream.hpp"
 
-#include "common/Exceptions.hh"
+#include "common/Exceptions.hpp"
 
 #include <fstream>
 #include <iostream>

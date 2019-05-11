@@ -21,13 +21,13 @@
 /// \author Chris Saunders
 ///
 
-#include "Program.hh"
-#include "Exceptions.hh"
-#include "ProgramConfig.hh"
+#include "Program.hpp"
+#include "Exceptions.hpp"
+#include "ProgramConfig.hpp"
 
-#include "blt_util/blt_exception.hh"
-#include "blt_util/log.hh"
-#include "blt_util/sig_handler.hh"
+#include "blt_util/blt_exception.hpp"
+#include "blt_util/log.hpp"
+#include "blt_util/sig_handler.hpp"
 
 #include <cstdlib>
 

@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "blt_util/align_path.hh"
+#include "blt_util/align_path.hpp"
 
 //#define DEBUG_AP_TEST
 

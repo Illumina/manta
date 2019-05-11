@@ -21,13 +21,13 @@
 /// \author Chris Saunders and Xiaoyu Chen
 ///
 
-#include "SVScorePairAltProcessor.hh"
-#include "alignment/AlignmentScoringUtil.hh"
-#include "blt_util/SimpleAlignment.hh"
-#include "blt_util/seq_util.hh"
-#include "common/Exceptions.hh"
-#include "htsapi/bam_record_util.hh"
-#include "manta/SVCandidateUtil.hh"
+#include "SVScorePairAltProcessor.hpp"
+#include "alignment/AlignmentScoringUtil.hpp"
+#include "blt_util/SimpleAlignment.hpp"
+#include "blt_util/seq_util.hpp"
+#include "common/Exceptions.hpp"
+#include "htsapi/bam_record_util.hpp"
+#include "manta/SVCandidateUtil.hpp"
 
 #include <cassert>
 
@@ -48,7 +48,7 @@
 #endif
 
 #ifdef ANY_DEBUG_PAIR
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #endif
 
 ContigParams::ContigParams(const SVCandidateAssemblyData& assemblyData, const SVCandidate& sv)

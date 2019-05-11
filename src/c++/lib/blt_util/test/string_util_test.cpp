@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "string_util.hh"
+#include "string_util.hpp"
 
 #include <cstring>
 

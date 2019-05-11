@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "depth_buffer_util.hh"
+#include "depth_buffer_util.hpp"
 
 void add_alignment_to_depth_buffer(const pos_t& pos, const ALIGNPATH::path_t& apath, depth_buffer& db)
 {

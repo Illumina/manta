@@ -20,10 +20,10 @@
 #include <fstream>
 #include <thread>
 
-#include "EdgeRuntimeTracker.hh"
+#include "EdgeRuntimeTracker.hpp"
 #include "boost/filesystem.hpp"
 #include "boost/test/unit_test.hpp"
-#include "test/testFileMakers.hh"
+#include "test/testFileMakers.hpp"
 
 /// TestEdgeRuntimeTracker is a friend of EdgeRuntimeTracker. So that can access private
 /// members of EdgeRuntimeTracker.

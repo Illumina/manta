@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "ProgramUtil.hh"
+#include "ProgramUtil.hpp"
 
 #include <iostream>
 

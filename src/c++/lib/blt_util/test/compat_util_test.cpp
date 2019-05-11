@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "compat_util.hh"
+#include "compat_util.hpp"
 
 #include <string>
 

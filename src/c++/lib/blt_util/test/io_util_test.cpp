@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "io_util.hh"
+#include "io_util.hpp"
 
 #include <iomanip>
 #include <sstream>

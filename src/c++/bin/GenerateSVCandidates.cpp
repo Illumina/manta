@@ -17,7 +17,7 @@
 //
 //
 
-#include "applications/GenerateSVCandidates/GenerateSVCandidates.hh"
+#include "applications/GenerateSVCandidates/GenerateSVCandidates.hpp"
 
 int main(int argc, char* argv[])
 {

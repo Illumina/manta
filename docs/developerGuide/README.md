@@ -269,7 +269,7 @@ release version with an "x", for instance the "v2.4.x" branch would be used to p
 
 ```c++
 
-#include "common/Exceptions.hh"
+#include "common/Exceptions.hpp"
 
 #include <sstream>
 

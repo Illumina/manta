@@ -17,7 +17,7 @@
 //
 //
 
-#include "SimpleAlignment.hh"
+#include "SimpleAlignment.hpp"
 
 #include <cassert>
 

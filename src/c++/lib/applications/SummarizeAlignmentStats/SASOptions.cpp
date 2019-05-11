@@ -21,15 +21,15 @@
 /// \author Chris Saunders
 ///
 
-#include "SASOptions.hh"
+#include "SASOptions.hpp"
 
-#include "blt_util/log.hh"
-#include "options/optionsUtil.hh"
+#include "blt_util/log.hpp"
+#include "options/optionsUtil.hpp"
 
 #include "boost/program_options.hpp"
 
 #include <iostream>
-#include "../../common/ProgramUtil.hh"
+#include "../../common/ProgramUtil.hpp"
 
 static void usage(
     std::ostream&                                      os,

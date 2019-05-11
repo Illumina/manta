@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "parse_util.hh"
+#include "parse_util.hpp"
 
 #include <cmath>
 

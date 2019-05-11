@@ -21,12 +21,12 @@
 /// \author Chris Saunders
 ///
 
-#include "vcf_streamer.hh"
+#include "vcf_streamer.hpp"
 
-#include "blt_util/log.hh"
-#include "blt_util/seq_util.hh"
+#include "blt_util/log.hpp"
+#include "blt_util/seq_util.hpp"
 
-#include "common/Exceptions.hh"
+#include "common/Exceptions.hpp"
 
 #include <sys/stat.h>
 #include <cassert>

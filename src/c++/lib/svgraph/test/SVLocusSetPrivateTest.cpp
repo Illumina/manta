@@ -23,8 +23,8 @@
 //#pragma clang diagnostic ignored "-Wkeyword-macro"
 //#define private public
 
-#include "svgraph/SVLocusSet.hh"
-#include "test/testSVLocusUtil.hh"
+#include "svgraph/SVLocusSet.hpp"
+#include "test/testSVLocusUtil.hpp"
 
 static unsigned testOverlap(
     SVLocusSet& locusSet, const int32_t tid, const int32_t beginPos, const int32_t endPos)

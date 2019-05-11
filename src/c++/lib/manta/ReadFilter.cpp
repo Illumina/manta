@@ -21,11 +21,11 @@
 /// \author Trevor Ramsay
 ///
 
-#include "manta/ReadFilter.hh"
+#include "manta/ReadFilter.hpp"
 
-#include "blt_util/align_path.hh"
-#include "common/Exceptions.hh"
-#include "htsapi/align_path_bam_util.hh"
+#include "blt_util/align_path.hpp"
+#include "common/Exceptions.hpp"
+#include "htsapi/align_path_bam_util.hpp"
 
 #include <ostream>
 

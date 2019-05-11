@@ -19,9 +19,9 @@
 
 #include "testConfig.h"
 
-#include "htsapi/vcf_streamer.hh"
+#include "htsapi/vcf_streamer.hpp"
 
-#include "common/Exceptions.hh"
+#include "common/Exceptions.hpp"
 
 #include "boost/test/unit_test.hpp"
 

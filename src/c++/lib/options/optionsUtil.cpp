@@ -17,7 +17,7 @@
 //
 //
 
-#include "optionsUtil.hh"
+#include "optionsUtil.hpp"
 
 #include "boost/filesystem.hpp"
 

@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "FatSVCandidate.hh"
+#include "FatSVCandidate.hpp"
 
 BOOST_AUTO_TEST_SUITE(FatSVCandidate_test_suite)
 

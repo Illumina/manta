@@ -21,10 +21,10 @@
 /// \author Chris Saunders and Xiaoyu Chen
 ///
 
-#include "SVScorePairRefProcessor.hh"
-#include "common/Exceptions.hh"
-#include "htsapi/bam_record_util.hh"
-#include "manta/SVCandidateUtil.hh"
+#include "SVScorePairRefProcessor.hpp"
+#include "common/Exceptions.hpp"
+#include "htsapi/bam_record_util.hpp"
+#include "manta/SVCandidateUtil.hpp"
 
 #include <cassert>
 
@@ -37,7 +37,7 @@
 //#define DEBUG_MEGAPAIR
 
 #ifdef DEBUG_PAIR
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #endif
 
 void SVScorePairRefProcessor::processClearedRecord(

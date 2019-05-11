@@ -21,9 +21,9 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/stage_manager.hh"
-#include "blt_util/blt_exception.hh"
-#include "blt_util/log.hh"
+#include "blt_util/stage_manager.hpp"
+#include "blt_util/blt_exception.hpp"
+#include "blt_util/log.hpp"
 
 #include <cstdlib>
 

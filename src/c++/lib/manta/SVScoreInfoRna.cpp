@@ -21,8 +21,8 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/SVScoreInfoRna.hh"
-#include "blt_util/log.hh"
+#include "manta/SVScoreInfoRna.hpp"
+#include "blt_util/log.hpp"
 
 #include <iostream>
 

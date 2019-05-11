@@ -17,12 +17,12 @@
 //
 //
 
-#include "GetChromDepth.hh"
-#include "ChromDepthOptions.hh"
-#include "ReadChromDepthUtil.hh"
+#include "GetChromDepth.hpp"
+#include "ChromDepthOptions.hpp"
+#include "ReadChromDepthUtil.hpp"
 
-#include "blt_util/log.hh"
-#include "common/OutStream.hh"
+#include "blt_util/log.hpp"
+#include "common/OutStream.hpp"
 
 #include <cstdlib>
 

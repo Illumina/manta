@@ -22,7 +22,7 @@
 /// \author Naoki Nariai
 ///
 
-#include "FatSVCandidate.hh"
+#include "FatSVCandidate.hpp"
 
 #include <iostream>
 

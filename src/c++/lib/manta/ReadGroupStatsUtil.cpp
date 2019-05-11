@@ -21,16 +21,16 @@
 /// \author Bret Barnes, Xiaoyu Chen
 ///
 
-#include "manta/ReadGroupStatsUtil.hh"
+#include "manta/ReadGroupStatsUtil.hpp"
 
-#include "blt_util/ReadKey.hh"
-#include "blt_util/log.hh"
-#include "common/Exceptions.hh"
-#include "htsapi/align_path_bam_util.hh"
-#include "htsapi/bam_record_util.hh"
-#include "htsapi/bam_streamer.hh"
-#include "manta/ReadFilter.hh"
-#include "manta/ReadGroupLabel.hh"
+#include "blt_util/ReadKey.hpp"
+#include "blt_util/log.hpp"
+#include "common/Exceptions.hpp"
+#include "htsapi/align_path_bam_util.hpp"
+#include "htsapi/bam_record_util.hpp"
+#include "htsapi/bam_streamer.hpp"
+#include "manta/ReadFilter.hpp"
+#include "manta/ReadGroupLabel.hpp"
 
 #include <array>
 #include <iostream>

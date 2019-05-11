@@ -21,7 +21,7 @@
 /// \author Chris Saunders and Xiaoyu Chen
 ///
 
-#include "SVEvidence.hh"
+#include "SVEvidence.hpp"
 
 #include <iostream>
 

@@ -20,17 +20,17 @@
 #include <fstream>
 #include "boost/make_unique.hpp"
 #include "boost/test/unit_test.hpp"
-#include "htsapi/vcf_streamer.hh"
-#include "manta/BamStreamerUtils.hh"
-#include "test/testAlignmentDataUtil.hh"
-#include "test/testFileMakers.hh"
-#include "test/testSVLocusScanner.hh"
-#include "test/testSVLocusUtil.hh"
+#include "htsapi/vcf_streamer.hpp"
+#include "manta/BamStreamerUtils.hpp"
+#include "test/testAlignmentDataUtil.hpp"
+#include "test/testFileMakers.hpp"
+#include "test/testSVLocusScanner.hpp"
+#include "test/testSVLocusUtil.hpp"
 
 #include "SVCandidateProcessor.cpp"  // cpp include is required to test 'checkJunctionsToFilter"
-#include "SVCandidateProcessor.hh"
-#include "options/SVLocusSetOptions.hh"
-#include "svgraph/SVLocusSet.hh"
+#include "SVCandidateProcessor.hpp"
+#include "options/SVLocusSetOptions.hpp"
+#include "svgraph/SVLocusSet.hpp"
 
 /// The whole purpose of this test file is given an SV candidate, whether it is correctly writing
 /// SV information in the corresponding vcf file for tumor, rna, diploid and somatic cases.

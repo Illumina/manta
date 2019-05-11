@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2019 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,10 +22,10 @@
 /// \author Naoki Nariai
 ///
 
-#include "SVWriter.hh"
+#include "SVWriter.hpp"
 
-#include "htsapi/bam_header_util.hh"
-#include "manta/BamStreamerUtils.hh"
+#include "htsapi/bam_header_util.hpp"
+#include "manta/BamStreamerUtils.hpp"
 
 static std::vector<std::string> getSampleNamesFromBamFiles(const GSCOptions& opt)
 {

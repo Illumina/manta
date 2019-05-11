@@ -17,7 +17,7 @@
 //
 //
 
-#include "htsapi/bam_header_util.hh"
+#include "htsapi/bam_header_util.hpp"
 
 #include "boost/test/unit_test.hpp"
 

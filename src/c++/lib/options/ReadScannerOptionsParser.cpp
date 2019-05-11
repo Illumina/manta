@@ -17,7 +17,7 @@
 //
 //
 
-#include "options/ReadScannerOptionsParser.hh"
+#include "options/ReadScannerOptionsParser.hpp"
 
 boost::program_options::options_description getOptionsDescription(ReadScannerOptions& opt)
 {

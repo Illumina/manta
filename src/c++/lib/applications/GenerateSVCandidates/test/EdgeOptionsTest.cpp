@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "EdgeOptions.hh"
+#include "EdgeOptions.hpp"
 
 BOOST_AUTO_TEST_SUITE(EdgeOptionsTest_test_suite)
 

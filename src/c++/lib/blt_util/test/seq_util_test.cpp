@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "blt_util/seq_util.hh"
+#include "blt_util/seq_util.hpp"
 
 BOOST_AUTO_TEST_SUITE(test_seq_util)
 

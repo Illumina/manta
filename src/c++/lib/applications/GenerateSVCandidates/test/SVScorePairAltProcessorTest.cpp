@@ -22,10 +22,10 @@
 ///
 
 #include "SVScorePairAltProcessor.cpp"
-#include "SVScorePairAltProcessor.hh"
+#include "SVScorePairAltProcessor.hpp"
 #include "boost/test/unit_test.hpp"
-#include "test/testAlignmentDataUtil.hh"
-#include "test/testSVLocusScanner.hh"
+#include "test/testAlignmentDataUtil.hpp"
+#include "test/testSVLocusScanner.hpp"
 
 /// TestSVScorerAltProcessor is a friend of SVScorer. So that it can access private
 /// method of SVScorePairAltProcessor

@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "EdgeRetrieverBin.hh"
+#include "EdgeRetrieverBin.hpp"
 
 #include <cassert>
 
@@ -29,7 +29,7 @@
 
 #ifdef DEBUG_EDGER
 #include <iostream>
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #endif
 
 /// \brief When \p totalCount is subdivided into \p binCount approximately even bins, return the 0-indexed

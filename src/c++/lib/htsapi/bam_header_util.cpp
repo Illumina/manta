@@ -21,10 +21,10 @@
 /// \author Chris Saunders
 ///
 
-#include "htsapi/bam_header_util.hh"
-#include "blt_util/blt_exception.hh"
-#include "blt_util/parse_util.hh"
-#include "blt_util/string_util.hh"
+#include "htsapi/bam_header_util.hpp"
+#include "blt_util/blt_exception.hpp"
+#include "blt_util/parse_util.hpp"
+#include "blt_util/string_util.hpp"
 
 #include <cassert>
 #include <cstring>

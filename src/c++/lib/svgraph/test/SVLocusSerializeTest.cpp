@@ -19,9 +19,9 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "svgraph/SVLocus.hh"
-#include "test/testFileMakers.hh"
-#include "test/testSVLocusUtil.hh"
+#include "svgraph/SVLocus.hpp"
+#include "test/testFileMakers.hpp"
+#include "test/testSVLocusUtil.hpp"
 
 #include "boost/archive/binary_iarchive.hpp"
 #include "boost/archive/binary_oarchive.hpp"

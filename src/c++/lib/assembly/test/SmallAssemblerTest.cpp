@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "SmallAssembler.hh"
+#include "SmallAssembler.hpp"
 
 BOOST_AUTO_TEST_SUITE(test_SmallAssembler)
 

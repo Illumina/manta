@@ -17,9 +17,9 @@
 //
 //
 
-#include "GenomeIntervalUtil.hh"
-#include "htsapi/bam_header_info.hh"
-#include "htsapi/bam_header_util.hh"
+#include "GenomeIntervalUtil.hpp"
+#include "htsapi/bam_header_info.hpp"
+#include "htsapi/bam_header_util.hpp"
 
 std::vector<unsigned> intervalCompressor(std::vector<GenomeInterval>& intervals)
 {

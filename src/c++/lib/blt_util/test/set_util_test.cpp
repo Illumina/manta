@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "blt_util/set_util.hh"
+#include "blt_util/set_util.hpp"
 
 BOOST_AUTO_TEST_SUITE(test_set_util)
 

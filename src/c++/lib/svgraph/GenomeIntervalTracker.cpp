@@ -17,7 +17,7 @@
 //
 //
 
-#include "GenomeIntervalTracker.hh"
+#include "GenomeIntervalTracker.hpp"
 
 #include <iostream>
 

@@ -17,7 +17,7 @@
 //
 //
 
-#include "alignment/Alignment.hh"
+#include "alignment/Alignment.hpp"
 
 #include <iostream>
 

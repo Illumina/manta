@@ -21,10 +21,10 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/qscore_cache.hh"
-#include "blt_util/blt_exception.hh"
-#include "blt_util/math_util.hh"
-#include "blt_util/qscore.hh"
+#include "blt_util/qscore_cache.hpp"
+#include "blt_util/blt_exception.hpp"
+#include "blt_util/math_util.hpp"
+#include "blt_util/qscore.hpp"
 
 #include <iostream>
 #include <sstream>

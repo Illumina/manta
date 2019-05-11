@@ -17,7 +17,7 @@
 //
 //
 
-#include "bam_header_info.hh"
+#include "bam_header_info.hpp"
 
 #include <iostream>
 

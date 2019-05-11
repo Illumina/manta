@@ -24,15 +24,15 @@
 /// \author Xiaoyu Chen
 ///
 
-#include "format/VcfWriterSV.hh"
+#include "format/VcfWriterSV.hpp"
 
-#include "blt_util/log.hh"
-#include "blt_util/seq_util.hh"
-#include "blt_util/string_util.hh"
-#include "common/Exceptions.hh"
-#include "htsapi/samtools_fasta_util.hh"
-#include "htsapi/vcf_util.hh"
-#include "manta/SVCandidateUtil.hh"
+#include "blt_util/log.hpp"
+#include "blt_util/seq_util.hpp"
+#include "blt_util/string_util.hpp"
+#include "common/Exceptions.hpp"
+#include "htsapi/samtools_fasta_util.hpp"
+#include "htsapi/vcf_util.hpp"
+#include "manta/SVCandidateUtil.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -40,7 +40,7 @@
 //#define DEBUG_VCF
 
 #ifdef DEBUG_VCF
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #endif
 
 VcfWriterSV::VcfWriterSV(

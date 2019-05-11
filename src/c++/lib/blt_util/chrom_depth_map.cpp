@@ -21,10 +21,10 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/chrom_depth_map.hh"
-#include "blt_util/blt_exception.hh"
-#include "blt_util/log.hh"
-#include "blt_util/parse_util.hh"
+#include "blt_util/chrom_depth_map.hpp"
+#include "blt_util/blt_exception.hpp"
+#include "blt_util/log.hpp"
+#include "blt_util/parse_util.hpp"
 
 #include <cstdlib>
 #include <cstring>

@@ -18,11 +18,11 @@
 //
 
 #include "boost/test/unit_test.hpp"
-#include "test/testAlignmentDataUtil.hh"
-#include "test/testSVLocusScanner.hh"
+#include "test/testAlignmentDataUtil.hpp"
+#include "test/testSVLocusScanner.hpp"
 
 #include "SVScorePairRefProcessor.cpp"
-#include "SVScorePairRefProcessor.hh"
+#include "SVScorePairRefProcessor.hpp"
 
 BOOST_AUTO_TEST_SUITE(SVScorePairRefProcessor_test_suite)
 

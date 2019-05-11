@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/ReadKey.hh"
+#include "blt_util/ReadKey.hpp"
 
 #include <iostream>
 

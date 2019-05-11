@@ -17,7 +17,7 @@
 //
 //
 
-#include "applications/MergeAlignmentStats/MergeAlignmentStats.hh"
+#include "applications/MergeAlignmentStats/MergeAlignmentStats.hpp"
 
 int main(int argc, char* argv[])
 {

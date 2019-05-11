@@ -21,8 +21,8 @@
 /// \author Chris Saunders
 ///
 
-#include "bed_record.hh"
-#include "blt_util/parse_util.hh"
+#include "bed_record.hpp"
+#include "blt_util/parse_util.hpp"
 
 #include <cassert>
 

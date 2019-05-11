@@ -21,9 +21,9 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/io_util.hh"
+#include "blt_util/io_util.hpp"
 
-#include "blt_util/blt_exception.hh"
+#include "blt_util/blt_exception.hpp"
 
 #include <cstdlib>
 

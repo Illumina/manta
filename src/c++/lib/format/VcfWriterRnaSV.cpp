@@ -21,7 +21,7 @@
 /// \author Felix Schlesinger
 ///
 
-#include "format/VcfWriterRnaSV.hh"
+#include "format/VcfWriterRnaSV.hpp"
 
 void VcfWriterRnaSV::addHeaderInfo(std::ostream& os) const
 {

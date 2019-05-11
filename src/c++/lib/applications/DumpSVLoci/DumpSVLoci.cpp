@@ -21,11 +21,11 @@
 /// \author Chris Saunders
 ///
 
-#include "DumpSVLoci.hh"
-#include "DSLOptions.hh"
+#include "DumpSVLoci.hpp"
+#include "DSLOptions.hpp"
 
-#include "svgraph/GenomeIntervalUtil.hh"
-#include "svgraph/SVLocusSet.hh"
+#include "svgraph/GenomeIntervalUtil.hpp"
+#include "svgraph/SVLocusSet.hpp"
 
 #include "blt_util/thirdparty_push.h"
 

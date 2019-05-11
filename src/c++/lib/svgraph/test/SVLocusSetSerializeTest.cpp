@@ -19,9 +19,9 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "svgraph/SVLocusSet.hh"
-#include "test/testSVLocusSetUtil.hh"
-#include "test/testSVLocusUtil.hh"
+#include "svgraph/SVLocusSet.hpp"
+#include "test/testSVLocusSetUtil.hpp"
+#include "test/testSVLocusUtil.hpp"
 
 BOOST_AUTO_TEST_SUITE(SVLocusSetSerialize_test_suite)
 

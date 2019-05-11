@@ -21,12 +21,12 @@
 /// \author Trevor Ramsay
 ///
 
-#include "testFileMakers.hh"
+#include "testFileMakers.hpp"
 
-#include "htsapi/bam_header_info.hh"
-#include "manta/ReadGroupStatsSet.hh"
-#include "svgraph/SVLocusSet.hh"
-#include "test/testUtil.hh"
+#include "htsapi/bam_header_info.hpp"
+#include "manta/ReadGroupStatsSet.hpp"
+#include "svgraph/SVLocusSet.hpp"
+#include "test/testUtil.hpp"
 
 #include "boost/filesystem.hpp"
 

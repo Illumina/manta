@@ -21,8 +21,8 @@
 /// \author Chris Saunders
 ///
 
-#include "svgraph/SVLocus.hh"
-#include "common/Exceptions.hh"
+#include "svgraph/SVLocus.hpp"
+#include "common/Exceptions.hpp"
 
 #include "boost/foreach.hpp"
 
@@ -30,7 +30,7 @@
 #include <stack>
 
 #ifdef DEBUG_SVL
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #endif
 
 void SVLocus::nodeHurl(const NodeIndexType nodePtr) const

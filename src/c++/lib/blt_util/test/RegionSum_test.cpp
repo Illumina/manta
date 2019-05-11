@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "RegionSum.hh"
+#include "RegionSum.hpp"
 
 BOOST_AUTO_TEST_SUITE(test_RegionSum)
 

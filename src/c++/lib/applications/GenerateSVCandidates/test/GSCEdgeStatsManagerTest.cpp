@@ -17,11 +17,11 @@
 //
 //
 
-#include "GSCEdgeStatsManager.hh"
+#include "GSCEdgeStatsManager.hpp"
 #include "boost/filesystem.hpp"
 #include "boost/test/unit_test.hpp"
 #include "fstream"
-#include "test/testFileMakers.hh"
+#include "test/testFileMakers.hpp"
 
 BOOST_AUTO_TEST_SUITE(GSCEdgeStatsManager_test_suite)
 

@@ -17,12 +17,12 @@
 //
 //
 
-#include "ReadGroupStatsSet.hh"
+#include "ReadGroupStatsSet.hpp"
 
-#include "blt_util/io_util.hh"
-#include "blt_util/log.hh"
-#include "blt_util/parse_util.hh"
-#include "blt_util/string_util.hh"
+#include "blt_util/io_util.hpp"
+#include "blt_util/log.hpp"
+#include "blt_util/parse_util.hpp"
+#include "blt_util/string_util.hpp"
 
 // workaround intel compiler boost warnings:
 #include "boost/config.hpp"

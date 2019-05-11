@@ -21,8 +21,8 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/parse_util.hh"
-#include "blt_util/blt_exception.hh"
+#include "blt_util/parse_util.hpp"
+#include "blt_util/blt_exception.hpp"
 
 #include "boost/spirit/include/qi.hpp"
 

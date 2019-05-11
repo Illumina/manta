@@ -21,14 +21,14 @@
 /// \author Trevor Ramsay
 ///
 
-#include "testAlignmentDataUtil.hh"
+#include "testAlignmentDataUtil.hpp"
 
 #include "testConfig.h"
 
-#include "blt_util/align_path.hh"
-#include "common/Exceptions.hh"
-#include "htsapi/align_path_bam_util.hh"
-#include "htsapi/bam_dumper.hh"
+#include "blt_util/align_path.hpp"
+#include "common/Exceptions.hpp"
+#include "htsapi/align_path_bam_util.hpp"
+#include "htsapi/bam_dumper.hpp"
 
 #include <fstream>
 #include <sstream>

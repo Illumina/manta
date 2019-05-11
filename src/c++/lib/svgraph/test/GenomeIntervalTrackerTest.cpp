@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "svgraph/GenomeIntervalTracker.hh"
+#include "svgraph/GenomeIntervalTracker.hpp"
 
 BOOST_AUTO_TEST_SUITE(GenomeIntervalTracker_tests)
 

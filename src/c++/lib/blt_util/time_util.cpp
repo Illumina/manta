@@ -21,8 +21,8 @@
 /// \author Chris Saunders
 ///
 
-#include "time_util.hh"
-#include "io_util.hh"
+#include "time_util.hpp"
+#include "io_util.hpp"
 
 #include <iomanip>
 #include <iostream>

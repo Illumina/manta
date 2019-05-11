@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "string_util.hh"
+#include "string_util.hpp"
 
 #include <cstring>
 

@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "stage_manager.hh"
+#include "stage_manager.hpp"
 
 //#define DEBUG_SM_TEST
 

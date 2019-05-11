@@ -21,16 +21,16 @@
 /// \author Xiaoyu Chen
 ///
 
-#include "SVEvidenceWriter.hh"
+#include "SVEvidenceWriter.hpp"
 
 #include <iostream>
 
-#include "manta/BamStreamerUtils.hh"
+#include "manta/BamStreamerUtils.hpp"
 
 //#define DEBUG_SUPPORT
 
 #ifdef DEBUG_SUPPORT
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #endif
 
 std::ostream& operator<<(std::ostream& os, const SVEvidenceWriterRead& read)

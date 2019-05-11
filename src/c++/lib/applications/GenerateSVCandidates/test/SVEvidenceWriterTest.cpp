@@ -19,12 +19,12 @@
 
 #include "boost/make_unique.hpp"
 #include "boost/test/unit_test.hpp"
-#include "manta/BamStreamerUtils.hh"
-#include "test/testAlignmentDataUtil.hh"
-#include "test/testFileMakers.hh"
-#include "test/testUtil.hh"
+#include "manta/BamStreamerUtils.hpp"
+#include "test/testAlignmentDataUtil.hpp"
+#include "test/testFileMakers.hpp"
+#include "test/testUtil.hpp"
 
-#include "SVEvidenceWriter.hh"
+#include "SVEvidenceWriter.hpp"
 
 BOOST_AUTO_TEST_SUITE(SVEvidenceWriter_test_suite)
 

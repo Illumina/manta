@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/stat_util.hh"
+#include "blt_util/stat_util.hpp"
 
 #include "boost/math/distributions/chi_squared.hpp"
 

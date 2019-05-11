@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "window_util.hh"
+#include "window_util.hpp"
 
 #include <iostream>
 

@@ -21,12 +21,12 @@
 /// \author Chris Saunders and Xiaoyu Chen
 ///
 
-#include "SVScorer.hh"
-#include "blt_util/log.hh"
-#include "blt_util/seq_util.hh"
-#include "htsapi/SimpleAlignment_bam_util.hh"
-#include "manta/ReadFilter.hh"
-#include "manta/ShadowReadFinder.hh"
+#include "SVScorer.hpp"
+#include "blt_util/log.hpp"
+#include "blt_util/seq_util.hpp"
+#include "htsapi/SimpleAlignment_bam_util.hpp"
+#include "manta/ReadFilter.hpp"
+#include "manta/ShadowReadFinder.hpp"
 
 #include "boost/scoped_array.hpp"
 

@@ -23,12 +23,12 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "SVLocusSetFinderActiveRegionManager.hh"
+#include "SVLocusSetFinderActiveRegionManager.hpp"
 
-#include "blt_util/depth_buffer.hh"
-#include "svgraph/SVLocusSet.hh"
-#include "test/testAlignmentDataUtil.hh"
-#include "test/testSVLocusUtil.hh"
+#include "blt_util/depth_buffer.hpp"
+#include "svgraph/SVLocusSet.hpp"
+#include "test/testAlignmentDataUtil.hpp"
+#include "test/testSVLocusUtil.hpp"
 
 static std::shared_ptr<SVLocusSet> getTestSVLocusSet()
 {

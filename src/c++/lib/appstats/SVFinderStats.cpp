@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "SVFinderStats.hh"
+#include "SVFinderStats.hpp"
 #include <iostream>
 
 void SVFinderStats::report(std::ostream& os) const

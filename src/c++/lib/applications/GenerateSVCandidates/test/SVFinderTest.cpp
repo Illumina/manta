@@ -23,15 +23,15 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "manta/SVLocusEvidenceCount.hh"
-#include "test/testAlignmentDataUtil.hh"
-#include "test/testFileMakers.hh"
-#include "test/testSVLocusScanner.hh"
-#include "test/testSVLocusUtil.hh"
-#include "test/testUtil.hh"
+#include "manta/SVLocusEvidenceCount.hpp"
+#include "test/testAlignmentDataUtil.hpp"
+#include "test/testFileMakers.hpp"
+#include "test/testSVLocusScanner.hpp"
+#include "test/testSVLocusUtil.hpp"
+#include "test/testUtil.hpp"
 
 #include "SVFinder.cpp"
-#include "SVFinder.hh"
+#include "SVFinder.hpp"
 
 BOOST_AUTO_TEST_SUITE(SVFinderTest_test_suite)
 

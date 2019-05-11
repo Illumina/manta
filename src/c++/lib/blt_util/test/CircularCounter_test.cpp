@@ -19,7 +19,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "CircularCounter.hh"
+#include "CircularCounter.hpp"
 
 BOOST_AUTO_TEST_SUITE(test_CircularCounter)
 

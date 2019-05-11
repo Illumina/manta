@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/SVCandidate.hh"
+#include "manta/SVCandidate.hpp"
 
 #include <iostream>
 

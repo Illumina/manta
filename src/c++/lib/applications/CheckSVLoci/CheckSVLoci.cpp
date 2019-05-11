@@ -17,10 +17,10 @@
 //
 //
 
-#include "CheckSVLoci.hh"
-#include "CSLOptions.hh"
+#include "CheckSVLoci.hpp"
+#include "CSLOptions.hpp"
 
-#include "svgraph/SVLocusSet.hh"
+#include "svgraph/SVLocusSet.hpp"
 
 static void runCSL(const CSLOptions& opt)
 {

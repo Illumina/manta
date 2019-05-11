@@ -24,8 +24,8 @@
 /// \author Felix Schlesinger
 ///
 
-#include "SVLocusScannerSemiAligned.hh"
-#include "htsapi/bam_record_util.hh"
+#include "SVLocusScannerSemiAligned.hpp"
+#include "htsapi/bam_record_util.hpp"
 
 #include "boost/foreach.hpp"
 
@@ -33,7 +33,7 @@
 
 #ifdef DEBUG_SEMI_ALIGNED
 #include <iostream>
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #endif
 
 /// \brief Base matching criteria for the purpose of finding poorly aligned read edge lengths.

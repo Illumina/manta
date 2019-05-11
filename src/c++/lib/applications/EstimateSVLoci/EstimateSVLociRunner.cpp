@@ -21,16 +21,16 @@
 /// \author Chris Saunders
 ///
 
-#include "EstimateSVLociRunner.hh"
-#include "SVLocusSetFinder.hh"
+#include "EstimateSVLociRunner.hpp"
+#include "SVLocusSetFinder.hpp"
 
-#include "blt_util/input_stream_handler.hh"
-#include "blt_util/log.hh"
-#include "blt_util/time_util.hh"
-#include "htsapi/bam_header_util.hh"
-#include "manta/BamStreamerUtils.hh"
-#include "manta/SVReferenceUtil.hh"
-#include "svgraph/GenomeIntervalUtil.hh"
+#include "blt_util/input_stream_handler.hpp"
+#include "blt_util/log.hpp"
+#include "blt_util/time_util.hpp"
+#include "htsapi/bam_header_util.hpp"
+#include "manta/BamStreamerUtils.hpp"
+#include "manta/SVReferenceUtil.hpp"
+#include "svgraph/GenomeIntervalUtil.hpp"
 
 #include <iostream>
 #include <vector>

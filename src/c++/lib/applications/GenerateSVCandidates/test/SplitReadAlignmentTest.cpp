@@ -22,12 +22,12 @@
 ///
 
 #include <iostream>
-#include <options/CallOptionsShared.hh>
 #include "boost/test/unit_test.hpp"
-#include "test/testAlignmentDataUtil.hh"
+#include "options/CallOptionsShared.hpp"
+#include "test/testAlignmentDataUtil.hpp"
 
 #include "SplitReadAlignment.cpp"
-#include "SplitReadAlignment.hh"
+#include "SplitReadAlignment.hpp"
 
 BOOST_AUTO_TEST_SUITE(SplitReadAligment_test_suite)
 

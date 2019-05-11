@@ -22,8 +22,8 @@
 /// \author Ole Schulz-Trieglaff
 ///
 
-#include "assembly/IterativeAssembler.hh"
-#include "blt_util/set_util.hh"
+#include "assembly/IterativeAssembler.hpp"
+#include "blt_util/set_util.hpp"
 
 #include "boost/foreach.hpp"
 
@@ -40,7 +40,7 @@
 // stream used by DEBUG_ASBL:
 #ifdef DEBUG_ASBL
 #include <iostream>
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 
 static void print_unsignSet(const std::set<unsigned>& unsignSet)
 {

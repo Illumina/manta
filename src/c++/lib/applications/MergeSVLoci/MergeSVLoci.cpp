@@ -21,12 +21,12 @@
 /// \author Chris Saunders
 ///
 
-#include "MergeSVLoci.hh"
-#include "MSLOptions.hh"
+#include "MergeSVLoci.hpp"
+#include "MSLOptions.hpp"
 
-#include "blt_util/log.hh"
-#include "common/OutStream.hh"
-#include "svgraph/SVLocusSet.hh"
+#include "blt_util/log.hpp"
+#include "common/OutStream.hpp"
+#include "svgraph/SVLocusSet.hpp"
 
 static void runMSL(const MSLOptions& opt)
 {

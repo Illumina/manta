@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "EdgeRetrieverLocus.hh"
+#include "EdgeRetrieverLocus.hpp"
 
 #include <cassert>
 
@@ -30,7 +30,7 @@
 //#define DEBUG_EDGER
 
 #ifdef DEBUG_EDGER
-#include "blt_util/log.hh"
+#include "blt_util/log.hpp"
 #endif
 
 EdgeRetrieverLocus::EdgeRetrieverLocus(

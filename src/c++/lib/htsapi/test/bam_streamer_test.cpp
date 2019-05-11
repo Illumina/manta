@@ -19,8 +19,8 @@
 
 #include "testConfig.h"
 
-#include "blt_util/blt_exception.hh"
-#include "htsapi/bam_streamer.hh"
+#include "blt_util/blt_exception.hpp"
+#include "htsapi/bam_streamer.hpp"
 
 #include "boost/test/unit_test.hpp"
 

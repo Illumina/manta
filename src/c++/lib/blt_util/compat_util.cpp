@@ -17,7 +17,7 @@
 //
 //
 
-#include "compat_util.hh"
+#include "compat_util.hpp"
 
 #include <cerrno>
 #include <cmath>

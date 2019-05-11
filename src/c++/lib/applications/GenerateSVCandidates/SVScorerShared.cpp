@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "SVScorerShared.hh"
+#include "SVScorerShared.hpp"
 
 void setReadEvidence(
     const unsigned          minMapQ,

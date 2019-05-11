@@ -17,8 +17,8 @@
 //
 //
 
-#include "htsapi/align_path_bam_util.hh"
-#include "htsapi/bam_record.hh"
+#include "htsapi/align_path_bam_util.hpp"
+#include "htsapi/bam_record.hpp"
 
 #include "boost/test/unit_test.hpp"
 

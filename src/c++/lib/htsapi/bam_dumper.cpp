@@ -21,9 +21,9 @@
 /// \author Chris Saunders
 ///
 
-#include "htsapi/bam_dumper.hh"
+#include "htsapi/bam_dumper.hpp"
 
-#include "common/Exceptions.hh"
+#include "common/Exceptions.hpp"
 
 #include <cassert>
 

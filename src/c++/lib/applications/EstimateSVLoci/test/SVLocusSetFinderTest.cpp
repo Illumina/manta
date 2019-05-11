@@ -23,9 +23,9 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "applications/EstimateSVLoci/SVLocusSetFinder.hh"
-#include "test/testAlignmentDataUtil.hh"
-#include "test/testFileMakers.hh"
+#include "applications/EstimateSVLoci/SVLocusSetFinder.hpp"
+#include "test/testAlignmentDataUtil.hpp"
+#include "test/testFileMakers.hpp"
 
 #include "boost/make_unique.hpp"
 

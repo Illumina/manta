@@ -22,14 +22,14 @@
 /// \author Naoki Nariai
 ///
 
-#include "SVCandidateProcessor.hh"
+#include "SVCandidateProcessor.hpp"
 
 #include <iostream>
 
-#include "blt_util/log.hh"
-#include "manta/SVMultiJunctionCandidateUtil.hh"
-#include "svgraph/EdgeInfoUtil.hh"
-#include "svgraph/SVLocusSet.hh"
+#include "blt_util/log.hpp"
+#include "manta/SVMultiJunctionCandidateUtil.hpp"
+#include "svgraph/EdgeInfoUtil.hpp"
+#include "svgraph/SVLocusSet.hpp"
 
 SVCandidateProcessor::SVCandidateProcessor(
     const GSCOptions&                           opt,

@@ -22,8 +22,8 @@
 /// \author Mitch Bekritsky
 ///
 
-#include "blt_util/binomial_test.hh"
-#include "blt_util/stat_util.hh"
+#include "blt_util/binomial_test.hpp"
+#include "blt_util/stat_util.hpp"
 
 #include <boost/math/distributions/binomial.hpp>
 #include <boost/math/distributions/complement.hpp>

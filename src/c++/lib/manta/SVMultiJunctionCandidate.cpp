@@ -21,7 +21,7 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/SVMultiJunctionCandidate.hh"
+#include "manta/SVMultiJunctionCandidate.hpp"
 
 #include <iostream>
 
