@@ -1,0 +1,65 @@
+BasedOnStyle: Google
+
+# These are already part of Google style, but explicitly add them here because
+# they're called out in the coding guidelines:
+Standard: Cpp11
+IndentWidth: 2
+UseTab: Never
+
+# Google default of 80 columns is a little tight:
+ColumnLimit: 110
+
+# Protect long string literals already in source:
+BreakStringLiterals: false
+
+# Comment lines that follow these patterns are likely to be commented out code. Don't reflow these.
+#
+# Patterns in this regex are:
+# 1. a line comment (ie. a second one inside of the first comment)
+# 2. preprocessor directive
+# 3. various common code line endings
+CommentPragmas: '(//|^\s*#|(;|:|"|{|}|\(|\)|\[|\]|<|>)\s*$)'
+
+# Indent before the ':'
+ConstructorInitializerIndentWidth: 2
+
+# If false, leave case labels at the same level as the switch:
+IndentCaseLabels: false
+
+# Set the indent for public/protected/private in classes:
+AccessModifierOffset: -2
+
+# Only allow empty functions and inline methods in class headers to go on a single line:
+AllowShortFunctionsOnASingleLine: Inline
+
+# Use one pointer alignment everywhere:
+DerivePointerAlignment: false
+
+# Try to preserve the dominant alignment style
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+
+# Try to preserve the dominant style for function parameters:
+AlignAfterOpenBracket: AlwaysBreak
+BinPackArguments: false
+BinPackParameters: false
+
+# This copies the Google format for brace breaking, except for adding a break after functions
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass:      false
+  AfterControlStatement: false
+  AfterEnum:       false
+  AfterFunction:   true
+  AfterNamespace:  false
+  AfterObjCDeclaration: false
+  AfterStruct:     false
+  AfterUnion:      false
+  AfterExternBlock: false
+  BeforeCatch:     false
+  BeforeElse:      false
+  IndentBraces:    false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+

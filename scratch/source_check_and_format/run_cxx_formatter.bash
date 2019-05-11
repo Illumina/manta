@@ -1,33 +1,21 @@
 #!/usr/bin/env bash
 #
-# run astyle on all cxx source
+# run clang-format on all cxx source
 #
 
 set -o nounset
 
-scriptName=$(basename $0)
+this_dir=$(dirname $0)
 
-if ! which -a astyle > /dev/null 2>&1 ; then
-    echo "ERROR: Can't find required utility 'astyle' in PATH" 1>&2
-    exit 1;
-fi
+cxx_base_dir=$this_dir/../../src/c++
 
-thisDir=$(dirname $0)
+get_c_and_cpp_files() {
+  find $cxx_base_dir \( -name *.cpp -or -name *.cc -or -name *.c -or -name *.hpp -or -name *.hh -or -name *.h \)
+}
 
-cxx_base_dir=$thisDir/../../src/c++
+# remove windows line endings from source:
+get_c_and_cpp_files | xargs -P8 -n1 sed $'s/\r$//' -i
 
-
-cd $cxx_base_dir 
-astyle \
---style=ansi \
---align-pointer=type \
---max-instatement-indent=80 \
---min-conditional-indent=0 \
---pad-header \
---lineend=linux \
---suffix=none \
---recursive \
-"*.cpp" "*.hh" "*.h" "*.h.in"
-
-#--keep-one-line-blocks \
-#--keep-one-line-statements \
+# general c/c++ source reformatting:
+get_c_and_cpp_files | xargs -P8 -n1 $this_dir/clang-format -style=file -i
+ 
