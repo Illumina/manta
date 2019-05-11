@@ -7,7 +7,7 @@
 
 ## v1.5.1 - 2019-02-15
 This is a minor update from v1.5.0.
-	
+
 ### Changed
 - Make existingAlignmentStats as a fallback option (MANTA-1487)
   - It prioritizes stats estimated from the alignment file and allows static stats file when stats estimation fails due to insufficient high-confidence read pairs.
