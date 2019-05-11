@@ -35,7 +35,11 @@
 #include "manta/MultiJunctionUtil.hh"
 #include "manta/SVCandidateUtil.hh"
 
-#include "ctpl.h"
+// A bus error on PPC64 (DRAGEN-1789) seems to be occurring in the boost lockfree queue logic
+// of the boost version of CTPL, although this was not traced down to a specific error mechanism.
+// To avoid this error under the assumption that there is a problem with boost CTPL, switch to
+// the STL version of CTPL instead:
+#include "ctpl_stl.h"
 
 #include <iostream>
 #include <string>
