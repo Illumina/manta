@@ -24,7 +24,6 @@
 
 #pragma once
 
-
 /// \brief Two-sided binomial exact probability
 ///
 /// This is a two sided binomial exact pval wherein we find the
@@ -32,28 +31,16 @@
 /// double it.
 ///
 ///
-double
-get_binomial_twosided_exact_pval(
-    const double p,
-    const unsigned n_success,
-    const unsigned n_trials);
+double get_binomial_twosided_exact_pval(const double p, const unsigned n_success, const unsigned n_trials);
 
 /// \brief Two-sided binomial exact test
 ///
-bool
-is_reject_binomial_twosided_exact(
-    const double alpha,
-    const double p,
-    const unsigned n_success,
-    const unsigned n_trials);
+bool is_reject_binomial_twosided_exact(
+    const double alpha, const double p, const unsigned n_success, const unsigned n_trials);
 
 /// \brief Two-sided binomial test chi-sqr approximation
-bool
-is_reject_binomial_twosided_chi_sqr(
-    const double alpha,
-    const double p,
-    const unsigned n_success,
-    const unsigned n_trials);
+bool is_reject_binomial_twosided_chi_sqr(
+    const double alpha, const double p, const unsigned n_success, const unsigned n_trials);
 
 /// \brief Two-sided binomial test
 ///
@@ -61,13 +48,8 @@ is_reject_binomial_twosided_chi_sqr(
 ///
 /// This function chooses from the two testing methods above (exact/approx) based on trial size
 ///
-bool
-is_reject_binomial_twosided(
-    const double alpha,
-    const double p,
-    const unsigned n_success,
-    const unsigned n_trials);
-
+bool is_reject_binomial_twosided(
+    const double alpha, const double p, const unsigned n_success, const unsigned n_trials);
 
 /// \brief One-sided binomial exact probability
 ///
@@ -77,12 +59,8 @@ is_reject_binomial_twosided(
 /// \code{.R}
 /// pbinom((n_success-1),n_trials,p,lower.tail=FALSE)
 /// \endcode
-double
-get_binomial_gte_n_success_exact_pval(
-    const double p,
-    const unsigned n_success,
-    const unsigned n_trials);
-
+double get_binomial_gte_n_success_exact_pval(
+    const double p, const unsigned n_success, const unsigned n_trials);
 
 /// \brief One-sided binomial exact test
 ///
@@ -93,12 +71,8 @@ get_binomial_gte_n_success_exact_pval(
 /// \code{.R}
 /// binom.test(n_success, n_trials, p, "greater")$p.value <= alpha
 /// \endcode
-bool
-is_reject_binomial_gte_n_success_exact(
-    const double alpha,
-    const double p,
-    const unsigned n_success,
-    const unsigned n_trials);
+bool is_reject_binomial_gte_n_success_exact(
+    const double alpha, const double p, const unsigned n_success, const unsigned n_trials);
 
 /// Return the minimum number of successes to reject the null hypothesis
 /// with a p-value of at most \p alpha for a given error rate and number of trials
@@ -107,8 +81,4 @@ is_reject_binomial_gte_n_success_exact(
 /// \code{.R}
 /// 1 + qbinom(alpha, n_trials, p, lower.tail = FALSE)
 /// \endcode
-double
-min_count_binomial_gte_exact(
-    const double alpha,
-    const double p,
-    const unsigned n_trials);
+double min_count_binomial_gte_exact(const double alpha, const double p, const unsigned n_trials);

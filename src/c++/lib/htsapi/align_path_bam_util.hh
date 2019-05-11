@@ -26,26 +26,17 @@
 #include "blt_util/align_path.hh"
 #include "htsapi/bam_util.hh"
 
-
 /// Convert htslib CIGAR format into ALIGNPATH::path_t
 ///
-void
-bam_cigar_to_apath(const uint32_t* bam_cigar,
-                   const unsigned n_cigar,
-                   ALIGNPATH::path_t& apath);
+void bam_cigar_to_apath(const uint32_t* bam_cigar, const unsigned n_cigar, ALIGNPATH::path_t& apath);
 
 /// Convert ALIGNPATH::path_t into htslib CIGAR format
 ///
 /// bam_cigar must already be allocated to at least apath.size() capacity
 ///
-void
-apath_to_bam_cigar(const ALIGNPATH::path_t& apath,
-                   uint32_t* bam_cigar);
+void apath_to_bam_cigar(const ALIGNPATH::path_t& apath, uint32_t* bam_cigar);
 
 /// Convert ALIGNPATH::path_t into htslib CIGAR format, and insert this
 /// into the input htslib BAM record
 ///
-void
-edit_bam_cigar(const ALIGNPATH::path_t& apath,
-               bam1_t& br);
-
+void edit_bam_cigar(const ALIGNPATH::path_t& apath, bam1_t& br);

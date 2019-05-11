@@ -31,111 +31,86 @@
 #include <set>
 #include <string>
 
+namespace TUMOR_GT {
+enum index_t { REF, HET, HOM, SIZE };
 
-namespace TUMOR_GT
+inline const char* label(const index_t i)
 {
-enum index_t
-{
-    REF,
-    HET,
-    HOM,
-    SIZE
-};
-
-inline
-const char*
-label(const index_t i)
-{
-    switch (i)
-    {
-    case REF :
-        return "ref";
-    case HET :
-        return "het";
-    case HOM :
-        return "hom";
-    default:
-        assert(false && "Unknown GT state");
-        return nullptr;
-    }
+  switch (i) {
+  case REF:
+    return "ref";
+  case HET:
+    return "het";
+  case HOM:
+    return "hom";
+  default:
+    assert(false && "Unknown GT state");
+    return nullptr;
+  }
 }
 
-inline
-const char*
-label(const unsigned i)
+inline const char* label(const unsigned i)
 {
-    return label(static_cast<index_t>(i));
+  return label(static_cast<index_t>(i));
 }
 
-inline
-float
-altFraction(const index_t i)
+inline float altFraction(const index_t i)
 {
-    switch (i)
-    {
-    case REF :
-        return 0;
-    case HET :
-        //TODO: fix this prior for low-AF
-        return 0.5;
-    case HOM :
-        return 1.0;
-    default:
-        assert(false && "Unknown GT state");
-        return 0;
-    }
+  switch (i) {
+  case REF:
+    return 0;
+  case HET:
+    // TODO: fix this prior for low-AF
+    return 0.5;
+  case HOM:
+    return 1.0;
+  default:
+    assert(false && "Unknown GT state");
+    return 0;
+  }
 }
 
-inline
-double
-altLnFraction(const index_t i)
+inline double altLnFraction(const index_t i)
 {
-    //TODO: fix value of HET for low-AF
-    static const double val[] = { std::log(0.), std::log(0.5), std::log(1.) };
-    switch (i)
-    {
-    case REF :
-        return val[0];
-    case HET :
-        return val[1];
-    case HOM :
-        return val[2];
-    default:
-        assert(false && "Unknown GT state");
-        return 0;
-    }
+  // TODO: fix value of HET for low-AF
+  static const double val[] = {std::log(0.), std::log(0.5), std::log(1.)};
+  switch (i) {
+  case REF:
+    return val[0];
+  case HET:
+    return val[1];
+  case HOM:
+    return val[2];
+  default:
+    assert(false && "Unknown GT state");
+    return 0;
+  }
 }
 
-inline
-double
-altLnCompFraction(const index_t i)
+inline double altLnCompFraction(const index_t i)
 {
-    return altLnFraction(static_cast<index_t>(2-i));
+  return altLnFraction(static_cast<index_t>(2 - i));
 }
 
-}
+}  // namespace TUMOR_GT
 
 /// consolidate all tumor-only scoring results applied to an SV candidate
-struct SVScoreInfoTumor
-{
-    void
-    clear()
-    {
-        filters.clear();
-        gt=TUMOR_GT::REF;
-        altScore=0;
-        gtScore=0;
-    }
+struct SVScoreInfoTumor {
+  void clear()
+  {
+    filters.clear();
+    gt       = TUMOR_GT::REF;
+    altScore = 0;
+    gtScore  = 0;
+  }
 
-    std::set<std::string> filters;
+  std::set<std::string> filters;
 
-    TUMOR_GT::index_t gt = TUMOR_GT::REF;
+  TUMOR_GT::index_t gt = TUMOR_GT::REF;
 
-    unsigned altScore = 0; ///< quality score indicating any non-reference state (regardless of specific genotype)
-    unsigned gtScore = 0; ///< quality score of genotype
+  unsigned altScore =
+      0;  ///< quality score indicating any non-reference state (regardless of specific genotype)
+  unsigned gtScore = 0;  ///< quality score of genotype
 };
 
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const SVScoreInfoTumor& sid);
+std::ostream& operator<<(std::ostream& os, const SVScoreInfoTumor& sid);

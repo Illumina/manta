@@ -28,50 +28,32 @@
 #include <fstream>
 #include <iostream>
 
-
-OutStream::
-OutStream(const std::string& fileName) :
-    _isInit(false),
-    _fileName(fileName),
-    _osptr(&std::cout),
-    _ofsptr(new std::ofstream)
+OutStream::OutStream(const std::string& fileName)
+  : _isInit(false), _fileName(fileName), _osptr(&std::cout), _ofsptr(new std::ofstream)
 {
-    if (! _fileName.empty())
-    {
-        std::ofstream test;
-        openFile(_fileName,test);
-    }
+  if (!_fileName.empty()) {
+    std::ofstream test;
+    openFile(_fileName, test);
+  }
 }
-
-
 
 // required for unique_ptr:
-OutStream::
-~OutStream() {}
+OutStream::~OutStream() {}
 
-
-
-void
-OutStream::
-initStream()
+void OutStream::initStream()
 {
-    if (! _fileName.empty())
-    {
-        openFile(_fileName,*_ofsptr);
-        _osptr=_ofsptr.get();
-    }
-    _isInit=true;
+  if (!_fileName.empty()) {
+    openFile(_fileName, *_ofsptr);
+    _osptr = _ofsptr.get();
+  }
+  _isInit = true;
 }
 
-void
-OutStream::
-openFile(
-    const std::string& filename,
-    std::ofstream& ofs)
+void OutStream::openFile(const std::string& filename, std::ofstream& ofs)
 {
-    ofs.open(filename.c_str());
-    if (ofs) return;
-    std::ostringstream oss;
-    oss << "Can't open output file: '" << filename << "'";
-    BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
+  ofs.open(filename.c_str());
+  if (ofs) return;
+  std::ostringstream oss;
+  oss << "Can't open output file: '" << filename << "'";
+  BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
 }

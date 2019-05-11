@@ -29,40 +29,30 @@
 #include <string>
 #include <vector>
 
+struct bed_record {
+  bed_record() { clear(); }
 
-struct bed_record
-{
-    bed_record()
-    {
-        clear();
-    }
+  /// \brief Construct bed_record from bed file line contained in string s
+  ///
+  /// \return false on error
+  ///
+  bool set(const char* s);
 
-    /// \brief Construct bed_record from bed file line contained in string s
-    ///
-    /// \return false on error
-    ///
-    bool set(const char* s);
+  void clear()
+  {
+    chrom.clear();
+    begin = 0;
+    end   = 0;
+    line  = nullptr;
+  }
 
-    void clear()
-    {
-        chrom.clear();
-        begin=0;
-        end=0;
-        line=nullptr;
-    }
+  /// Test if bed records are valid, where valid means having a strictly positive region size
+  bool is_valid() const { return (begin < end); }
 
-    /// Test if bed records are valid, where valid means having a strictly positive region size
-    bool
-    is_valid() const
-    {
-        return (begin < end);
-    }
-
-    std::string chrom;
-    int begin = 0;
-    int end = 0;
-    const char* line = nullptr;
+  std::string chrom;
+  int         begin = 0;
+  int         end   = 0;
+  const char* line  = nullptr;
 };
-
 
 std::ostream& operator<<(std::ostream& os, const bed_record& bedr);

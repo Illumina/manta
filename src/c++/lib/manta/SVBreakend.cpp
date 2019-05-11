@@ -25,32 +25,22 @@
 
 #include <iostream>
 
-
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const SVBreakendLowResEvidence& sce)
+std::ostream& operator<<(std::ostream& os, const SVBreakendLowResEvidence& sce)
 {
-    using namespace SVEvidenceType;
+  using namespace SVEvidenceType;
 
-    os << "SVBreakendLowResEvidence:";
-    for (int i(0); i<SIZE; ++i)
-    {
-        os << " " << label(i) << ": " << sce.getVal(i);
-    }
+  os << "SVBreakendLowResEvidence:";
+  for (int i(0); i < SIZE; ++i) {
+    os << " " << label(i) << ": " << sce.getVal(i);
+  }
 
-    return os;
+  return os;
 }
 
-
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const SVBreakend& svb)
+std::ostream& operator<<(std::ostream& os, const SVBreakend& svb)
 {
-    os << "Breakend:"
-       << " " << svb.interval
-       << " " << SVBreakendState::label(svb.state) << "\n"
-       << "\t" << svb.lowresEvidence << "\n";
-    return os;
+  os << "Breakend:"
+     << " " << svb.interval << " " << SVBreakendState::label(svb.state) << "\n"
+     << "\t" << svb.lowresEvidence << "\n";
+  return os;
 }

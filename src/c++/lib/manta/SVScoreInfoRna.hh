@@ -31,32 +31,27 @@
 #include <set>
 #include <string>
 
-
 /// consolidate all RNA scoring results applied to an SV candidate
-///todo This is mostly a placeholder. Add real RNA scoring model
-struct SVScoreInfoRna
-{
-    void
-    clear()
-    {
-        filters.clear();
-        altScore=0;
-    }
+/// todo This is mostly a placeholder. Add real RNA scoring model
+struct SVScoreInfoRna {
+  void clear()
+  {
+    filters.clear();
+    altScore = 0;
+  }
 
-    std::set<std::string> filters;
+  std::set<std::string> filters;
 
-    unsigned altScore = 0; ///< quality score indicating any non-reference state (regardless of specific genotype)
+  unsigned altScore =
+      0;  ///< quality score indicating any non-reference state (regardless of specific genotype)
 
-    /// Dummy value used for variant score in RNA output
-    static const int defaultScore = 42;
-    /// Min length for passing fusions
-    static const int minLength = 100000;
-    static const std::string rnaFilterLabel;
-    static const std::string impreciseLabel;
-    static const std::string localLabel;
+  /// Dummy value used for variant score in RNA output
+  static const int defaultScore = 42;
+  /// Min length for passing fusions
+  static const int         minLength = 100000;
+  static const std::string rnaFilterLabel;
+  static const std::string impreciseLabel;
+  static const std::string localLabel;
 };
 
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const SVScoreInfoRna& sid);
+std::ostream& operator<<(std::ostream& os, const SVScoreInfoRna& sid);

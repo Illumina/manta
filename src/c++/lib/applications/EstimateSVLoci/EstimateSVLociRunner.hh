@@ -17,7 +17,6 @@
 //
 //
 
-
 #pragma once
 
 #include "ESLOptions.hh"
@@ -28,35 +27,25 @@
 
 struct bam_streamer;
 
+/// Provides SV loci estimation methods over multiple regions, and manages the one-time initialization costs
+/// of this process
+struct EstimateSVLociRunner : private boost::noncopyable {
+  /// \param[in] opt Options for estimation process
+  explicit EstimateSVLociRunner(const ESLOptions& opt);
 
-/// Provides SV loci estimation methods over multiple regions, and manages the one-time initialization costs of
-/// this process
-struct EstimateSVLociRunner : private boost::noncopyable
-{
-    /// \param[in] opt Options for estimation process
-    explicit
-    EstimateSVLociRunner(
-        const ESLOptions& opt);
+  /// Run the SVlocus estimation process and the specified region and merge results into \p mergedSet
+  ///
+  /// \param[in] region Target region for estimation process
+  void estimateSVLociForSingleRegion(const std::string& region);
 
-    /// Run the SVlocus estimation process and the specified region and merge results into \p mergedSet
-    ///
-    /// \param[in] region Target region for estimation process
-    void
-    estimateSVLociForSingleRegion(
-        const std::string& region);
-
-    /// \brief Provide const access to the SV locus graph that this object is building.
-    const SVLocusSet&
-    getLocusSet() const
-    {
-        return *_mergedSetPtr;
-    }
+  /// \brief Provide const access to the SV locus graph that this object is building.
+  const SVLocusSet& getLocusSet() const { return *_mergedSetPtr; }
 
 private:
-    const ESLOptions _opt;
+  const ESLOptions _opt;
 
-    std::vector<std::shared_ptr<bam_streamer>> _bamStreams;
+  std::vector<std::shared_ptr<bam_streamer>> _bamStreams;
 
-    /// Estimated SVlocus graph components should be merged into this object
-    std::shared_ptr<SVLocusSet> _mergedSetPtr;
+  /// Estimated SVlocus graph components should be merged into this object
+  std::shared_ptr<SVLocusSet> _mergedSetPtr;
 };

@@ -26,17 +26,12 @@
 
 #include "htsapi/bam_record.hh"
 
-
 /// This predicate runs isReadFiltered without the mapq components
 /// \param bamRead The read to test.
 /// \return True if the read is filtered out based on core alignment flags.
-bool
-isReadFilteredCore(
-    const bam_record& bamRead);
+bool isReadFilteredCore(const bam_record& bamRead);
 
 /// Test if the read is unmapped or is true in isReadFilteredCore
 /// \param bamRead The read to test.
 /// \return True if the read is filtered out based on the core alignment flags, or is unmapped.
-bool
-isReadUnmappedOrFilteredCore(
-    const bam_record& bamRead);
+bool isReadUnmappedOrFilteredCore(const bam_record& bamRead);

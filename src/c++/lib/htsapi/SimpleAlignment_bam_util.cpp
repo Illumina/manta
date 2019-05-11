@@ -24,52 +24,38 @@
 #include "SimpleAlignment_bam_util.hh"
 #include "htsapi/align_path_bam_util.hh"
 
-
-void
-getAlignment(
-    const bam_record& bamRead,
-    SimpleAlignment& al)
+void getAlignment(const bam_record& bamRead, SimpleAlignment& al)
 {
-    al.is_fwd_strand=bamRead.is_fwd_strand();
-    al.tid=bamRead.target_id();
-    al.pos=(bamRead.pos()-1);
+  al.is_fwd_strand = bamRead.is_fwd_strand();
+  al.tid           = bamRead.target_id();
+  al.pos           = (bamRead.pos() - 1);
 
-    bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),al.path);
+  bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), al.path);
 }
 
-
-
-SimpleAlignment
-getAlignment(
-    const bam_record& bamRead)
+SimpleAlignment getAlignment(const bam_record& bamRead)
 {
-    SimpleAlignment al;
-    getAlignment(bamRead,al);
-    return al;
+  SimpleAlignment al;
+  getAlignment(bamRead, al);
+  return al;
 }
 
-
-SimpleAlignment
-getKnownOrFakedMateAlignment(
-    const bam_record& bamRead)
+SimpleAlignment getKnownOrFakedMateAlignment(const bam_record& bamRead)
 {
-    using namespace ALIGNPATH;
+  using namespace ALIGNPATH;
 
-    SimpleAlignment al;
-    assert(! bamRead.is_mate_unmapped());
-    al.is_fwd_strand=bamRead.is_mate_fwd_strand();
-    al.tid=bamRead.mate_target_id();
-    al.pos=(bamRead.mate_pos()-1);
+  SimpleAlignment al;
+  assert(!bamRead.is_mate_unmapped());
+  al.is_fwd_strand = bamRead.is_mate_fwd_strand();
+  al.tid           = bamRead.mate_target_id();
+  al.pos           = (bamRead.mate_pos() - 1);
 
-    static const char mateCigarTag[] = { 'M','C' };
-    const char* mateCigarString(bamRead.get_string_tag(mateCigarTag));
-    if (nullptr != mateCigarString)
-    {
-        cigar_to_apath(mateCigarString, al.path);
-    }
-    else
-    {
-        al.path.emplace_back(MATCH, bamRead.read_size());
-    }
-    return al;
+  static const char mateCigarTag[] = {'M', 'C'};
+  const char*       mateCigarString(bamRead.get_string_tag(mateCigarTag));
+  if (nullptr != mateCigarString) {
+    cigar_to_apath(mateCigarString, al.path);
+  } else {
+    al.path.emplace_back(MATCH, bamRead.read_size());
+  }
+  return al;
 }

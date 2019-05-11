@@ -26,20 +26,11 @@
 #include <iosfwd>
 #include <string>
 
-
 /// pretty print sequence in such a way that it's easy to locate position number
 ///
-void
-printSeq(
-    const char* seq,
-    std::ostream& os);
+void printSeq(const char* seq, std::ostream& os);
 
-
-inline
-void
-printSeq(
-    const std::string& seq,
-    std::ostream& os)
+inline void printSeq(const std::string& seq, std::ostream& os)
 {
-    printSeq(seq.c_str(),os);
+  printSeq(seq.c_str(), os);
 }

@@ -26,24 +26,16 @@
 #include "svgraph/EdgeInfo.hh"
 #include "svgraph/SVLocusSet.hh"
 
-
-inline
-bool
-isBidirectionalEdge(
-    const SVLocusSet& cset,
-    const EdgeInfo& edge)
+inline bool isBidirectionalEdge(const SVLocusSet& cset, const EdgeInfo& edge)
 {
-    const unsigned minEdgeCount(cset.getMinMergeEdgeCount());
+  const unsigned minEdgeCount(cset.getMinMergeEdgeCount());
 
-    const SVLocus& locus(cset.getLocus(edge.locusIndex));
+  const SVLocus& locus(cset.getLocus(edge.locusIndex));
 
-    return ((locus.getEdge(edge.nodeIndex1,edge.nodeIndex2).getCount() >= minEdgeCount) &&
-            (locus.getEdge(edge.nodeIndex2,edge.nodeIndex1).getCount() >= minEdgeCount));
+  return (
+      (locus.getEdge(edge.nodeIndex1, edge.nodeIndex2).getCount() >= minEdgeCount) &&
+      (locus.getEdge(edge.nodeIndex2, edge.nodeIndex1).getCount() >= minEdgeCount));
 }
 
-
 /// determine if this is a self-edge of a node with no other (bidirectional-pass) edges:
-bool
-testIsolatedEdge(
-    const SVLocusSet& cset,
-    const EdgeInfo& edge);
+bool testIsolatedEdge(const SVLocusSet& cset, const EdgeInfo& edge);

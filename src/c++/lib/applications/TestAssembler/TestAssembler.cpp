@@ -19,53 +19,45 @@
 
 #include "TestAssembler.hh"
 
-static
-void
-runTestAssembler(const TestAssemblerOptions& opt)
+static void runTestAssembler(const TestAssemblerOptions& opt)
 {
-    // check that we have write permission on the output file early:
-    {
-        OutStream outs(opt.outputFilename);
-    }
-
-    const ReadScannerOptions scanOpt;
-    const AssemblerOptions asmOpt;
-
-    AssemblyReadInput reads;
-    for (const std::string& alignmentFilename : opt.alignFileOpt.alignmentFilenames)
-    {
-        log_os << "[INFO] Extracting reads from file: '" << alignmentFilename << "'\n";
-
-        extractAssemblyReadsFromBam(scanOpt, asmOpt, opt.referenceFilename, alignmentFilename, reads);
-    }
-
-    AssemblyReadOutput readInfo;
-    Assembly contigs;
-
-    log_os << "[INFO] Assmbling read input.\n";
-    runIterativeAssembler(asmOpt, reads, readInfo, contigs);
-
+  // check that we have write permission on the output file early:
+  {
     OutStream outs(opt.outputFilename);
-    std::ostream& os(outs.getStream());
+  }
 
-    const unsigned contigCount(contigs.size());
-    log_os << "[INFO] Assembly complete. Contig count: " << contigCount << "\n";
+  const ReadScannerOptions scanOpt;
+  const AssemblerOptions   asmOpt;
 
-    for (unsigned contigIndex(0); contigIndex<contigCount; ++contigIndex)
-    {
-        os << ">Contig" << contigIndex << "\n";
-        os << contigs[contigIndex].seq << "\n";
-    }
+  AssemblyReadInput reads;
+  for (const std::string& alignmentFilename : opt.alignFileOpt.alignmentFilenames) {
+    log_os << "[INFO] Extracting reads from file: '" << alignmentFilename << "'\n";
+
+    extractAssemblyReadsFromBam(scanOpt, asmOpt, opt.referenceFilename, alignmentFilename, reads);
+  }
+
+  AssemblyReadOutput readInfo;
+  Assembly           contigs;
+
+  log_os << "[INFO] Assmbling read input.\n";
+  runIterativeAssembler(asmOpt, reads, readInfo, contigs);
+
+  OutStream     outs(opt.outputFilename);
+  std::ostream& os(outs.getStream());
+
+  const unsigned contigCount(contigs.size());
+  log_os << "[INFO] Assembly complete. Contig count: " << contigCount << "\n";
+
+  for (unsigned contigIndex(0); contigIndex < contigCount; ++contigIndex) {
+    os << ">Contig" << contigIndex << "\n";
+    os << contigs[contigIndex].seq << "\n";
+  }
 }
 
-
-
-void
-TestAssembler::
-runInternal(int argc, char* argv[]) const
+void TestAssembler::runInternal(int argc, char* argv[]) const
 {
-    TestAssemblerOptions opt;
+  TestAssemblerOptions opt;
 
-    parseTestAssemblerOptions(*this,argc,argv,opt);
-    runTestAssembler(opt);
+  parseTestAssemblerOptions(*this, argc, argv, opt);
+  runTestAssembler(opt);
 }

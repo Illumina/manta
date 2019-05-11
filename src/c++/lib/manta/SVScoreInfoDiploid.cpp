@@ -26,55 +26,38 @@
 
 #include <iostream>
 
-
-
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const SVScoreInfoDiploidSample& sids)
+std::ostream& operator<<(std::ostream& os, const SVScoreInfoDiploidSample& sids)
 {
-    os << "DiploidSVScoreInfoSample "
-       << " gt=" << DIPLOID_GT::label(sids.gt)
-       << " gtScore=" << sids.gtScore
-       << " pl=";
+  os << "DiploidSVScoreInfoSample "
+     << " gt=" << DIPLOID_GT::label(sids.gt) << " gtScore=" << sids.gtScore << " pl=";
 
-    for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
-    {
-        if (gt!=0) os << ',';
-        os << sids.phredLoghood[gt];
-    }
-    os << " pprob=";
-    for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
-    {
-        if (gt!=0) os << ',';
-        os << sids.pprob[gt];
-    }
-    os << " sampleFilters:";
-    for (const std::string& filter : sids.filters)
-    {
-        os << " " << filter;
-    }
-    return os;
+  for (unsigned gt(0); gt < DIPLOID_GT::SIZE; ++gt) {
+    if (gt != 0) os << ',';
+    os << sids.phredLoghood[gt];
+  }
+  os << " pprob=";
+  for (unsigned gt(0); gt < DIPLOID_GT::SIZE; ++gt) {
+    if (gt != 0) os << ',';
+    os << sids.pprob[gt];
+  }
+  os << " sampleFilters:";
+  for (const std::string& filter : sids.filters) {
+    os << " " << filter;
+  }
+  return os;
 }
 
-
-
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const SVScoreInfoDiploid& sid)
+std::ostream& operator<<(std::ostream& os, const SVScoreInfoDiploid& sid)
 {
-    os << "DiploidSVScoreInfo "
-       << " altScore=" << sid.altScore;
-    os << " filters:";
-    for (const std::string& filter : sid.filters)
-    {
-        os << " " << filter;
-    }
-    os << "\n";
-    for (const auto& sample : sid.samples)
-    {
-        os << sample << "\n";
-    }
-    return os;
+  os << "DiploidSVScoreInfo "
+     << " altScore=" << sid.altScore;
+  os << " filters:";
+  for (const std::string& filter : sid.filters) {
+    os << " " << filter;
+  }
+  os << "\n";
+  for (const auto& sample : sid.samples) {
+    os << sample << "\n";
+  }
+  return os;
 }

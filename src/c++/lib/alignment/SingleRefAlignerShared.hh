@@ -30,69 +30,56 @@
 
 #include <iosfwd>
 
-
 template <typename ScoreType>
-struct AlignmentResult
-{
-    AlignmentResult()
-    {
-        clear();
-    }
+struct AlignmentResult {
+  AlignmentResult() { clear(); }
 
-    void
-    clear()
-    {
-        score = 0;
-        isJumped = false;
-        align.clear();
-    }
+  void clear()
+  {
+    score    = 0;
+    isJumped = false;
+    align.clear();
+  }
 
-    ScoreType score;
-    bool isJumped; ///< whether alignment path includes jump state(s) while backtracking
-    Alignment align;
+  ScoreType score;
+  bool      isJumped;  ///< whether alignment path includes jump state(s) while backtracking
+  Alignment align;
 };
 
+template <typename ScoreType>
+std::ostream& operator<<(std::ostream& os, AlignmentResult<ScoreType>& alignment);
 
 template <typename ScoreType>
-std::ostream&
-operator<<(std::ostream& os, AlignmentResult<ScoreType>& alignment);
-
-
-
-template <typename ScoreType>
-struct SingleRefAlignerBase : public AlignerBase<ScoreType>
-{
-    SingleRefAlignerBase(
-        const AlignmentScores<ScoreType>& scores) :
-        AlignerBase<ScoreType>(scores)
-    {}
+struct SingleRefAlignerBase : public AlignerBase<ScoreType> {
+  SingleRefAlignerBase(const AlignmentScores<ScoreType>& scores) : AlignerBase<ScoreType>(scores) {}
 
 protected:
-
-    /// returns alignment path of query to reference
-    template <typename SymIter, typename MatrixType>
-    void
-    backTraceAlignment(
-        const SymIter queryBegin, const SymIter queryEnd,
-        const SymIter refBegin, const SymIter refEnd,
-        const size_t querySize, const size_t refSize,
-        const MatrixType& ptrMatrix,
-        const BackTrace<ScoreType>& btraceInput,
-        AlignmentResult<ScoreType>& result) const;
+  /// returns alignment path of query to reference
+  template <typename SymIter, typename MatrixType>
+  void backTraceAlignment(
+      const SymIter               queryBegin,
+      const SymIter               queryEnd,
+      const SymIter               refBegin,
+      const SymIter               refEnd,
+      const size_t                querySize,
+      const size_t                refSize,
+      const MatrixType&           ptrMatrix,
+      const BackTrace<ScoreType>& btraceInput,
+      AlignmentResult<ScoreType>& result) const;
 
 #ifdef DEBUG_ALN_MATRIX
-    /// write out matrix of scores and back-trace pointers for debug:
-    template <typename SymIter, typename MatrixType, typename ScoreValType>
-    void
-    dumpTables(
-        const SymIter queryBegin, const SymIter queryEnd,
-        const SymIter refBegin, const SymIter refEnd,
-        const size_t querySize,
-        const MatrixType& ptrMatrix,
-        const std::vector<AlignState::index_t>& dumpStates,
-        const std::vector<std::vector<ScoreValType>>& storeScores) const;
+  /// write out matrix of scores and back-trace pointers for debug:
+  template <typename SymIter, typename MatrixType, typename ScoreValType>
+  void dumpTables(
+      const SymIter                                 queryBegin,
+      const SymIter                                 queryEnd,
+      const SymIter                                 refBegin,
+      const SymIter                                 refEnd,
+      const size_t                                  querySize,
+      const MatrixType&                             ptrMatrix,
+      const std::vector<AlignState::index_t>&       dumpStates,
+      const std::vector<std::vector<ScoreValType>>& storeScores) const;
 #endif
 };
-
 
 #include "SingleRefAlignerSharedImpl.hh"

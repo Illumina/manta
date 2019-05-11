@@ -25,7 +25,6 @@
 
 #include <string>
 
-
 #ifdef _MSC_VER
 #define snprintf _snprintf
 #define strdup _strdup
@@ -36,9 +35,6 @@
 #define noexcept
 #endif
 
-double
-compat_round(const double x);
+double compat_round(const double x);
 
-
-const char*
-compat_basename(const char* s);
+const char* compat_basename(const char* s);

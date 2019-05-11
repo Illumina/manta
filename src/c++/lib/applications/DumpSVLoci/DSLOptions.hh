@@ -27,23 +27,14 @@
 
 #include <string>
 
+struct DSLOptions {
+  DSLOptions() : isLocusIndex(false), locusIndex(0) {}
 
-struct DSLOptions
-{
-    DSLOptions() :
-        isLocusIndex(false),
-        locusIndex(0)
-    {}
-
-    bool isLocusIndex = false;
-    unsigned locusIndex = 0;
-    std::string graphFilename;
-    std::string locusFilename;
-    std::string region;
+  bool        isLocusIndex = false;
+  unsigned    locusIndex   = 0;
+  std::string graphFilename;
+  std::string locusFilename;
+  std::string region;
 };
 
-
-void
-parseDSLOptions(const illumina::Program& prog,
-                int argc, char* argv[],
-                DSLOptions& opt);
+void parseDSLOptions(const illumina::Program& prog, int argc, char* argv[], DSLOptions& opt);

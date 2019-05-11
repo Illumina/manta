@@ -20,164 +20,126 @@
 /// \file
 /// \author Chris Saunders
 
+#include "manta/SVCandidateSetData.hh"
 #include "common/Exceptions.hh"
 #include "htsapi/bam_record_util.hh"
-#include "manta/SVCandidateSetData.hh"
 
 #include <cassert>
 
 #include <iostream>
 #include <sstream>
 
-
 #ifdef DEBUG_SVDATA
 #include "blt_util/log.hh"
 #endif
 
-
-
-std::ostream&
-operator<<(std::ostream& os, const SVCandidateSetRead& svr)
+std::ostream& operator<<(std::ostream& os, const SVCandidateSetRead& svr)
 {
-    os << "SVCandidateSetRead: " << svr.bamrec << "\n";
-    os << "Read_index: " << svr.readIndex << "\n";
-    return os;
+  os << "SVCandidateSetRead: " << svr.bamrec << "\n";
+  os << "Read_index: " << svr.readIndex << "\n";
+  return os;
 }
 
-
-
-std::ostream&
-operator<<(std::ostream& os, const SVSequenceFragmentAssociation& sva)
+std::ostream& operator<<(std::ostream& os, const SVSequenceFragmentAssociation& sva)
 {
-    os << " svindex: " << sva.index << " evidenceType: " << SVEvidenceType::label(sva.evtype);
-    return os;
+  os << " svindex: " << sva.index << " evidenceType: " << SVEvidenceType::label(sva.evtype);
+  return os;
 }
 
-
-
-std::ostream&
-operator<<(std::ostream& os, const SVCandidateSetSequenceFragment& svp)
+std::ostream& operator<<(std::ostream& os, const SVCandidateSetSequenceFragment& svp)
 {
-    os << "SVCandidateReadPair svIndices:";
-    for (const SVSequenceFragmentAssociation& sva : svp.svLink)
-    {
-        os << sva << "\n";
-    }
-    os << "\n";
-    os << "\tread1: " << svp.read1;
-    os << "\tread2: " << svp.read2;
-    return os;
+  os << "SVCandidateReadPair svIndices:";
+  for (const SVSequenceFragmentAssociation& sva : svp.svLink) {
+    os << sva << "\n";
+  }
+  os << "\n";
+  os << "\tread1: " << svp.read1;
+  os << "\tread2: " << svp.read2;
+  return os;
 }
 
-
-
-SVCandidateSetSequenceFragment*
-SVCandidateSetSequenceFragmentSampleGroup::
-getSequenceFragment(
+SVCandidateSetSequenceFragment* SVCandidateSetSequenceFragmentSampleGroup::getSequenceFragment(
     const pindex_t::key_type& key)
 {
-    const pindex_t::const_iterator kiter(_pairIndex.find(key));
+  const pindex_t::const_iterator kiter(_pairIndex.find(key));
 
-    if (kiter == _pairIndex.end())
-    {
-        /// don't add more pairs to the object once it's full:
-        if (isFull()) return nullptr;
+  if (kiter == _pairIndex.end()) {
+    /// don't add more pairs to the object once it's full:
+    if (isFull()) return nullptr;
 
-        _pairIndex[key] = _pairs.size();
-        _pairs.emplace_back();
-        return &(_pairs.back());
-    }
-    else
-    {
-        return &(_pairs[kiter->second]);
-    }
+    _pairIndex[key] = _pairs.size();
+    _pairs.emplace_back();
+    return &(_pairs.back());
+  } else {
+    return &(_pairs[kiter->second]);
+  }
 }
 
-
-
-void
-SVCandidateSetSequenceFragmentSampleGroup::
-add(
+void SVCandidateSetSequenceFragmentSampleGroup::add(
     const bam_header_info& bamHeader,
-    const bam_record& bamRead,
-    const bool isExpectRepeat,
-    const bool isSourcedFromGraphEdgeNode1,
-    const bool isSubMapped)
+    const bam_record&      bamRead,
+    const bool             isExpectRepeat,
+    const bool             isSourcedFromGraphEdgeNode1,
+    const bool             isSubMapped)
 {
-    using namespace illumina::common;
+  using namespace illumina::common;
 
 #ifdef DEBUG_SVDATA
-    log_os << "SVDataGroup adding: " << bamRead << "\n";
+  log_os << "SVDataGroup adding: " << bamRead << "\n";
 #endif
 
-    SVCandidateSetSequenceFragment* fragPtr(getSequenceFragment(bamRead.qname()));
-    if (nullptr == fragPtr) return;
+  SVCandidateSetSequenceFragment* fragPtr(getSequenceFragment(bamRead.qname()));
+  if (nullptr == fragPtr) return;
 
-    SVCandidateSetSequenceFragment& fragment(*fragPtr);
+  SVCandidateSetSequenceFragment& fragment(*fragPtr);
 
-    SVCandidateSetRead* targetReadPtr(nullptr);
-    if (2 == bamRead.read_no())
-    {
-        if (bamRead.isNonStrictSupplement())
-        {
-            fragment.read2Supplemental.emplace_back();
-            targetReadPtr = (&(fragment.read2Supplemental.back()));
-        }
-        else
-        {
-            targetReadPtr = (&(fragment.read2));
-        }
+  SVCandidateSetRead* targetReadPtr(nullptr);
+  if (2 == bamRead.read_no()) {
+    if (bamRead.isNonStrictSupplement()) {
+      fragment.read2Supplemental.emplace_back();
+      targetReadPtr = (&(fragment.read2Supplemental.back()));
+    } else {
+      targetReadPtr = (&(fragment.read2));
     }
-    else
-    {
-        if (bamRead.isNonStrictSupplement())
-        {
-            fragment.read1Supplemental.emplace_back();
-            targetReadPtr = (&(fragment.read1Supplemental.back()));
-        }
-        else
-        {
-            targetReadPtr = (&(fragment.read1));
-        }
+  } else {
+    if (bamRead.isNonStrictSupplement()) {
+      fragment.read1Supplemental.emplace_back();
+      targetReadPtr = (&(fragment.read1Supplemental.back()));
+    } else {
+      targetReadPtr = (&(fragment.read1));
     }
+  }
 
-    SVCandidateSetRead& targetRead(*targetReadPtr);
-    if (targetRead.isSet())
-    {
-        if (isExpectRepeat) return;
+  SVCandidateSetRead& targetRead(*targetReadPtr);
+  if (targetRead.isSet()) {
+    if (isExpectRepeat) return;
 
-        std::ostringstream oss;
-        oss << "Unexpected alignment name collision. Source: '" << dataSourceName << "'\n"
-            << "\tExisting read: ";
-        summarizeAlignmentRecord(bamHeader, targetRead.bamrec, oss);
-        oss << "\n"
-            << "\tNew read: ";
-        summarizeAlignmentRecord(bamHeader, bamRead, oss);
-        oss << "\n";
-        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
-    }
+    std::ostringstream oss;
+    oss << "Unexpected alignment name collision. Source: '" << dataSourceName << "'\n"
+        << "\tExisting read: ";
+    summarizeAlignmentRecord(bamHeader, targetRead.bamrec, oss);
+    oss << "\n"
+        << "\tNew read: ";
+    summarizeAlignmentRecord(bamHeader, bamRead, oss);
+    oss << "\n";
+    BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
+  }
 
-    targetRead.bamrec = bamRead;
-    targetRead.isSourcedFromGraphEdgeNode1 = isSourcedFromGraphEdgeNode1;
-    targetRead.isSubMapped = isSubMapped;
-    targetRead.readIndex = (isSubMapped ? _subMappedReadIndex : _mappedReadIndex);
+  targetRead.bamrec                      = bamRead;
+  targetRead.isSourcedFromGraphEdgeNode1 = isSourcedFromGraphEdgeNode1;
+  targetRead.isSubMapped                 = isSubMapped;
+  targetRead.readIndex                   = (isSubMapped ? _subMappedReadIndex : _mappedReadIndex);
 }
 
-
-
-bool
-SVCandidateSetData::
-setNewSearchInterval(const GenomeInterval& newSearch)
+bool SVCandidateSetData::setNewSearchInterval(const GenomeInterval& newSearch)
 {
-    bool retval(false);
-    for (const GenomeInterval& oldSearch : _searchIntervals)
-    {
-        if (oldSearch.isIntersect(newSearch))
-        {
-            retval=true;
-            break;
-        }
+  bool retval(false);
+  for (const GenomeInterval& oldSearch : _searchIntervals) {
+    if (oldSearch.isIntersect(newSearch)) {
+      retval = true;
+      break;
     }
-    _searchIntervals.push_back(newSearch);
-    return retval;
+  }
+  _searchIntervals.push_back(newSearch);
+  return retval;
 }

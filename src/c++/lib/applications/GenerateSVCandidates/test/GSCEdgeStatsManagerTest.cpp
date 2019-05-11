@@ -17,13 +17,13 @@
 //
 //
 
+#include "GSCEdgeStatsManager.hh"
+#include "boost/filesystem.hpp"
 #include "boost/test/unit_test.hpp"
 #include "fstream"
-#include "GSCEdgeStatsManager.hh"
 #include "test/testFileMakers.hh"
-#include "boost/filesystem.hpp"
 
-BOOST_AUTO_TEST_SUITE( GSCEdgeStatsManager_test_suite )
+BOOST_AUTO_TEST_SUITE(GSCEdgeStatsManager_test_suite)
 
 // Following statistics are verifed from EdgeStats file
 // 1. Total number of junction assembly overlaps have been skipped
@@ -35,50 +35,50 @@ BOOST_AUTO_TEST_SUITE( GSCEdgeStatsManager_test_suite )
 // 7. Number of complex junctions
 // 8. Number of assembly candidates
 // 9. Number of spanning assembly candidates
-BOOST_AUTO_TEST_CASE( test_GSCEdgeStatsManager )
+BOOST_AUTO_TEST_CASE(test_GSCEdgeStatsManager)
 {
-    TestFilenameMaker filenameMaker2;
-    GSCEdgeStatsManager edgeStatsManager;
-    EdgeRuntimeTracker tracker(filenameMaker2.getFilename());
-    EdgeInfo edgeInfo;
-    edgeInfo.nodeIndex1 = 1;
-    edgeInfo.nodeIndex2 = 2;
-    SVFinderStats finderStats;
-    // Increment input edge count by 1 and increment candidate count by 5.
-    edgeStatsManager.updateEdgeCandidates(edgeInfo, 5, finderStats);
-    // Increment assembly candidates and spanning assembly candidates by 3.
-    edgeStatsManager.updateAssemblyCount(edgeInfo, 3, true);
-    // Increment assembly candidates and spanning assembly candidates by 3.
-    // Increment totalJunctionAssemblyOverlapSkips by 1.
-    edgeStatsManager.updateAssemblyCount(edgeInfo, 3, true, true);
-    // Increment junction count by 10
-    edgeStatsManager.updateJunctionCandidateCounts(edgeInfo, 10, false);
-    // Increment total complex candidate by 2 and increment total Spanning Candidate Filter count by 4
-    edgeStatsManager.updateMJFilter(edgeInfo, 2, 4);
-    // Update the times
-    edgeStatsManager.updateScoredEdgeTime(edgeInfo, tracker);
-    tracker.stop(edgeInfo);
+  TestFilenameMaker   filenameMaker2;
+  GSCEdgeStatsManager edgeStatsManager;
+  EdgeRuntimeTracker  tracker(filenameMaker2.getFilename());
+  EdgeInfo            edgeInfo;
+  edgeInfo.nodeIndex1 = 1;
+  edgeInfo.nodeIndex2 = 2;
+  SVFinderStats finderStats;
+  // Increment input edge count by 1 and increment candidate count by 5.
+  edgeStatsManager.updateEdgeCandidates(edgeInfo, 5, finderStats);
+  // Increment assembly candidates and spanning assembly candidates by 3.
+  edgeStatsManager.updateAssemblyCount(edgeInfo, 3, true);
+  // Increment assembly candidates and spanning assembly candidates by 3.
+  // Increment totalJunctionAssemblyOverlapSkips by 1.
+  edgeStatsManager.updateAssemblyCount(edgeInfo, 3, true, true);
+  // Increment junction count by 10
+  edgeStatsManager.updateJunctionCandidateCounts(edgeInfo, 10, false);
+  // Increment total complex candidate by 2 and increment total Spanning Candidate Filter count by 4
+  edgeStatsManager.updateMJFilter(edgeInfo, 2, 4);
+  // Update the times
+  edgeStatsManager.updateScoredEdgeTime(edgeInfo, tracker);
+  tracker.stop(edgeInfo);
 
-    // put edgeStats through serialize/deserialize cycle to test these functions as well:
-    TestFilenameMaker filenameMaker1;
-    {
-        GSCEdgeStats edgeStats(edgeStatsManager.returnStats());
-        edgeStats.save(filenameMaker1.getFilename().c_str());
-    }
+  // put edgeStats through serialize/deserialize cycle to test these functions as well:
+  TestFilenameMaker filenameMaker1;
+  {
+    GSCEdgeStats edgeStats(edgeStatsManager.returnStats());
+    edgeStats.save(filenameMaker1.getFilename().c_str());
+  }
 
-    GSCEdgeStats edgeStats;
-    // loading edge stats from the file
-    edgeStats.load(filenameMaker1.getFilename().c_str());
-    // Check all the counts according to the description
-    BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalJunctionAssemblyOverlapSkips, 1);
-    BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalInputEdgeCount, 1);
-    BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalCandidateCount, 5);
-    BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalComplexCandidate, 2);
-    BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalSpanningCandidateFilter, 4);
-    BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalJunctionCount, 10);
-    BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalComplexJunctionCount, 0);
-    BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalAssemblyCandidates, 6);
-    BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalSpanningAssemblyCandidates, 6);
+  GSCEdgeStats edgeStats;
+  // loading edge stats from the file
+  edgeStats.load(filenameMaker1.getFilename().c_str());
+  // Check all the counts according to the description
+  BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalJunctionAssemblyOverlapSkips, 1);
+  BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalInputEdgeCount, 1);
+  BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalCandidateCount, 5);
+  BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalComplexCandidate, 2);
+  BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalSpanningCandidateFilter, 4);
+  BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalJunctionCount, 10);
+  BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalComplexJunctionCount, 0);
+  BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalAssemblyCandidates, 6);
+  BOOST_REQUIRE_EQUAL(edgeStats.edgeData.remoteEdges.totalSpanningAssemblyCandidates, 6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

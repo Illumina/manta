@@ -23,30 +23,20 @@
 
 #include "manta/JunctionIdGenerator.hh"
 
-
-
-void
-JunctionIdGenerator::
-getId(
-    const EdgeInfo& edge,
-    const SVCandidate& sv,
-    const bool isRNA,
-    SVId& svId)
+void JunctionIdGenerator::getId(const EdgeInfo& edge, const SVCandidate& sv, const bool isRNA, SVId& svId)
 {
-    using namespace EXTENDED_SV_TYPE;
+  using namespace EXTENDED_SV_TYPE;
 
-    svId.svType=(getExtendedSVType(sv, isRNA));
+  svId.svType = (getExtendedSVType(sv, isRNA));
 
-    svId.localId = str(_SVIdFormatter % label(svId.svType) % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2
-                       % sv.candidateIndex %  sv.assemblyAlignIndex % sv.assemblySegmentIndex );
+  svId.localId =
+      str(_SVIdFormatter % label(svId.svType) % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 %
+          sv.candidateIndex % sv.assemblyAlignIndex % sv.assemblySegmentIndex);
 
-    if (isSVTransloc(svId.svType) || isSVInv(svId.svType))
-    {
-        svId.mateId = svId.localId + ":1";
-        svId.localId = svId.localId + ":0";
-    }
-    else
-    {
-        svId.mateId.clear();
-    }
+  if (isSVTransloc(svId.svType) || isSVInv(svId.svType)) {
+    svId.mateId  = svId.localId + ":1";
+    svId.localId = svId.localId + ":0";
+  } else {
+    svId.mateId.clear();
+  }
 }

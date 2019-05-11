@@ -26,38 +26,28 @@
 
 #include <cstdlib>
 
-
-
-bool
-isMateInsertionEvidenceCandidate(
-    const bam_record& bamRead,
-    const unsigned minMapq)
+bool isMateInsertionEvidenceCandidate(const bam_record& bamRead, const unsigned minMapq)
 {
-    if (! bamRead.is_paired()) return false;
-    if (bamRead.isNonStrictSupplement()) return false;
-    if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return false;
+  if (!bamRead.is_paired()) return false;
+  if (bamRead.isNonStrictSupplement()) return false;
+  if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return false;
 
-    if (bamRead.map_qual() < minMapq) return false;
+  if (bamRead.map_qual() < minMapq) return false;
 
-    if (bamRead.target_id() < 0) return false;
-    if (bamRead.mate_target_id() < 0) return false;
+  if (bamRead.target_id() < 0) return false;
+  if (bamRead.mate_target_id() < 0) return false;
 
-    if (bamRead.target_id() != bamRead.mate_target_id()) return true;
+  if (bamRead.target_id() != bamRead.mate_target_id()) return true;
 
-    /// TODO: better candidate definition based on fragment size distro:
-    static const int minSize(10000);
-    return (std::abs(bamRead.pos()-bamRead.mate_pos()) >= minSize);
+  /// TODO: better candidate definition based on fragment size distro:
+  static const int minSize(10000);
+  return (std::abs(bamRead.pos() - bamRead.mate_pos()) >= minSize);
 }
 
-
-
-bool
-isMateInsertionEvidenceCandidate2(
-    const bam_record& bamRead,
-    const bool isSearchForLeftOpen,
-    const bool isSearchForRightOpen)
+bool isMateInsertionEvidenceCandidate2(
+    const bam_record& bamRead, const bool isSearchForLeftOpen, const bool isSearchForRightOpen)
 {
-    if ((! isSearchForLeftOpen) && (! bamRead.is_fwd_strand())) return false;
-    if ((! isSearchForRightOpen) && bamRead.is_fwd_strand()) return false;
-    return true;
+  if ((!isSearchForLeftOpen) && (!bamRead.is_fwd_strand())) return false;
+  if ((!isSearchForRightOpen) && bamRead.is_fwd_strand()) return false;
+  return true;
 }

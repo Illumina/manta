@@ -30,15 +30,10 @@
 #include <iostream>
 #endif
 
-
-
-blt_exception::
-blt_exception(const char* s)
-    : message(s)
+blt_exception::blt_exception(const char* s) : message(s)
 {
 #ifdef KILL_EXCEPTIONS
-    log_os << "ERROR:: " << s << std::endl;
-    abort();
+  log_os << "ERROR:: " << s << std::endl;
+  abort();
 #endif
 }
-

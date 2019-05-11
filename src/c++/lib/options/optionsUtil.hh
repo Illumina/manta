@@ -21,12 +21,8 @@
 
 #include <string>
 
-
 /// Check if input path exists and is usable as input, if so, convert the input filename to an absolute path.
 ///
 /// In case of error return true and provide error message
-bool
-checkAndStandardizeRequiredInputFilePath(
-    std::string& filename,
-    const char* fileLabel,
-    std::string& errorMsg);
+bool checkAndStandardizeRequiredInputFilePath(
+    std::string& filename, const char* fileLabel, std::string& errorMsg);

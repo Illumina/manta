@@ -29,15 +29,10 @@
 #include <string>
 
 /// \brief a minimal exception class
-struct blt_exception : public std::exception
-{
-    explicit
-    blt_exception(const char* s);
+struct blt_exception : public std::exception {
+  explicit blt_exception(const char* s);
 
-    const char* what() const noexcept
-    {
-        return message.c_str();
-    }
+  const char* what() const noexcept { return message.c_str(); }
 
-    std::string message;
+  std::string message;
 };

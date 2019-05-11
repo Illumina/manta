@@ -21,35 +21,26 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/log.hh"
 #include "blt_util/prob_util.hh"
+#include "blt_util/log.hh"
 
 #include <cstdlib>
 
 #include <iomanip>
 #include <iostream>
 
-
-
-void
-check_ln_distro_invalid_value(const char* label,
-                              const double val,
-                              const unsigned n)
+void check_ln_distro_invalid_value(const char* label, const double val, const unsigned n)
 {
-    log_os << std::setprecision(14) << std::fixed;
-    log_os << "ERROR: " << label << " element [" << n << "] has invalid value: '" << val << "'\n";
-    log_os.unsetf(std::ios::fixed);
-    exit(EXIT_FAILURE);
+  log_os << std::setprecision(14) << std::fixed;
+  log_os << "ERROR: " << label << " element [" << n << "] has invalid value: '" << val << "'\n";
+  log_os.unsetf(std::ios::fixed);
+  exit(EXIT_FAILURE);
 }
 
-
-
-void
-check_ln_distro_invalid_sum(const char* label,
-                            const double sum)
+void check_ln_distro_invalid_sum(const char* label, const double sum)
 {
-    log_os << std::setprecision(14) << std::fixed;
-    log_os << "ERROR: " << label << " sum is: '" << sum << "'\n";
-    log_os.unsetf(std::ios::fixed);
-    exit(EXIT_FAILURE);
+  log_os << std::setprecision(14) << std::fixed;
+  log_os << "ERROR: " << label << " sum is: '" << sum << "'\n";
+  log_os.unsetf(std::ios::fixed);
+  exit(EXIT_FAILURE);
 }

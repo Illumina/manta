@@ -23,17 +23,16 @@
 
 #include "blt_util/thirdparty_push.h"
 
+#include "boost/serialization/map.hpp"
 #include "boost/serialization/string.hpp"
 #include "boost/serialization/vector.hpp"
-#include "boost/serialization/map.hpp"
 
 #include "blt_util/thirdparty_pop.h"
 
 #include <iosfwd>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-
 
 /// \brief Subset of information from a BAM file header
 ///
@@ -42,77 +41,58 @@
 ///
 /// Currently this stores for each chromosome, the label, size and corresponding BAM index id.
 ///
-struct bam_header_info
-{
-    bam_header_info() = default;
+struct bam_header_info {
+  bam_header_info() = default;
 
-    explicit
-    bam_header_info(const bam_hdr_t& header);
+  explicit bam_header_info(const bam_hdr_t& header);
 
-    bool
-    operator==(const bam_header_info& rhs) const
+  bool operator==(const bam_header_info& rhs) const
+  {
+    const unsigned data_size(chrom_data.size());
+    if (chrom_data.size() != rhs.chrom_data.size()) return false;
+    for (unsigned i(0); i < data_size; ++i) {
+      if (chrom_data[i] == rhs.chrom_data[i]) continue;
+      return false;
+    }
+    return true;
+  }
+
+  void clear()
+  {
+    chrom_data.clear();
+    chrom_to_index.clear();
+  }
+
+  bool empty() const { return (chrom_data.empty() && chrom_to_index.empty()); }
+
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned /* version */)
+  {
+    ar& chrom_data;
+    ar& chrom_to_index;
+  }
+
+  struct chrom_info {
+    explicit chrom_info(const char* init_label = nullptr, const unsigned init_length = 0)
+      : label((nullptr == init_label) ? "" : init_label), length(init_length)
     {
-        const unsigned data_size(chrom_data.size());
-        if (chrom_data.size() != rhs.chrom_data.size()) return false;
-        for (unsigned i(0); i<data_size; ++i)
-        {
-            if (chrom_data[i] == rhs.chrom_data[i]) continue;
-            return false;
-        }
-        return true;
     }
 
-    void
-    clear()
-    {
-        chrom_data.clear();
-        chrom_to_index.clear();
-    }
+    bool operator==(const chrom_info& rhs) const { return ((label == rhs.label) && (length == rhs.length)); }
 
-    bool
-    empty() const
-    {
-        return (chrom_data.empty() && chrom_to_index.empty());
-    }
-
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& chrom_data;
-        ar& chrom_to_index;
+      ar& label& length;
     }
 
-    struct chrom_info
-    {
-        explicit
-        chrom_info(
-            const char* init_label = nullptr,
-            const unsigned init_length = 0) :
-            label((nullptr==init_label) ? "" : init_label ),
-            length(init_length)
-        {}
+    std::string label;
+    unsigned    length;
+  };
 
-        bool
-        operator==(const chrom_info& rhs) const
-        {
-            return ((label == rhs.label) && (length == rhs.length));
-        }
-
-        template<class Archive>
-        void serialize(Archive& ar, const unsigned /* version */)
-        {
-            ar& label& length;
-        }
-
-        std::string label;
-        unsigned length;
-    };
-
-    std::vector<chrom_info> chrom_data;
-    std::map<std::string, int32_t> chrom_to_index;
+  std::vector<chrom_info>        chrom_data;
+  std::map<std::string, int32_t> chrom_to_index;
 };
 
-
 /// \brief Print header info to stream in a simple tabular format
-std::ostream&
-operator<<(std::ostream& os, const bam_header_info& bhi);
+std::ostream& operator<<(std::ostream& os, const bam_header_info& bhi);

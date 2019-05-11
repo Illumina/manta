@@ -23,13 +23,7 @@
 
 #include "boost/program_options.hpp"
 
+boost::program_options::options_description getOptionsDescription(ReadScannerOptions& opt);
 
-boost::program_options::options_description
-getOptionsDescription(ReadScannerOptions& opt);
-
-
-bool
-parseOptions(
-    const boost::program_options::variables_map& vm,
-    ReadScannerOptions& opt,
-    std::string& errorMsg);
+bool parseOptions(
+    const boost::program_options::variables_map& vm, ReadScannerOptions& opt, std::string& errorMsg);

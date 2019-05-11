@@ -21,17 +21,10 @@
 
 #include "common/Program.hh"
 
-
 /// estimate per-library information from alignment file(s)
 ///
-struct SummarizeAlignmentStats : public illumina::Program
-{
-    const char*
-    name() const override
-    {
-        return "SummarizeAlignmentStats";
-    }
+struct SummarizeAlignmentStats : public illumina::Program {
+  const char* name() const override { return "SummarizeAlignmentStats"; }
 
-    void
-    runInternal(int argc, char* argv[]) const override;
+  void runInternal(int argc, char* argv[]) const override;
 };

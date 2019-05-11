@@ -27,23 +27,15 @@
 
 #include <iosfwd>
 
+struct EdgeInfo {
+  /// minimal ascii representation:
+  void write(std::ostream& os) const;
 
-struct EdgeInfo
-{
-    /// minimal ascii representation:
-    void
-    write(std::ostream& os) const;
+  bool isSelfEdge() const { return (nodeIndex1 == nodeIndex2); }
 
-    bool
-    isSelfEdge() const
-    {
-        return (nodeIndex1 == nodeIndex2);
-    }
-
-    LocusIndexType locusIndex = 0;
-    NodeIndexType nodeIndex1 = 0;
-    NodeIndexType nodeIndex2 = 0;
+  LocusIndexType locusIndex = 0;
+  NodeIndexType  nodeIndex1 = 0;
+  NodeIndexType  nodeIndex2 = 0;
 };
 
-std::ostream&
-operator<<(std::ostream& os, const EdgeInfo& ei);
+std::ostream& operator<<(std::ostream& os, const EdgeInfo& ei);

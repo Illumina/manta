@@ -19,4 +19,3 @@
 
 #define BOOST_TEST_MODULE libmanta
 #include "boost/test/unit_test.hpp"
-

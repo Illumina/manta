@@ -17,38 +17,31 @@
 //
 //
 
-
 #include "options/SVLocusSetOptionsParser.hh"
 
-
-boost::program_options::options_description
-getOptionsDescription(SVLocusSetOptions& opt)
+boost::program_options::options_description getOptionsDescription(SVLocusSetOptions& opt)
 {
-    namespace po = boost::program_options;
-    po::options_description desc("sv-locus-graph");
-    desc.add_options()
-    ("min-edge-observations", po::value(&opt.minMergeEdgeObservations)->default_value(opt.minMergeEdgeObservations),
-     "Minimum number of supporting observations required to retain a graph edge")
-    ;
+  namespace po = boost::program_options;
+  po::options_description desc("sv-locus-graph");
+  // clang-format off
+  desc.add_options()
+  ("min-edge-observations", po::value(&opt.minMergeEdgeObservations)->default_value(opt.minMergeEdgeObservations),
+   "Minimum number of supporting observations required to retain a graph edge")
+  ;
+  // clang-format on
 
-    return desc;
+  return desc;
 }
 
-
-
-bool
-parseOptions(
-    const boost::program_options::variables_map& /*vm*/,
-    SVLocusSetOptions& /*opt*/,
-    std::string& errorMsg)
+bool parseOptions(
+    const boost::program_options::variables_map& /*vm*/, SVLocusSetOptions& /*opt*/, std::string& errorMsg)
 {
-    errorMsg.clear();
+  errorMsg.clear();
 #if 0
     if ((opt.breakendEdgeQuantileProb <= 0) || (opt.breakendEdgeQuantileProb >= 1.0))
     {
         errorMsg="edge-prob argument is restricted to (0,1)";
     }
 #endif
-    return (! errorMsg.empty());
-
+  return (!errorMsg.empty());
 }

@@ -30,12 +30,11 @@
 
 #pragma once
 
-
 #include "blt_util/thirdparty_push.h"
 
 #include "boost/cerrno.hpp"
-#include "boost/lexical_cast.hpp"
 #include "boost/exception/all.hpp"
+#include "boost/lexical_cast.hpp"
 #include "boost/throw_exception.hpp"
 
 #include "blt_util/thirdparty_pop.h"
@@ -44,30 +43,29 @@
 #include <stdexcept>
 #include <string>
 
-namespace illumina
-{
-namespace common
-{
+namespace illumina {
+namespace common {
 
 /// \brief Virtual base class to all the exception classes
 ///
 /// Use BOOST_THROW_EXCEPTION to get the context info (file, function, line)
 /// at the throw site.
 ///
-class ExceptionData : public boost::exception
-{
+class ExceptionData : public boost::exception {
 public:
-    ExceptionData(const std::string& message, const int errorNumber=0)
-        : boost::exception(), _message(message), _errorNumber(errorNumber)
-    {}
+  ExceptionData(const std::string& message, const int errorNumber = 0)
+    : boost::exception(), _message(message), _errorNumber(errorNumber)
+  {
+  }
 
-    ExceptionData(const ExceptionData&) = default;
-    ExceptionData& operator=(const ExceptionData&) = delete;
+  ExceptionData(const ExceptionData&) = default;
+  ExceptionData& operator=(const ExceptionData&) = delete;
 
-    std::string getContext() const;
+  std::string getContext() const;
+
 private:
-    const std::string _message;
-    const int _errorNumber;
+  const std::string _message;
+  const int         _errorNumber;
 };
 
 /// A general purpose exception type
@@ -77,13 +75,13 @@ private:
 ///
 ///     BOOST_THROW_EXCEPTION(GeneralException("Error message"));
 ///
-class GeneralException : public std::logic_error, public ExceptionData
-{
+class GeneralException : public std::logic_error, public ExceptionData {
 public:
-    explicit
-    GeneralException(const std::string& message, const int errorNumber = 0) : std::logic_error(message), ExceptionData(message, errorNumber) {}
+  explicit GeneralException(const std::string& message, const int errorNumber = 0)
+    : std::logic_error(message), ExceptionData(message, errorNumber)
+  {
+  }
 };
 
-
-}
-}
+}  // namespace common
+}  // namespace illumina

@@ -23,47 +23,32 @@
 
 #pragma once
 
-#include "svgraph/EdgeInfo.hh"
-#include "manta/SVCandidateUtil.hh"
 #include "boost/format.hpp"
+#include "manta/SVCandidateUtil.hh"
+#include "svgraph/EdgeInfo.hh"
 
 #include <string>
-
 
 /// A pair of ids for both ends of a single SV junction
 ///
 /// the mateId will only be defined for tranlocations, and empty otherwise
 ///
-struct SVId
-{
-    const char*
-    getLabel() const
-    {
-        return EXTENDED_SV_TYPE::label(svType);
-    }
+struct SVId {
+  const char* getLabel() const { return EXTENDED_SV_TYPE::label(svType); }
 
-    EXTENDED_SV_TYPE::index_t svType = EXTENDED_SV_TYPE::UNKNOWN;
-    std::string localId;
-    std::string mateId;
+  EXTENDED_SV_TYPE::index_t svType = EXTENDED_SV_TYPE::UNKNOWN;
+  std::string               localId;
+  std::string               mateId;
 };
-
 
 /// create IDs for each variant that are guaranteed to be unique for a single
 /// manta run
 ///
-struct JunctionIdGenerator
-{
-    JunctionIdGenerator() :
-        _SVIdFormatter("Manta%s:%i:%i:%i:%i:%i:%i")
-    {}
+struct JunctionIdGenerator {
+  JunctionIdGenerator() : _SVIdFormatter("Manta%s:%i:%i:%i:%i:%i:%i") {}
 
-    void
-    getId(
-        const EdgeInfo& edge,
-        const SVCandidate& sv,
-        const bool isRNA,
-        SVId& svId);
+  void getId(const EdgeInfo& edge, const SVCandidate& sv, const bool isRNA, SVId& svId);
 
 private:
-    boost::format _SVIdFormatter;
+  boost::format _SVIdFormatter;
 };

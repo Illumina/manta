@@ -19,9 +19,7 @@
 
 #include "applications/EstimateSVLoci/EstimateSVLoci.hh"
 
-
-int
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    return EstimateSVLoci().run(argc,argv);
+  return EstimateSVLoci().run(argc, argv);
 }

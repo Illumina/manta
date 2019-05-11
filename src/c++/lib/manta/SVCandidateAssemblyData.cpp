@@ -24,14 +24,10 @@
 
 #include <iostream>
 
-
-
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const LargeInsertionInfo& lii)
+std::ostream& operator<<(std::ostream& os, const LargeInsertionInfo& lii)
 {
-    os << "LargeInsertionInfo: isLeft/Right: " << lii.isLeftCandidate << "/" << lii.isRightCandidate
-       << " contigOffset: " << lii.contigOffset << " refOffset: " << lii.refOffset << " score: " << lii.score << "\n";
-    return os;
+  os << "LargeInsertionInfo: isLeft/Right: " << lii.isLeftCandidate << "/" << lii.isRightCandidate
+     << " contigOffset: " << lii.contigOffset << " refOffset: " << lii.refOffset << " score: " << lii.score
+     << "\n";
+  return os;
 }

@@ -19,29 +19,22 @@
 
 #pragma once
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 
 #include "blt_util/log.hh"
 #include "common/OutStream.hh"
 #include "common/Program.hh"
 
+#include "TestAssemblerOptions.hh"
 #include "assembly/IterativeAssembler.hh"
 #include "assembly/SmallAssembler.hh"
-#include "TestAssemblerOptions.hh"
 #include "extractAssemblyReads.hh"
-
 
 /// test front-end to run the manta assembler from command-line
 ///
-struct TestAssembler : public illumina::Program
-{
-    const char*
-    name() const
-    {
-        return "TestAssembler";
-    }
+struct TestAssembler : public illumina::Program {
+  const char* name() const { return "TestAssembler"; }
 
-    void
-    runInternal(int argc, char* argv[]) const;
+  void runInternal(int argc, char* argv[]) const;
 };

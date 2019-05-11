@@ -25,23 +25,16 @@
 
 #include <iostream>
 
-
-
-void
-EdgeInfo::
-write(std::ostream& os) const
+void EdgeInfo::write(std::ostream& os) const
 {
-    static const char sep(':');
-    os << locusIndex << sep << nodeIndex1 << sep << nodeIndex2;
+  static const char sep(':');
+  os << locusIndex << sep << nodeIndex1 << sep << nodeIndex2;
 }
 
-
-
-std::ostream&
-operator<<(std::ostream& os, const EdgeInfo& ei)
+std::ostream& operator<<(std::ostream& os, const EdgeInfo& ei)
 {
-    os << "edgeinfo locus:node1:node2: ";
-    ei.write(os);
-    os << '\n';
-    return os;
+  os << "edgeinfo locus:node1:node2: ";
+  ei.write(os);
+  os << '\n';
+  return os;
 }

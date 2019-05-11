@@ -27,58 +27,45 @@
 /// insert candidacy. Note that we assume base filtration
 /// (PCR dups, etc.) has already occurred.
 ///
-bool
-isMateInsertionEvidenceCandidate(
-    const bam_record& bamRead,
-    const unsigned minMapq);
+bool isMateInsertionEvidenceCandidate(const bam_record& bamRead, const unsigned minMapq);
 
-
-bool
-isMateInsertionEvidenceCandidate2(
-    const bam_record& bamRead,
-    const bool isSearchForLeftOpen,
-    const bool isSearchForRightOpen);
-
+bool isMateInsertionEvidenceCandidate2(
+    const bam_record& bamRead, const bool isSearchForLeftOpen, const bool isSearchForRightOpen);
 
 /// information recorded for reads where we need to grab the mate from a remote locus
 ///
 /// typically these are chimeras with a MAPQ0 mate used to assemble a large insertion
 ///
-struct RemoteReadInfo
-{
-    explicit
-    RemoteReadInfo(
-        const bam_record& bamRead)
-        : qname(bamRead.qname()),
-          readNo(bamRead.read_no()==1 ? 2 : 1),
-          tid(bamRead.mate_target_id()),
-          pos(bamRead.mate_pos() - 1),
-          localPos(bamRead.pos() - 1),
-          readSize(bamRead.read_size()),
-          isLocalFwd(bamRead.is_fwd_strand()),
-          isFound(false),
-          isUsed(false)
-    {}
+struct RemoteReadInfo {
+  explicit RemoteReadInfo(const bam_record& bamRead)
+    : qname(bamRead.qname()),
+      readNo(bamRead.read_no() == 1 ? 2 : 1),
+      tid(bamRead.mate_target_id()),
+      pos(bamRead.mate_pos() - 1),
+      localPos(bamRead.pos() - 1),
+      readSize(bamRead.read_size()),
+      isLocalFwd(bamRead.is_fwd_strand()),
+      isFound(false),
+      isUsed(false)
+  {
+  }
 
-    bool
-    operator<(
-        const RemoteReadInfo& rhs) const
-    {
-        if (tid < rhs.tid) return true;
-        if (tid == rhs.tid)
-        {
-            return (pos < rhs.pos);
-        }
-        return false;
+  bool operator<(const RemoteReadInfo& rhs) const
+  {
+    if (tid < rhs.tid) return true;
+    if (tid == rhs.tid) {
+      return (pos < rhs.pos);
     }
+    return false;
+  }
 
-    std::string qname;
-    int readNo; // this is read number of the target
-    int tid;
-    int pos;
-    int localPos;
-    int readSize;
-    bool isLocalFwd;
-    bool isFound;
-    bool isUsed;
+  std::string qname;
+  int         readNo;  // this is read number of the target
+  int         tid;
+  int         pos;
+  int         localPos;
+  int         readSize;
+  bool        isLocalFwd;
+  bool        isFound;
+  bool        isUsed;
 };

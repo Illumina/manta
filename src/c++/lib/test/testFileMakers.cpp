@@ -33,94 +33,69 @@
 #include <cassert>
 #include <fstream>
 
-
-
-TestFileMakerBase::
-~TestFileMakerBase()
+TestFileMakerBase::~TestFileMakerBase()
 {
-    using namespace boost::filesystem;
-    if (exists(_tempFilename))
-    {
-        remove(_tempFilename);
-    }
+  using namespace boost::filesystem;
+  if (exists(_tempFilename)) {
+    remove(_tempFilename);
+  }
 }
 
-
-TestFilenameMaker::
-TestFilenameMaker()
+TestFilenameMaker::TestFilenameMaker()
 {
-    _tempFilename = getNewTempFile();
+  _tempFilename = getNewTempFile();
 }
 
-
-
-BamFilenameMaker::
-BamFilenameMaker()
+BamFilenameMaker::BamFilenameMaker()
 {
-    _tempFilename = getNewTempFile() + ".bam";
+  _tempFilename = getNewTempFile() + ".bam";
 }
 
-
-
-BamFilenameMaker::
-~BamFilenameMaker()
+BamFilenameMaker::~BamFilenameMaker()
 {
-    using namespace boost::filesystem;
-    const std::string& indexFilename(_tempFilename+".bai");
-    if (exists(indexFilename))
-    {
-        remove(indexFilename);
-    }
+  using namespace boost::filesystem;
+  const std::string& indexFilename(_tempFilename + ".bai");
+  if (exists(indexFilename)) {
+    remove(indexFilename);
+  }
 }
 
-
-
-TestAlignHeaderFileMaker::
-TestAlignHeaderFileMaker(const bam_header_info& info)
+TestAlignHeaderFileMaker::TestAlignHeaderFileMaker(const bam_header_info& info)
 {
-    _tempFilename = getNewTempFile();
-    std::ofstream os(_tempFilename);
-    assert(os);
-    os << info;
+  _tempFilename = getNewTempFile();
+  std::ofstream os(_tempFilename);
+  assert(os);
+  os << info;
 }
 
-
-
-TestStatsFileMaker::
-TestStatsFileMaker()
+TestStatsFileMaker::TestStatsFileMaker()
 {
-    _tempFilename = getNewTempFile();
+  _tempFilename = getNewTempFile();
 
-    ReadGroupLabel rgKey("tempStatsGroup", "");
-    ReadGroupStats rgStats;
-    for (unsigned i(0); i<250; ++i)
-    {
-        rgStats.fragStats.addObservation(50);
-        rgStats.fragStats.addObservation(75);
-        rgStats.fragStats.addObservation(100);
-        rgStats.fragStats.addObservation(125);
-    }
+  ReadGroupLabel rgKey("tempStatsGroup", "");
+  ReadGroupStats rgStats;
+  for (unsigned i(0); i < 250; ++i) {
+    rgStats.fragStats.addObservation(50);
+    rgStats.fragStats.addObservation(75);
+    rgStats.fragStats.addObservation(100);
+    rgStats.fragStats.addObservation(125);
+  }
 
-    ReadGroupStatsSet rstats;
-    rstats.setStats(rgKey, rgStats);
+  ReadGroupStatsSet rstats;
+  rstats.setStats(rgKey, rgStats);
 
-    rstats.save(_tempFilename.c_str());
+  rstats.save(_tempFilename.c_str());
 }
 
-
-
-SVLocusSetStatsFileMaker::
-SVLocusSetStatsFileMaker(
-    const SVLocusSet& svLocusSet)
+SVLocusSetStatsFileMaker::SVLocusSetStatsFileMaker(const SVLocusSet& svLocusSet)
 {
-    _tempFilename = getNewTempFile();
-    std::ofstream os(_tempFilename);
-    assert(os);
-    svLocusSet.dumpStats(os);
+  _tempFilename = getNewTempFile();
+  std::ofstream os(_tempFilename);
+  assert(os);
+  svLocusSet.dumpStats(os);
 }
 
-TestChromosomeDepthFileMaker::
-TestChromosomeDepthFileMaker()
+TestChromosomeDepthFileMaker::TestChromosomeDepthFileMaker()
 {
-    _tempFilename = getNewTempFile() + ".txt";
+  _tempFilename = getNewTempFile() + ".txt";
 }

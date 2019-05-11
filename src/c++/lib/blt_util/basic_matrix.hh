@@ -21,84 +21,41 @@
 
 #include <vector>
 
-
 /// very simple matrix implementation, row major
 template <typename T>
-struct basic_matrix
-{
-    typedef typename std::vector<T> data_t;
-    typedef typename data_t::iterator iterator;
-    typedef typename data_t::const_iterator const_iterator;
+struct basic_matrix {
+  typedef typename std::vector<T>         data_t;
+  typedef typename data_t::iterator       iterator;
+  typedef typename data_t::const_iterator const_iterator;
 
-    basic_matrix(
-        const unsigned rowCount = 0,
-        const unsigned colCount = 0) :
-        _colCount(colCount),
-        _data(rowCount* colCount)
-    {}
+  basic_matrix(const unsigned rowCount = 0, const unsigned colCount = 0)
+    : _colCount(colCount), _data(rowCount * colCount)
+  {
+  }
 
-    void
-    resize(
-        const unsigned rowCount,
-        const unsigned colCount)
-    {
-        _colCount=colCount;
-        _data.resize(rowCount*colCount);
-    }
+  void resize(const unsigned rowCount, const unsigned colCount)
+  {
+    _colCount = colCount;
+    _data.resize(rowCount * colCount);
+  }
 
-    T&
-    val(const unsigned row,
-        const unsigned col)
-    {
-        return _data[(row*_colCount+col)];
-    }
+  T& val(const unsigned row, const unsigned col) { return _data[(row * _colCount + col)]; }
 
-    const T&
-    val(const unsigned row,
-        const unsigned col) const
-    {
-        return _data[(row*_colCount+col)];
-    }
+  const T& val(const unsigned row, const unsigned col) const { return _data[(row * _colCount + col)]; }
 
-    bool
-    empty()
-    {
-        return _data.empty();
-    }
+  bool empty() { return _data.empty(); }
 
-    size_t
-    size()
-    {
-        return _data.size();
-    }
+  size_t size() { return _data.size(); }
 
-    iterator
-    begin()
-    {
-        return _data.begin();
-    }
+  iterator begin() { return _data.begin(); }
 
-    const_iterator
-    begin() const
-    {
-        return _data.begin();
-    }
+  const_iterator begin() const { return _data.begin(); }
 
-    iterator
-    end()
-    {
-        return _data.end();
-    }
+  iterator end() { return _data.end(); }
 
-    const_iterator
-    end() const
-    {
-        return _data.end();
-    }
+  const_iterator end() const { return _data.end(); }
 
 private:
-    unsigned _colCount;
-    std::vector<T> _data;
+  unsigned       _colCount;
+  std::vector<T> _data;
 };
-
-

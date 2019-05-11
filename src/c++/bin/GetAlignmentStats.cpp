@@ -19,9 +19,7 @@
 
 #include "applications/GetAlignmentStats/GetAlignmentStats.hh"
 
-
-int
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    return GetAlignmentStats().run(argc,argv);
+  return GetAlignmentStats().run(argc, argv);
 }

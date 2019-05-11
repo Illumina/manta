@@ -21,94 +21,87 @@
 
 #include "MedianDepthTracker.hh"
 
+BOOST_AUTO_TEST_SUITE(test_MedianDepthTracker)
 
-BOOST_AUTO_TEST_SUITE( test_MedianDepthTracker )
-
-
-BOOST_AUTO_TEST_CASE( test_MDT0 )
+BOOST_AUTO_TEST_CASE(test_MDT0)
 {
-    static const double eps(0.00001);
+  static const double eps(0.00001);
 
-    MedianDepthTracker t;
+  MedianDepthTracker t;
 
-    BOOST_REQUIRE_CLOSE(t.getMedian(),0.0,eps);
+  BOOST_REQUIRE_CLOSE(t.getMedian(), 0.0, eps);
 }
 
-BOOST_AUTO_TEST_CASE( test_MDT1 )
+BOOST_AUTO_TEST_CASE(test_MDT1)
 {
-    static const double eps(0.00001);
+  static const double eps(0.00001);
 
-    MedianDepthTracker t;
+  MedianDepthTracker t;
 
-    t.addObs(0);
-    t.addObs(2);
-    t.addObs(1);
-    t.addObs(3);
+  t.addObs(0);
+  t.addObs(2);
+  t.addObs(1);
+  t.addObs(3);
 
-    BOOST_REQUIRE_CLOSE(t.getMedian(),2.,eps);
+  BOOST_REQUIRE_CLOSE(t.getMedian(), 2., eps);
 
-    t.addObs(4);
+  t.addObs(4);
 
-    BOOST_REQUIRE_CLOSE(t.getMedian(),2.5,eps);
+  BOOST_REQUIRE_CLOSE(t.getMedian(), 2.5, eps);
 }
 
-
-
-BOOST_AUTO_TEST_CASE( test_MDT2 )
+BOOST_AUTO_TEST_CASE(test_MDT2)
 {
-    static const double eps(0.00001);
+  static const double eps(0.00001);
 
-    MedianDepthTracker t;
+  MedianDepthTracker t;
 
-    t.addObs(0);
-    t.addObs(2);
-    t.addObs(1);
-    t.addObs(3);
+  t.addObs(0);
+  t.addObs(2);
+  t.addObs(1);
+  t.addObs(3);
 
-    BOOST_REQUIRE_CLOSE(t.getMedian(),2.,eps);
+  BOOST_REQUIRE_CLOSE(t.getMedian(), 2., eps);
 
-    t.addObs(2);
-    t.addObs(2);
-    t.addObs(2);
-    t.addObs(2);
-    t.addObs(2);
+  t.addObs(2);
+  t.addObs(2);
+  t.addObs(2);
+  t.addObs(2);
+  t.addObs(2);
 
-    BOOST_REQUIRE_CLOSE(t.getMedian(),2.,eps);
+  BOOST_REQUIRE_CLOSE(t.getMedian(), 2., eps);
 
-    t.addObs(1);
-    t.addObs(1);
-    t.addObs(1);
-    t.addObs(1);
-    t.addObs(1);
-    t.addObs(1);
-    t.addObs(1);
-    t.addObs(1);
-    t.addObs(1);
+  t.addObs(1);
+  t.addObs(1);
+  t.addObs(1);
+  t.addObs(1);
+  t.addObs(1);
+  t.addObs(1);
+  t.addObs(1);
+  t.addObs(1);
+  t.addObs(1);
 
-    BOOST_REQUIRE_CLOSE(t.getMedian(),1.,eps);
+  BOOST_REQUIRE_CLOSE(t.getMedian(), 1., eps);
 }
 
-
-BOOST_AUTO_TEST_CASE( test_MDT3 )
+BOOST_AUTO_TEST_CASE(test_MDT3)
 {
-    static const double eps(0.00001);
+  static const double eps(0.00001);
 
-    MedianDepthTracker t;
+  MedianDepthTracker t;
 
-    t.addObs(1);
-    t.addObs(4);
-    t.addObs(1);
-    t.addObs(4);
-    t.addObs(1);
-    t.addObs(4);
-    t.addObs(1);
-    t.addObs(4);
-    t.addObs(1);
-    t.addObs(4);
+  t.addObs(1);
+  t.addObs(4);
+  t.addObs(1);
+  t.addObs(4);
+  t.addObs(1);
+  t.addObs(4);
+  t.addObs(1);
+  t.addObs(4);
+  t.addObs(1);
+  t.addObs(4);
 
-    BOOST_REQUIRE_CLOSE(t.getMedian(),2.5,eps);
+  BOOST_REQUIRE_CLOSE(t.getMedian(), 2.5, eps);
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
-

@@ -21,17 +21,10 @@
 
 #include "common/Program.hh"
 
-
 /// estimate per-library information from alignment file(s)
 ///
-struct SummarizeSVLoci : public illumina::Program
-{
-    const char*
-    name() const override
-    {
-        return "SummarizeSVLoci";
-    }
+struct SummarizeSVLoci : public illumina::Program {
+  const char* name() const override { return "SummarizeSVLoci"; }
 
-    void
-    runInternal(int argc, char* argv[]) const override;
+  void runInternal(int argc, char* argv[]) const override;
 };

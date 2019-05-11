@@ -26,32 +26,23 @@
 
 #include <iostream>
 
-
-
-double
-compat_round(const double x)
+double compat_round(const double x)
 {
-    if (x>=0.)
-    {
-        return std::floor(x+0.5);
-    }
-    else
-    {
-        return std::ceil(x-0.5);
-    }
+  if (x >= 0.) {
+    return std::floor(x + 0.5);
+  } else {
+    return std::ceil(x - 0.5);
+  }
 }
 
-
-
-const char*
-compat_basename(const char* str)
+const char* compat_basename(const char* str)
 {
 #ifdef _MSC_VER
-    static const char pathsep('\\');
+  static const char pathsep('\\');
 #else
-    static const char pathsep('/');
+  static const char pathsep('/');
 #endif
-    const char* res(strrchr(str,pathsep));
-    if (nullptr==res) return str;
-    return res+1;
+  const char* res(strrchr(str, pathsep));
+  if (nullptr == res) return str;
+  return res + 1;
 }

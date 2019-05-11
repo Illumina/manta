@@ -23,24 +23,20 @@
 
 #include <random>
 
+BOOST_AUTO_TEST_SUITE(test_SampleVector)
 
-BOOST_AUTO_TEST_SUITE( test_SampleVector )
-
-
-BOOST_AUTO_TEST_CASE( test_SampleVector1 )
+BOOST_AUTO_TEST_CASE(test_SampleVector1)
 {
-    std::mt19937 rngEngine(0);
-    SampleVector<int,std::mt19937> sv(2,rngEngine);
+  std::mt19937                    rngEngine(0);
+  SampleVector<int, std::mt19937> sv(2, rngEngine);
 
-    for (unsigned i(0); i<100; ++i)
-    {
-        sv.push(i);
-    }
+  for (unsigned i(0); i < 100; ++i) {
+    sv.push(i);
+  }
 
-    // can't make this portable:
-    // BOOST_CHECK_EQUAL(sv.data()[0],34);
-    // BOOST_CHECK_EQUAL(sv.data()[1],70);
+  // can't make this portable:
+  // BOOST_CHECK_EQUAL(sv.data()[0],34);
+  // BOOST_CHECK_EQUAL(sv.data()[1],70);
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()

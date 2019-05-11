@@ -36,53 +36,37 @@
 #include <fstream>
 #include <iostream>
 
-
-
-static
-void
-runDSL(const DSLOptions& opt)
+static void runDSL(const DSLOptions& opt)
 {
-    SVLocusSet set(opt.graphFilename.c_str());
+  SVLocusSet set(opt.graphFilename.c_str());
 
-    const SVLocusSet& cset(set);
+  const SVLocusSet& cset(set);
 
-    std::ostream& os(std::cout);
+  std::ostream& os(std::cout);
 
-    // add this handy map of chromosome id to chromosome label at the start of all output types:
-    os << cset.getBamHeader() << "\n";
+  // add this handy map of chromosome id to chromosome label at the start of all output types:
+  os << cset.getBamHeader() << "\n";
 
-    if (! opt.region.empty())
-    {
-        set.dumpRegion(os, convertSamtoolsRegionToGenomeInterval(cset.getBamHeader(), opt.region));
+  if (!opt.region.empty()) {
+    set.dumpRegion(os, convertSamtoolsRegionToGenomeInterval(cset.getBamHeader(), opt.region));
+  } else if (opt.isLocusIndex) {
+    const SVLocus& locus(cset.getLocus(opt.locusIndex));
+    if (opt.locusFilename.empty()) {
+      os << locus;
+    } else {
+      std::ofstream                   ofs(opt.locusFilename.c_str(), std::ios::binary);
+      boost::archive::binary_oarchive oa(ofs);
+      oa << locus;
     }
-    else if (opt.isLocusIndex)
-    {
-        const SVLocus& locus(cset.getLocus(opt.locusIndex));
-        if (opt.locusFilename.empty())
-        {
-            os << locus;
-        }
-        else
-        {
-            std::ofstream ofs(opt.locusFilename.c_str(), std::ios::binary);
-            boost::archive::binary_oarchive oa(ofs);
-            oa << locus;
-        }
-    }
-    else
-    {
-        cset.dump(os);
-    }
+  } else {
+    cset.dump(os);
+  }
 }
 
-
-
-void
-DumpSVLoci::
-runInternal(int argc, char* argv[]) const
+void DumpSVLoci::runInternal(int argc, char* argv[]) const
 {
-    DSLOptions opt;
+  DSLOptions opt;
 
-    parseDSLOptions(*this,argc,argv,opt);
-    runDSL(opt);
+  parseDSLOptions(*this, argc, argv, opt);
+  runDSL(opt);
 }

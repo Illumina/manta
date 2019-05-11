@@ -21,31 +21,21 @@
 /// \author Chris Saunders
 ///
 
-#include "io_util.hh"
 #include "time_util.hh"
+#include "io_util.hh"
 
 #include <iomanip>
 #include <iostream>
 
-
-
-void
-CpuTimes::
-report(
-    const double factor,
-    const char* tlabel,
-    std::ostream& os) const
+void CpuTimes::report(const double factor, const char* tlabel, std::ostream& os) const
 {
-    StreamScoper scoper(os);
-    os << std::fixed << std::setprecision(4);
-    const double fwall(wall*factor);
-    const double fuser(user*factor);
-    const double fsystem(system*factor);
-    const double total(fuser+fsystem);
-    const double perc(100*total/fwall);
-    os << fwall << tlabel << " wall, "
-       << fuser << tlabel << " user + "
-       << fsystem << tlabel << " system = "
-       << total << tlabel
-       << " CPU (" << std::setprecision(2) << perc << "%)";
+  StreamScoper scoper(os);
+  os << std::fixed << std::setprecision(4);
+  const double fwall(wall * factor);
+  const double fuser(user * factor);
+  const double fsystem(system * factor);
+  const double total(fuser + fsystem);
+  const double perc(100 * total / fwall);
+  os << fwall << tlabel << " wall, " << fuser << tlabel << " user + " << fsystem << tlabel
+     << " system = " << total << tlabel << " CPU (" << std::setprecision(2) << perc << "%)";
 }

@@ -21,16 +21,8 @@
 
 #include "common/Program.hh"
 
+struct MergeSVLoci : public illumina::Program {
+  const char* name() const { return "MergeSVLoci"; }
 
-struct MergeSVLoci : public illumina::Program
-{
-    const char*
-    name() const
-    {
-        return "MergeSVLoci";
-    }
-
-    void
-    runInternal(int argc, char* argv[]) const;
+  void runInternal(int argc, char* argv[]) const;
 };
-

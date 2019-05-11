@@ -21,40 +21,31 @@
 
 #include "blt_util/blt_types.hh"
 
-
 /// \brief Interface for objects designed to perform work in a single pass over a position range
 ///
 /// Work progress is communicated via process_pos(). This object is designed to
 /// link its child with the stage_manager.
 ///
-struct pos_processor_base
-{
-    pos_processor_base()
-        : _is_skip_process_pos(false) {}
+struct pos_processor_base {
+  pos_processor_base() : _is_skip_process_pos(false) {}
 
-    virtual
-    ~pos_processor_base() {}
+  virtual ~pos_processor_base() {}
 
-    void
-    check_process_pos(const int stage_no,
-                      const pos_t pos)
-    {
-        if (_is_skip_process_pos) return;
-        process_pos(stage_no,pos);
-    }
+  void check_process_pos(const int stage_no, const pos_t pos)
+  {
+    if (_is_skip_process_pos) return;
+    process_pos(stage_no, pos);
+  }
 
-    /// Execute position dependent logic associated with a particular stage
-    /// in a positional processing pipeline.
-    ///
-    /// Stages are each offset by a fixed value from the HEAD position in the
-    /// positional pipeline. Conventions on stage numbering are assumed to be
-    /// enforced the a separate stage_manager object.
-    ///
-    virtual
-    void
-    process_pos(const int stage_no,
-                const pos_t pos) = 0;
+  /// Execute position dependent logic associated with a particular stage
+  /// in a positional processing pipeline.
+  ///
+  /// Stages are each offset by a fixed value from the HEAD position in the
+  /// positional pipeline. Conventions on stage numbering are assumed to be
+  /// enforced the a separate stage_manager object.
+  ///
+  virtual void process_pos(const int stage_no, const pos_t pos) = 0;
 
 protected:
-    mutable bool _is_skip_process_pos;
+  mutable bool _is_skip_process_pos;
 };

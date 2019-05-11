@@ -21,57 +21,36 @@
 
 #include <iostream>
 
-
-
-void
-GenomeIntervalTracker::
-dump(
-    std::ostream& os) const
+void GenomeIntervalTracker::dump(std::ostream& os) const
 {
-    const unsigned contigIndexSize(_regions.size());
+  const unsigned contigIndexSize(_regions.size());
 
-    for (unsigned contigIndex(0); contigIndex<contigIndexSize; ++contigIndex)
-    {
-        os << "--- Regions tracked for tid " << contigIndex << "\n";
-        _regions[contigIndex].dump(os);
-    }
+  for (unsigned contigIndex(0); contigIndex < contigIndexSize; ++contigIndex) {
+    os << "--- Regions tracked for tid " << contigIndex << "\n";
+    _regions[contigIndex].dump(os);
+  }
 }
 
-
-
-void
-GenomeIntervalTracker::
-merge(const GenomeIntervalTracker& rhs)
+void GenomeIntervalTracker::merge(const GenomeIntervalTracker& rhs)
 {
-    const unsigned rhsContigIndexSize(rhs._regions.size());
-    if (rhsContigIndexSize > _regions.size()) _regions.resize(rhsContigIndexSize);
+  const unsigned rhsContigIndexSize(rhs._regions.size());
+  if (rhsContigIndexSize > _regions.size()) _regions.resize(rhsContigIndexSize);
 
-    for (unsigned contigIndex(0); contigIndex<rhsContigIndexSize; ++contigIndex)
-    {
-        _regions[contigIndex].merge(rhs._regions[contigIndex]);
-    }
+  for (unsigned contigIndex(0); contigIndex < rhsContigIndexSize; ++contigIndex) {
+    _regions[contigIndex].merge(rhs._regions[contigIndex]);
+  }
 }
 
-
-
-bool
-GenomeIntervalTracker::
-isIntersectRegion(
-    const GenomeInterval& gi) const
+bool GenomeIntervalTracker::isIntersectRegion(const GenomeInterval& gi) const
 {
-    assert(gi.tid >= 0);
-    if (static_cast<unsigned>(gi.tid) >= _regions.size()) return false;
-    return _regions[gi.tid].isIntersectRegion(gi.range);
+  assert(gi.tid >= 0);
+  if (static_cast<unsigned>(gi.tid) >= _regions.size()) return false;
+  return _regions[gi.tid].isIntersectRegion(gi.range);
 }
 
-
-
-bool
-GenomeIntervalTracker::
-isSubsetOfRegion(
-    const GenomeInterval& gi) const
+bool GenomeIntervalTracker::isSubsetOfRegion(const GenomeInterval& gi) const
 {
-    assert(gi.tid >= 0);
-    if (static_cast<unsigned>(gi.tid) >= _regions.size()) return false;
-    return _regions[gi.tid].isSubsetOfRegion(gi.range);
+  assert(gi.tid >= 0);
+  if (static_cast<unsigned>(gi.tid) >= _regions.size()) return false;
+  return _regions[gi.tid].isSubsetOfRegion(gi.range);
 }

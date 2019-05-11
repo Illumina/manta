@@ -25,14 +25,8 @@
 
 #include <iostream>
 
-
-
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const ReadKey& rk)
+std::ostream& operator<<(std::ostream& os, const ReadKey& rk)
 {
-    os << rk.qname() << '/' << rk.readNo();
-    return os;
+  os << rk.qname() << '/' << rk.readNo();
+  return os;
 }
-

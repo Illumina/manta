@@ -33,101 +33,74 @@
 #include <iosfwd>
 #include <string>
 
-
 /// This object processes incoming edge data to accumulate stats in the edge stats module (GSCEdgeStats)
 ///
-struct GSCEdgeStatsManager : private boost::noncopyable
-{
-    explicit
-    GSCEdgeStatsManager()
-    {
-        lifeTime.resume();
-    }
+struct GSCEdgeStatsManager : private boost::noncopyable {
+  explicit GSCEdgeStatsManager() { lifeTime.resume(); }
 
-    GSCEdgeStats
-    returnStats()
-    {
-        edgeStats.edgeData.lifeTime = lifeTime.getTimes();
-        return edgeStats;
-    }
+  GSCEdgeStats returnStats()
+  {
+    edgeStats.edgeData.lifeTime = lifeTime.getTimes();
+    return edgeStats;
+  }
 
-    void
-    updateEdgeCandidates(
-        const EdgeInfo& edge,
-        const unsigned candCount,
-        const SVFinderStats& finderStats)
-    {
-        GSCEdgeGroupStats& gStats(getStatsGroup(edge));
-        gStats.totalInputEdgeCount++;
-        gStats.totalCandidateCount+=candCount;
-        gStats.candidatesPerEdge.increment(candCount);
-        gStats.finderStats.merge(finderStats);
-    }
+  void updateEdgeCandidates(const EdgeInfo& edge, const unsigned candCount, const SVFinderStats& finderStats)
+  {
+    GSCEdgeGroupStats& gStats(getStatsGroup(edge));
+    gStats.totalInputEdgeCount++;
+    gStats.totalCandidateCount += candCount;
+    gStats.candidatesPerEdge.increment(candCount);
+    gStats.finderStats.merge(finderStats);
+  }
 
-    void
-    updateMJFilter(
-        const EdgeInfo& edge,
-        const unsigned mjComplexCount,
-        const unsigned mjSpanningFilterCount)
-    {
-        GSCEdgeGroupStats& gStats(getStatsGroup(edge));
-        gStats.totalComplexCandidate += mjComplexCount;
-        gStats.totalSpanningCandidateFilter += mjSpanningFilterCount;
-    }
+  void updateMJFilter(
+      const EdgeInfo& edge, const unsigned mjComplexCount, const unsigned mjSpanningFilterCount)
+  {
+    GSCEdgeGroupStats& gStats(getStatsGroup(edge));
+    gStats.totalComplexCandidate += mjComplexCount;
+    gStats.totalSpanningCandidateFilter += mjSpanningFilterCount;
+  }
 
-    void
-    updateJunctionCandidateCounts(
-        const EdgeInfo& edge,
-        const unsigned junctionCount,
-        const bool isComplex)
-    {
-        GSCEdgeGroupStats& gStats(getStatsGroup(edge));
-        gStats.totalJunctionCount+=junctionCount;
-        if (isComplex) gStats.totalComplexJunctionCount+=junctionCount;
-        gStats.breaksPerJunction.increment(junctionCount);
-    }
+  void updateJunctionCandidateCounts(const EdgeInfo& edge, const unsigned junctionCount, const bool isComplex)
+  {
+    GSCEdgeGroupStats& gStats(getStatsGroup(edge));
+    gStats.totalJunctionCount += junctionCount;
+    if (isComplex) gStats.totalComplexJunctionCount += junctionCount;
+    gStats.breaksPerJunction.increment(junctionCount);
+  }
 
-    void
-    updateAssemblyCount(
-        const EdgeInfo& edge,
-        const unsigned assemblyCount,
-        const bool isSpanning,
-        const bool isOverlapSkip = false)
-    {
-        GSCEdgeGroupStats& gStats(getStatsGroup(edge));
-        gStats.totalAssemblyCandidates += assemblyCount;
-        if (isSpanning) gStats.totalSpanningAssemblyCandidates += assemblyCount;
-        if (isOverlapSkip)
-        {
-            gStats.totalJunctionAssemblyOverlapSkips++;
-        }
-        else
-        {
-            gStats.assemblyCandidatesPerJunction.increment(assemblyCount);
-        }
+  void updateAssemblyCount(
+      const EdgeInfo& edge,
+      const unsigned  assemblyCount,
+      const bool      isSpanning,
+      const bool      isOverlapSkip = false)
+  {
+    GSCEdgeGroupStats& gStats(getStatsGroup(edge));
+    gStats.totalAssemblyCandidates += assemblyCount;
+    if (isSpanning) gStats.totalSpanningAssemblyCandidates += assemblyCount;
+    if (isOverlapSkip) {
+      gStats.totalJunctionAssemblyOverlapSkips++;
+    } else {
+      gStats.assemblyCandidatesPerJunction.increment(assemblyCount);
     }
+  }
 
-    void
-    updateScoredEdgeTime(
-        const EdgeInfo& edge,
-        const EdgeRuntimeTracker& edgeTracker)
-    {
-        GSCEdgeGroupStats& gStats(getStatsGroup(edge));
-        gStats.totalTime.merge(edgeTracker.getLastEdgeTime());
-        gStats.candTime.merge(edgeTracker.candidacyTime.getTimes());
-        gStats.assemblyTime.merge(edgeTracker.assemblyTime.getTimes());
-        gStats.scoringTime.merge(edgeTracker.scoreTime.getTimes());
-    }
+  void updateScoredEdgeTime(const EdgeInfo& edge, const EdgeRuntimeTracker& edgeTracker)
+  {
+    GSCEdgeGroupStats& gStats(getStatsGroup(edge));
+    gStats.totalTime.merge(edgeTracker.getLastEdgeTime());
+    gStats.candTime.merge(edgeTracker.candidacyTime.getTimes());
+    gStats.assemblyTime.merge(edgeTracker.assemblyTime.getTimes());
+    gStats.scoringTime.merge(edgeTracker.scoreTime.getTimes());
+  }
 
 private:
-    GSCEdgeGroupStats&
-    getStatsGroup(
-        const EdgeInfo& edge)
-    {
-        return (edge.isSelfEdge() ? edgeStats.edgeData.selfEdges : edgeStats.edgeData.remoteEdges);
-    }
+  GSCEdgeGroupStats& getStatsGroup(const EdgeInfo& edge)
+  {
+    return (edge.isSelfEdge() ? edgeStats.edgeData.selfEdges : edgeStats.edgeData.remoteEdges);
+  }
 
-    /// Lifetime of thread, whether it's running or not
-    TimeTracker lifeTime;
-    GSCEdgeStats edgeStats;
+  /// Lifetime of thread, whether it's running or not
+  TimeTracker  lifeTime;
+  GSCEdgeStats edgeStats;
 };

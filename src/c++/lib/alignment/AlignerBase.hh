@@ -26,76 +26,55 @@
 #include "alignment/Alignment.hh"
 #include "alignment/AlignmentScores.hh"
 
-
 // #define DEBUG_ALN // Standard debug output
 // #define DEBUG_ALN_MATRIX // Dump full edit-matrix tables to stderr. Does not scale to non-trivial ref/query size!
-
 
 #ifdef DEBUG_ALN_MATRIX
 #include <iosfwd>
 #endif
 
-
 /// shared methods for all aligners
 ///
 template <typename ScoreType>
-struct AlignerBase
-{
-    AlignerBase(
-        const AlignmentScores<ScoreType>& scores) :
-        _scores(scores)
-    {}
+struct AlignerBase {
+  AlignerBase(const AlignmentScores<ScoreType>& scores) : _scores(scores) {}
 
-    /// read-only access to the aligner's scores:
-    const AlignmentScores<ScoreType>&
-    getScores() const
-    {
-        return _scores;
-    }
+  /// read-only access to the aligner's scores:
+  const AlignmentScores<ScoreType>& getScores() const { return _scores; }
 
 protected:
-
-    static
-    uint8_t
-    max3(
-        ScoreType& max,
-        const ScoreType v0,
-        const ScoreType v1,
-        const ScoreType v2)
-    {
-        max=v0;
-        uint8_t ptr=0;
-        if (v1>v0)
-        {
-            max=v1;
-            ptr=1;
-        }
-        if (v2>max)
-        {
-            max=v2;
-            ptr=2;
-        }
-        return ptr;
+  static uint8_t max3(ScoreType& max, const ScoreType v0, const ScoreType v1, const ScoreType v2)
+  {
+    max         = v0;
+    uint8_t ptr = 0;
+    if (v1 > v0) {
+      max = v1;
+      ptr = 1;
     }
+    if (v2 > max) {
+      max = v2;
+      ptr = 2;
+    }
+    return ptr;
+  }
 
 #ifdef DEBUG_ALN_MATRIX
-    /// write out subset of matrix of scores back-trace pointers for debug,for
-    /// one reference
-    template <typename SymIter, typename MatrixType, typename ScoreValType>
-    void
-    dumpSingleRefTable(
-        const SymIter refBegin, const SymIter refEnd,
-        const size_t querySize,
-        const MatrixType& ptrMatrix,
-        const std::vector<std::vector<ScoreValType>>& storeScores,
-        const char refSym,
-        const AlignState::index_t sIndex,
-        unsigned& storeIndex,
-        std::ostream& os) const;
+  /// write out subset of matrix of scores back-trace pointers for debug,for
+  /// one reference
+  template <typename SymIter, typename MatrixType, typename ScoreValType>
+  void dumpSingleRefTable(
+      const SymIter                                 refBegin,
+      const SymIter                                 refEnd,
+      const size_t                                  querySize,
+      const MatrixType&                             ptrMatrix,
+      const std::vector<std::vector<ScoreValType>>& storeScores,
+      const char                                    refSym,
+      const AlignState::index_t                     sIndex,
+      unsigned&                                     storeIndex,
+      std::ostream&                                 os) const;
 #endif
 
-    const AlignmentScores<ScoreType> _scores;
+  const AlignmentScores<ScoreType> _scores;
 };
-
 
 #include "alignment/AlignerBaseImpl.hh"

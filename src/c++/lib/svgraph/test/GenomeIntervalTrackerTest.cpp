@@ -21,51 +21,50 @@
 
 #include "svgraph/GenomeIntervalTracker.hh"
 
+BOOST_AUTO_TEST_SUITE(GenomeIntervalTracker_tests)
 
-BOOST_AUTO_TEST_SUITE( GenomeIntervalTracker_tests )
-
-BOOST_AUTO_TEST_CASE( GenomIntervalTracker_subset )
+BOOST_AUTO_TEST_CASE(GenomIntervalTracker_subset)
 {
-    GenomeIntervalTracker git;
+  GenomeIntervalTracker git;
 
-    git.addInterval(GenomeInterval(1, 100, 200));
-    git.addInterval(GenomeInterval(1, 150, 250));
-    git.addInterval(GenomeInterval(3, 100, 200));
+  git.addInterval(GenomeInterval(1, 100, 200));
+  git.addInterval(GenomeInterval(1, 150, 250));
+  git.addInterval(GenomeInterval(3, 100, 200));
 
-    BOOST_REQUIRE(git.isSubsetOfRegion(GenomeInterval(1,170,220)));
-    BOOST_REQUIRE(! git.isSubsetOfRegion(GenomeInterval(1,220,280)));
-    BOOST_REQUIRE(! git.isSubsetOfRegion(GenomeInterval(1,300,350)));
-    BOOST_REQUIRE(! git.isSubsetOfRegion(GenomeInterval(2,150,200)));
+  BOOST_REQUIRE(git.isSubsetOfRegion(GenomeInterval(1, 170, 220)));
+  BOOST_REQUIRE(!git.isSubsetOfRegion(GenomeInterval(1, 220, 280)));
+  BOOST_REQUIRE(!git.isSubsetOfRegion(GenomeInterval(1, 300, 350)));
+  BOOST_REQUIRE(!git.isSubsetOfRegion(GenomeInterval(2, 150, 200)));
 }
 
-BOOST_AUTO_TEST_CASE( GenomIntervalTracker_clear )
+BOOST_AUTO_TEST_CASE(GenomIntervalTracker_clear)
 {
-    GenomeIntervalTracker git;
+  GenomeIntervalTracker git;
 
-    git.addInterval(GenomeInterval(1, 100, 200));
-    git.addInterval(GenomeInterval(1, 150, 250));
-    git.addInterval(GenomeInterval(3, 100, 200));
+  git.addInterval(GenomeInterval(1, 100, 200));
+  git.addInterval(GenomeInterval(1, 150, 250));
+  git.addInterval(GenomeInterval(3, 100, 200));
 
-    git.clear();
+  git.clear();
 
-    BOOST_REQUIRE(! git.isSubsetOfRegion(GenomeInterval(1,150,200)));
+  BOOST_REQUIRE(!git.isSubsetOfRegion(GenomeInterval(1, 150, 200)));
 }
 
-BOOST_AUTO_TEST_CASE( GenomIntervalTracker_merge )
+BOOST_AUTO_TEST_CASE(GenomIntervalTracker_merge)
 {
-    GenomeIntervalTracker git1,git2;
+  GenomeIntervalTracker git1, git2;
 
-    git1.addInterval(GenomeInterval(1, 100, 200));
-    git2.addInterval(GenomeInterval(1, 150, 250));
-    git2.addInterval(GenomeInterval(3, 100, 200));
+  git1.addInterval(GenomeInterval(1, 100, 200));
+  git2.addInterval(GenomeInterval(1, 150, 250));
+  git2.addInterval(GenomeInterval(3, 100, 200));
 
-    git1.merge(git2);
+  git1.merge(git2);
 
-    BOOST_REQUIRE(git1.isSubsetOfRegion(GenomeInterval(1,170,220)));
-    BOOST_REQUIRE(git1.isSubsetOfRegion(GenomeInterval(3,170,180)));
-    BOOST_REQUIRE(! git1.isSubsetOfRegion(GenomeInterval(1,220,280)));
-    BOOST_REQUIRE(! git1.isSubsetOfRegion(GenomeInterval(1,300,350)));
-    BOOST_REQUIRE(! git1.isSubsetOfRegion(GenomeInterval(2,150,200)));
+  BOOST_REQUIRE(git1.isSubsetOfRegion(GenomeInterval(1, 170, 220)));
+  BOOST_REQUIRE(git1.isSubsetOfRegion(GenomeInterval(3, 170, 180)));
+  BOOST_REQUIRE(!git1.isSubsetOfRegion(GenomeInterval(1, 220, 280)));
+  BOOST_REQUIRE(!git1.isSubsetOfRegion(GenomeInterval(1, 300, 350)));
+  BOOST_REQUIRE(!git1.isSubsetOfRegion(GenomeInterval(2, 150, 200)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

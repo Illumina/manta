@@ -24,15 +24,11 @@
 #include "SVFinderStats.hh"
 #include <iostream>
 
-
-
-void
-SVFinderStats::
-report(std::ostream& os) const
+void SVFinderStats::report(std::ostream& os) const
 {
-    os << "EdgeFilter\t" << edgeFilter << "\n";
-    os << "SemiMappedFilter\t" << semiMappedFilter << "\n";
-    os << "ComplexLowCountFilter\t" << ComplexLowCountFilter << "\n";
-    os << "ComplexLowSignalFilter\t" << ComplexLowSignalFilter << "\n";
-    os << "UnmatchedReadPairFilter\t" << unmatchedReadPairFilter << "\n";
+  os << "EdgeFilter\t" << edgeFilter << "\n";
+  os << "SemiMappedFilter\t" << semiMappedFilter << "\n";
+  os << "ComplexLowCountFilter\t" << ComplexLowCountFilter << "\n";
+  os << "ComplexLowSignalFilter\t" << ComplexLowSignalFilter << "\n";
+  os << "UnmatchedReadPairFilter\t" << unmatchedReadPairFilter << "\n";
 }

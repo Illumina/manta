@@ -29,42 +29,36 @@
 #include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <set>
 #include <sstream>
 
-
-
-static
-void
-usage(
-    std::ostream& os,
-    const illumina::Program& prog,
+static void usage(
+    std::ostream&                                      os,
+    const illumina::Program&                           prog,
     const boost::program_options::options_description& visible,
-    const char* msg = nullptr)
+    const char*                                        msg = nullptr)
 {
-    usage(os, prog, visible, "merge sv locus graphs", "", msg);
+  usage(os, prog, visible, "merge sv locus graphs", "", msg);
 }
 
-
-
-void
-parseMSLOptions(const illumina::Program& prog,
-                int argc, char* argv[],
-                MSLOptions& opt)
+void parseMSLOptions(const illumina::Program& prog, int argc, char* argv[], MSLOptions& opt)
 {
-    namespace po = boost::program_options;
-    po::options_description req("configuration");
-    req.add_options()
-    ("graph-file", po::value(&opt.graphFilename),
-     "input sv locus graph file (may be specified multiple times)")
-    ("graph-file-list", po::value(&opt.graphFilenameList),
-     "file listing all input sv locus graph files, one filename per line (specified only once)")
-    ("output-file", po::value(&opt.outputFilename),
-     "merged output sv locus graph file")
-    ("verbose", po::value(&opt.isVerbose)->zero_tokens(),
-     "provide additional progress logging");
+  namespace po = boost::program_options;
+  po::options_description req("configuration");
+  // clang-format off
+  req.add_options()
+  ("graph-file", po::value(&opt.graphFilename),
+   "input sv locus graph file (may be specified multiple times)")
+  ("graph-file-list", po::value(&opt.graphFilenameList),
+   "file listing all input sv locus graph files, one filename per line (specified only once)")
+  ("output-file", po::value(&opt.outputFilename),
+   "merged output sv locus graph file")
+  ("verbose", po::value(&opt.isVerbose)->zero_tokens(),
+   "provide additional progress logging")
+  ;
+  // clang-format om
 
     po::options_description help("help");
     help.add_options()

@@ -25,21 +25,14 @@
 
 #include <iostream>
 
-
-
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const SVMultiJunctionCandidate& scc)
+std::ostream& operator<<(std::ostream& os, const SVMultiJunctionCandidate& scc)
 {
-    static const char indent('\t');
-    os << "SVComplexCandidate:\n"
-       << indent << "total_breakend_junctions: " << scc.junction.size() << "\n";
+  static const char indent('\t');
+  os << "SVComplexCandidate:\n" << indent << "total_breakend_junctions: " << scc.junction.size() << "\n";
 
-    for (const SVCandidate& sv : scc.junction)
-    {
-        os << sv;
-    }
+  for (const SVCandidate& sv : scc.junction) {
+    os << sv;
+  }
 
-    return os;
+  return os;
 }

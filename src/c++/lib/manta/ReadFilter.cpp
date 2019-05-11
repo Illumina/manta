@@ -24,39 +24,32 @@
 #include "manta/ReadFilter.hh"
 
 #include "blt_util/align_path.hh"
-#include "htsapi/align_path_bam_util.hh"
 #include "common/Exceptions.hh"
+#include "htsapi/align_path_bam_util.hh"
 
 #include <ostream>
 
-
-
-bool
-isReadFilteredCore(
-    const bam_record& bamRead)
+bool isReadFilteredCore(const bam_record& bamRead)
 {
-    if      (bamRead.is_filter()) return true;
-    else if (bamRead.is_dup()) return true;
-    // supplementary reads without SA tag
-    else if (bamRead.is_supplementary() && (! bamRead.isSASplit())) return true;
-    else
-    {
-        // hack to work with bwamem '-M' formatting,
-        // keep secondary reads when they contain an SA tag
-        if (bamRead.is_secondary())
-        {
-            if (! bamRead.isSASplit()) return true;
-        }
+  if (bamRead.is_filter())
+    return true;
+  else if (bamRead.is_dup())
+    return true;
+  // supplementary reads without SA tag
+  else if (bamRead.is_supplementary() && (!bamRead.isSASplit()))
+    return true;
+  else {
+    // hack to work with bwamem '-M' formatting,
+    // keep secondary reads when they contain an SA tag
+    if (bamRead.is_secondary()) {
+      if (!bamRead.isSASplit()) return true;
     }
-    return false;
+  }
+  return false;
 }
 
-
-
-bool
-isReadUnmappedOrFilteredCore(
-    const bam_record& bamRead)
+bool isReadUnmappedOrFilteredCore(const bam_record& bamRead)
 {
-    if (isReadFilteredCore(bamRead)) return true;
-    return bamRead.is_unmapped();
+  if (isReadFilteredCore(bamRead)) return true;
+  return bamRead.is_unmapped();
 }

@@ -28,21 +28,13 @@
 #include <string>
 #include <vector>
 
+struct MSLOptions {
+  MSLOptions() : isVerbose(false) {}
 
-struct MSLOptions
-{
-    MSLOptions() :
-        isVerbose(false)
-    {}
-
-    std::vector<std::string> graphFilename;
-    std::string graphFilenameList;
-    std::string outputFilename;
-    bool isVerbose;
+  std::vector<std::string> graphFilename;
+  std::string              graphFilenameList;
+  std::string              outputFilename;
+  bool                     isVerbose;
 };
 
-
-void
-parseMSLOptions(const illumina::Program& prog,
-                int argc, char* argv[],
-                MSLOptions& opt);
+void parseMSLOptions(const illumina::Program& prog, int argc, char* argv[], MSLOptions& opt);

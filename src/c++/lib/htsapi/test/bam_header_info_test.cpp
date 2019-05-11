@@ -22,43 +22,41 @@
 #include "htsapi/bam_header_info.hh"
 #include "test/testAlignmentDataUtil.hh"
 
-
-
-BOOST_AUTO_TEST_SUITE( bam_header_info_test_suite )
+BOOST_AUTO_TEST_SUITE(bam_header_info_test_suite)
 
 /// Create a bam_header_info object from an empty hts header
-BOOST_AUTO_TEST_CASE( test_bam_header_info_empty )
+BOOST_AUTO_TEST_CASE(test_bam_header_info_empty)
 {
-    HtslibBamHeaderManager emptyHtsHeader;
-    bam_header_info emptyBamHeader(emptyHtsHeader.get());
-    BOOST_REQUIRE(emptyBamHeader.empty());
+  HtslibBamHeaderManager emptyHtsHeader;
+  bam_header_info        emptyBamHeader(emptyHtsHeader.get());
+  BOOST_REQUIRE(emptyBamHeader.empty());
 }
 
 /// Create a bam header_info object with one chromosome
-BOOST_AUTO_TEST_CASE( test_bam_header_info_1chrom )
+BOOST_AUTO_TEST_CASE(test_bam_header_info_1chrom)
 {
-    std::vector<bam_header_info::chrom_info> chromData;
-    chromData.emplace_back("chr1",1000);
+  std::vector<bam_header_info::chrom_info> chromData;
+  chromData.emplace_back("chr1", 1000);
 
-    HtslibBamHeaderManager oneHtsHeader(chromData);
-    bam_header_info oneBamHeader(oneHtsHeader.get());
+  HtslibBamHeaderManager oneHtsHeader(chromData);
+  bam_header_info        oneBamHeader(oneHtsHeader.get());
 
-    BOOST_REQUIRE_EQUAL(oneBamHeader.chrom_data.size(), 1);
-    BOOST_REQUIRE_EQUAL(oneBamHeader.chrom_to_index.size(), 1);
+  BOOST_REQUIRE_EQUAL(oneBamHeader.chrom_data.size(), 1);
+  BOOST_REQUIRE_EQUAL(oneBamHeader.chrom_to_index.size(), 1);
 }
 
 /// Create a bam header_info object with two chromosomes
-BOOST_AUTO_TEST_CASE( test_bam_header_info_2chrom )
+BOOST_AUTO_TEST_CASE(test_bam_header_info_2chrom)
 {
-    std::vector<bam_header_info::chrom_info> chromData;
-    chromData.emplace_back("chr1", 1000);
-    chromData.emplace_back("chr2", 1000);
+  std::vector<bam_header_info::chrom_info> chromData;
+  chromData.emplace_back("chr1", 1000);
+  chromData.emplace_back("chr2", 1000);
 
-    HtslibBamHeaderManager twoHtsHeader(chromData);
-    bam_header_info twoBamHeader(twoHtsHeader.get());
+  HtslibBamHeaderManager twoHtsHeader(chromData);
+  bam_header_info        twoBamHeader(twoHtsHeader.get());
 
-    BOOST_REQUIRE_EQUAL(twoBamHeader.chrom_data.size(), 2);
-    BOOST_REQUIRE_EQUAL(twoBamHeader.chrom_to_index.size(), 2);
+  BOOST_REQUIRE_EQUAL(twoBamHeader.chrom_data.size(), 2);
+  BOOST_REQUIRE_EQUAL(twoBamHeader.chrom_to_index.size(), 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

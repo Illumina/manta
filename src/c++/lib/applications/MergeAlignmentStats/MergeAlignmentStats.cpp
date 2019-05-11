@@ -28,36 +28,27 @@
 #include <iostream>
 #include "MergeAlignmentStats.hh"
 
-
-
-static
-void
-mergeAlignmentStats(const MergeAlignmentStatsOptions& opt)
+static void mergeAlignmentStats(const MergeAlignmentStatsOptions& opt)
 {
-    if (opt.statsFiles.empty())
-    {
-        log_os << "ERROR: No input files specified.\n";
-        exit(EXIT_FAILURE);
-    }
+  if (opt.statsFiles.empty()) {
+    log_os << "ERROR: No input files specified.\n";
+    exit(EXIT_FAILURE);
+  }
 
-    ReadGroupStatsSet all_rstats;
-    for (const std::string& file : opt.statsFiles)
-    {
-        ReadGroupStatsSet rstats;
-        rstats.load(file.c_str());
-        all_rstats.merge(rstats);
-    }
+  ReadGroupStatsSet all_rstats;
+  for (const std::string& file : opt.statsFiles) {
+    ReadGroupStatsSet rstats;
+    rstats.load(file.c_str());
+    all_rstats.merge(rstats);
+  }
 
-    all_rstats.save(opt.outputFilename.c_str());
+  all_rstats.save(opt.outputFilename.c_str());
 }
 
-
-void
-MergeAlignmentStats::
-runInternal(int argc, char* argv[]) const
+void MergeAlignmentStats::runInternal(int argc, char* argv[]) const
 {
-    MergeAlignmentStatsOptions opt;
+  MergeAlignmentStatsOptions opt;
 
-    parseMergeAlignmentStatsOptions(*this,argc,argv,opt);
-    mergeAlignmentStats(opt);
+  parseMergeAlignmentStatsOptions(*this, argc, argv, opt);
+  mergeAlignmentStats(opt);
 }

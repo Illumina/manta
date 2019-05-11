@@ -19,29 +19,29 @@
 
 #pragma once
 
-
 template <typename ScoreType>
-struct AlignmentScores
-{
-    AlignmentScores(
-        ScoreType initMatch,
-        ScoreType initMismatch,
-        ScoreType initOpen,
-        ScoreType initExtend,
-        ScoreType initOffEdge,
-        bool initIsAllowEdgeInsertion = false) :
-        match(initMatch),
-        mismatch(initMismatch),
-        open(initOpen),
-        extend(initExtend),
-        offEdge(initOffEdge),
-        isAllowEdgeInsertion(initIsAllowEdgeInsertion)
-    {}
+struct AlignmentScores {
+  AlignmentScores(
+      ScoreType initMatch,
+      ScoreType initMismatch,
+      ScoreType initOpen,
+      ScoreType initExtend,
+      ScoreType initOffEdge,
+      bool      initIsAllowEdgeInsertion = false)
+    : match(initMatch),
+      mismatch(initMismatch),
+      open(initOpen),
+      extend(initExtend),
+      offEdge(initOffEdge),
+      isAllowEdgeInsertion(initIsAllowEdgeInsertion)
+  {
+  }
 
-    const ScoreType match; ///< match score
-    const ScoreType mismatch; ///< mismatch score (should be negative)
-    const ScoreType open; ///< gap open, gap of length N is scored (open + N * extend) (should be negative)
-    const ScoreType extend; ///< gap extend, gap of length N is scored (open + N * extend) (should be negative or zero)
-    const ScoreType offEdge; ///< score applied when query goes off the end of an edge (should be negative)
-    const bool isAllowEdgeInsertion; ///< are insertions allowed directly on the leading and trailing edges?
+  const ScoreType match;     ///< match score
+  const ScoreType mismatch;  ///< mismatch score (should be negative)
+  const ScoreType open;      ///< gap open, gap of length N is scored (open + N * extend) (should be negative)
+  const ScoreType
+                  extend;  ///< gap extend, gap of length N is scored (open + N * extend) (should be negative or zero)
+  const ScoreType offEdge;  ///< score applied when query goes off the end of an edge (should be negative)
+  const bool isAllowEdgeInsertion;  ///< are insertions allowed directly on the leading and trailing edges?
 };

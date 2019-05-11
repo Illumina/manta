@@ -22,4 +22,3 @@
 #include <iostream>
 
 std::ostream& log_os(std::cerr);
-

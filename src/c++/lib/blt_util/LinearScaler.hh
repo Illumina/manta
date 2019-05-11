@@ -27,8 +27,8 @@
 
 #include <algorithm>
 
-
-/// \brief Maps an input to [0,1] based on where it lies within a [min,max] range specified during initialization.
+/// \brief Maps an input to [0,1] based on where it lies within a [min,max] range specified during
+/// initialization.
 ///
 /// ### Example:
 /// ```
@@ -37,40 +37,26 @@
 /// ```
 ///
 template <typename T>
-struct LinearScaler
-{
-    LinearScaler() :
-        _min(static_cast<T>(0)),
-        _factor(1.)
-    {}
+struct LinearScaler {
+  LinearScaler() : _min(static_cast<T>(0)), _factor(1.) {}
 
-    LinearScaler(
-        const T min,
-        const T max)
-    {
-        init(min, max);
-    }
+  LinearScaler(const T min, const T max) { init(min, max); }
 
-    void
-    init(
-        const T min,
-        const T max)
-    {
-        assert(max>min);
-        _min = min;
-        _factor = (1./static_cast<double>(max-min));
-    }
+  void init(const T min, const T max)
+  {
+    assert(max > min);
+    _min    = min;
+    _factor = (1. / static_cast<double>(max - min));
+  }
 
-    double
-    getScale(
-        const T val) const
-    {
-        static const double zero(0);
-        static const double one(1);
-        return std::min(one, std::max(zero, static_cast<double>(val-_min)*_factor));
-    }
+  double getScale(const T val) const
+  {
+    static const double zero(0);
+    static const double one(1);
+    return std::min(one, std::max(zero, static_cast<double>(val - _min) * _factor));
+  }
 
 private:
-    T _min;
-    double _factor;
+  T      _min;
+  double _factor;
 };

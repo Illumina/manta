@@ -24,67 +24,52 @@
 #pragma once
 
 #include "SVEvidence.hh"
-#include "manta/SVScoreInfo.hh"
 #include "manta/SVCandidate.hh"
-
+#include "manta/SVScoreInfo.hh"
 
 /// manage all per-junction information consumed by an SV calling model
 ///
 /// using this object facilities multi-breakend event scoring, but clearly
 /// separating out per-junction input info from junction-independent info
 ///
-struct JunctionCallInfo
-{
-    JunctionCallInfo() :
-        _sv(nullptr),
-        _evidence(nullptr),
-        _baseInfo(nullptr),
-        _spanningPairWeight(0)
-    {}
+struct JunctionCallInfo {
+  JunctionCallInfo() : _sv(nullptr), _evidence(nullptr), _baseInfo(nullptr), _spanningPairWeight(0) {}
 
-    const SVCandidate&
-    getSV() const
-    {
-        assert(nullptr != _sv);
-        return *_sv;
-    }
+  const SVCandidate& getSV() const
+  {
+    assert(nullptr != _sv);
+    return *_sv;
+  }
 
-    const SVEvidence&
-    getEvidence() const
-    {
-        assert(nullptr != _evidence);
-        return *_evidence;
-    }
+  const SVEvidence& getEvidence() const
+  {
+    assert(nullptr != _evidence);
+    return *_evidence;
+  }
 
-    const SVScoreInfo&
-    getBaseInfo() const
-    {
-        assert(nullptr != _baseInfo);
-        return *_baseInfo;
-    }
+  const SVScoreInfo& getBaseInfo() const
+  {
+    assert(nullptr != _baseInfo);
+    return *_baseInfo;
+  }
 
-    float
-    getSpanningWeight() const
-    {
-        return _spanningPairWeight;
-    }
+  float getSpanningWeight() const { return _spanningPairWeight; }
 
-    void
-    init(
-        const SVCandidate& sv,
-        const SVEvidence& evidence,
-        const SVScoreInfo& baseInfo,
-        const float spanningPairWeight)
-    {
-        _sv=&sv;
-        _evidence=&evidence;
-        _baseInfo=&baseInfo;
-        _spanningPairWeight=spanningPairWeight;
-    }
+  void init(
+      const SVCandidate& sv,
+      const SVEvidence&  evidence,
+      const SVScoreInfo& baseInfo,
+      const float        spanningPairWeight)
+  {
+    _sv                 = &sv;
+    _evidence           = &evidence;
+    _baseInfo           = &baseInfo;
+    _spanningPairWeight = spanningPairWeight;
+  }
 
 private:
-    const SVCandidate* _sv;
-    const SVEvidence* _evidence;
-    const SVScoreInfo* _baseInfo;
-    float _spanningPairWeight;
+  const SVCandidate* _sv;
+  const SVEvidence*  _evidence;
+  const SVScoreInfo* _baseInfo;
+  float              _spanningPairWeight;
 };

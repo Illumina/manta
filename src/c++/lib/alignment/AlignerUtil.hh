@@ -23,60 +23,45 @@
 /// \brief Align a contig across two breakend regions
 ///
 
-
 #pragma once
 
 #include "Alignment.hh"
 #include "blt_util/align_path.hh"
 
-
-struct AlignerUtil
-{
-    static
-    void
-    updatePath(
-        ALIGNPATH::path_t& path,
-        ALIGNPATH::path_segment& ps,
-        ALIGNPATH::align_t atype)
-    {
-        if (ps.type == atype) return;
-        if (ps.type != ALIGNPATH::NONE) path.push_back(ps);
-        ps.type = atype;
-        ps.length = 0;
-    }
+struct AlignerUtil {
+  static void updatePath(ALIGNPATH::path_t& path, ALIGNPATH::path_segment& ps, ALIGNPATH::align_t atype)
+  {
+    if (ps.type == atype) return;
+    if (ps.type != ALIGNPATH::NONE) path.push_back(ps);
+    ps.type   = atype;
+    ps.length = 0;
+  }
 };
-
-
 
 /// bookkeeping variables used during alignment backtrace
 template <typename ScoreType>
-struct BackTrace
-{
-    ScoreType max = 0;
-    AlignState::index_t state = AlignState::MATCH;
-    unsigned queryBegin = 0;
-    unsigned refBegin = 0;
-    bool isInit = false;
+struct BackTrace {
+  ScoreType           max        = 0;
+  AlignState::index_t state      = AlignState::MATCH;
+  unsigned            queryBegin = 0;
+  unsigned            refBegin   = 0;
+  bool                isInit     = false;
 };
-
-
 
 /// track values needed to run the alignment backtrace:
 template <typename ScoreType>
-void
-updateBacktrace(
-    const ScoreType thisMax,
-    const unsigned refIndex,
-    const unsigned queryIndex,
-    BackTrace<ScoreType>& btrace,
+void updateBacktrace(
+    const ScoreType           thisMax,
+    const unsigned            refIndex,
+    const unsigned            queryIndex,
+    BackTrace<ScoreType>&     btrace,
     const AlignState::index_t state = AlignState::MATCH)
 {
-    if ( (! btrace.isInit) || (thisMax>btrace.max))
-    {
-        btrace.max=thisMax;
-        btrace.refBegin=refIndex;
-        btrace.queryBegin=queryIndex;
-        btrace.isInit=true;
-        btrace.state = state;
-    }
+  if ((!btrace.isInit) || (thisMax > btrace.max)) {
+    btrace.max        = thisMax;
+    btrace.refBegin   = refIndex;
+    btrace.queryBegin = queryIndex;
+    btrace.isInit     = true;
+    btrace.state      = state;
+  }
 }

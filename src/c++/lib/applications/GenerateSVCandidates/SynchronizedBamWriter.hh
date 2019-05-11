@@ -29,26 +29,19 @@
 
 #include "htsapi/bam_dumper.hh"
 
-
 /// Extends the standard BAM writer to allow synchronized writing to the same file from multiple threads
-class SynchronizedBamWriter : private boost::noncopyable
-{
+class SynchronizedBamWriter : private boost::noncopyable {
 public:
-    SynchronizedBamWriter(
-        const char* filename,
-        const bam_hdr_t& header)
-        : m_bamWriter(filename, header)
-    {}
+  SynchronizedBamWriter(const char* filename, const bam_hdr_t& header) : m_bamWriter(filename, header) {}
 
-    /// Add another BAM record to the file. File must not be closed.
-    void
-    put_record(const bam1_t* brec)
-    {
-        std::lock_guard<std::mutex> lock(m_writeMutex);
-        m_bamWriter.put_record(brec);
-    }
+  /// Add another BAM record to the file. File must not be closed.
+  void put_record(const bam1_t* brec)
+  {
+    std::lock_guard<std::mutex> lock(m_writeMutex);
+    m_bamWriter.put_record(brec);
+  }
 
 private:
-    bam_dumper m_bamWriter;
-    std::mutex m_writeMutex;
+  bam_dumper m_bamWriter;
+  std::mutex m_writeMutex;
 };

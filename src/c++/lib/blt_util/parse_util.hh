@@ -25,11 +25,8 @@
 
 #include <string>
 
-
-namespace illumina
-{
-namespace blt_util
-{
+namespace illumina {
+namespace blt_util {
 
 /// parse c-string to TYPE
 ///
@@ -38,23 +35,13 @@ namespace blt_util
 ///
 /// if available, specify s_end for minor performance improvement (in case of extremely large string)
 ///
-unsigned
-parse_unsigned(
-    const char*& s);
+unsigned parse_unsigned(const char*& s);
 
-int
-parse_int(
-    const char*& s);
+int parse_int(const char*& s);
 
-long
-parse_long(
-    const char*& s);
+long parse_long(const char*& s);
 
-double
-parse_double(
-    const char*& s,
-    const char* s_end = nullptr);
-
+double parse_double(const char*& s, const char* s_end = nullptr);
 
 /// parse c-string to TYPE
 ///
@@ -62,90 +49,58 @@ parse_double(
 /// - entire string must be convertible, no trailing suffix is allowed
 /// - appropriate for rvalue char pointers
 ///
-unsigned
-parse_unsigned_rvalue(
-    const char* s);
+unsigned parse_unsigned_rvalue(const char* s);
 
-int
-parse_int_rvalue(
-    const char* s);
+int parse_int_rvalue(const char* s);
 
-long
-parse_long_rvalue(
-    const char* s);
+long parse_long_rvalue(const char* s);
 
-double
-parse_double_rvalue(
-    const char* s,
-    const char* s_end = nullptr);
-
+double parse_double_rvalue(const char* s, const char* s_end = nullptr);
 
 /// parse std::string to TYPE
 ///
 /// entire string must be convertible, no trailing suffix is allowed
 ///
-unsigned
-parse_unsigned_str(
-    const std::string& s);
+unsigned parse_unsigned_str(const std::string& s);
 
-int
-parse_int_str(
-    const std::string& s);
+int parse_int_str(const std::string& s);
 
-long
-parse_long_str(
-    const std::string& s);
+long parse_long_str(const std::string& s);
 
-double
-parse_double_str(
-    const std::string& s);
-
-
+double parse_double_str(const std::string& s);
 
 /// template version:
 ///
 template <typename T>
-T
-parse_type(const char*&)
+T parse_type(const char*&)
 {
-    static_assert(sizeof(T)==0, "no parse specialization available for type T");
-    return T();
-}
-
-
-template <>
-inline
-unsigned
-parse_type<unsigned>(const char*& s)
-{
-    return parse_unsigned(s);
+  static_assert(sizeof(T) == 0, "no parse specialization available for type T");
+  return T();
 }
 
 template <>
-inline
-int
-parse_type<int>(const char*& s)
+inline unsigned parse_type<unsigned>(const char*& s)
 {
-    return parse_int(s);
+  return parse_unsigned(s);
 }
 
 template <>
-inline
-long
-parse_type<long>(const char*& s)
+inline int parse_type<int>(const char*& s)
 {
-    return parse_long(s);
+  return parse_int(s);
 }
 
 template <>
-inline
-double
-parse_type<double>(const char*& s)
+inline long parse_type<long>(const char*& s)
 {
-    return parse_double(s);
+  return parse_long(s);
 }
 
-
+template <>
+inline double parse_type<double>(const char*& s)
+{
+  return parse_double(s);
 }
-}
 
+}  // namespace blt_util
+}  // namespace illumina

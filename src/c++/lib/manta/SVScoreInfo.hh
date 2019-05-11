@@ -23,174 +23,131 @@
 
 #pragma once
 
-#include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidate.hh"
+#include "manta/SVCandidateAssemblyData.hh"
 
 #include <iosfwd>
 #include <string>
 
+struct SVAlignmentInfo {
+  SVAlignmentInfo(const SVCandidate& sv, const SVCandidateAssemblyData& assemblyData);
 
-struct SVAlignmentInfo
-{
-    SVAlignmentInfo(
-        const SVCandidate& sv,
-        const SVCandidateAssemblyData& assemblyData);
+  const std::string& bp1ContigSeq() const { return (_bp1ContigReversed ? revContigSeq : contigSeq); }
 
-    const std::string&
-    bp1ContigSeq() const
-    {
-        return (_bp1ContigReversed ? revContigSeq : contigSeq);
-    }
+  const std::string& bp2ContigSeq() const { return (_bp2ContigReversed ? revContigSeq : contigSeq); }
 
-    const std::string&
-    bp2ContigSeq() const
-    {
-        return (_bp2ContigReversed ? revContigSeq : contigSeq);
-    }
+  const std::string& bp1ReferenceSeq() const { return bp1RefSeq; }
 
-    const std::string&
-    bp1ReferenceSeq() const
-    {
-        return bp1RefSeq;
-    }
+  const std::string& bp2ReferenceSeq() const { return (_isSpanning ? bp2RefSeq : bp1RefSeq); }
 
-    const std::string&
-    bp2ReferenceSeq() const
-    {
-        return (_isSpanning ? bp2RefSeq : bp1RefSeq);
-    }
+  bool isSpanning() const { return _isSpanning; }
 
-    bool
-    isSpanning() const
-    {
-        return _isSpanning;
-    }
+  /// do we have a enough room on either side of the breakend for
+  /// both the ref and contig to make a fair split read evaluation?
+  bool isMinBpEdge(const unsigned minEdge) const;
 
-    /// do we have a enough room on either side of the breakend for
-    /// both the ref and contig to make a fair split read evaluation?
-    bool
-    isMinBpEdge(const unsigned minEdge) const;
-
-    friend
-    std::ostream&
-    operator<<(std::ostream& os, const SVAlignmentInfo& ai);
+  friend std::ostream& operator<<(std::ostream& os, const SVAlignmentInfo& ai);
 
 private:
-    std::string contigSeq;
-    std::string revContigSeq;
-    std::string bp1RefSeq;
-    std::string bp2RefSeq;
-    const bool _isSpanning;
-    const bool _bp1ContigReversed;
-    const bool _bp2ContigReversed;
+  std::string contigSeq;
+  std::string revContigSeq;
+  std::string bp1RefSeq;
+  std::string bp2RefSeq;
+  const bool  _isSpanning;
+  const bool  _bp1ContigReversed;
+  const bool  _bp2ContigReversed;
 
 public:
-    /// all offset range 'begin' values correspond to the zero-indexed base immediately before the breakend on the fwd-strand,
-    /// and 'end' values correspond to the zero-indexed base immediately before the breakend on the forward strand+microhomology range
-    /// In the absence of microhomology, begin and end should be equal.
-    known_pos_range2 bp1ContigOffset;
-    known_pos_range2 bp2ContigOffset;
-    known_pos_range2 bp1RefOffset;
-    known_pos_range2 bp2RefOffset;
+  /// all offset range 'begin' values correspond to the zero-indexed base immediately before the breakend on
+  /// the fwd-strand, and 'end' values correspond to the zero-indexed base immediately before the breakend on
+  /// the forward strand+microhomology range In the absence of microhomology, begin and end should be equal.
+  known_pos_range2 bp1ContigOffset;
+  known_pos_range2 bp2ContigOffset;
+  known_pos_range2 bp1RefOffset;
+  known_pos_range2 bp2RefOffset;
 };
 
-std::ostream&
-operator<<(std::ostream& os, const SVAlignmentInfo& ai);
-
-
+std::ostream& operator<<(std::ostream& os, const SVAlignmentInfo& ai);
 
 /// Sample-specific and allele-specific evidence info
-struct SVSampleAlleleInfo
-{
-    void
-    clear()
-    {
-        spanningPairCount = 0;
-        confidentSpanningPairCount = 0;
-        confidentSemiMappedSpanningPairCount = 0;
-        splitReadCount = 0;
-        splitReadEvidence = 0;
-        splitReadMapQ = 0;
-        confidentSplitReadCount = 0;
-        confidentSplitReadAndPairCountRefBp1 = 0;
-        confidentSplitReadAndPairCountRefBp2 = 0;
-    }
+struct SVSampleAlleleInfo {
+  void clear()
+  {
+    spanningPairCount                    = 0;
+    confidentSpanningPairCount           = 0;
+    confidentSemiMappedSpanningPairCount = 0;
+    splitReadCount                       = 0;
+    splitReadEvidence                    = 0;
+    splitReadMapQ                        = 0;
+    confidentSplitReadCount              = 0;
+    confidentSplitReadAndPairCountRefBp1 = 0;
+    confidentSplitReadAndPairCountRefBp2 = 0;
+  }
 
-    // allele pair support
-    unsigned spanningPairCount = 0;  ///< all mapped pairs compatible with the allele
-    unsigned confidentSpanningPairCount = 0;  ///< pairs where both reads are mapped and we've successfully looked up a fragment prob of 0.01 or more
-    unsigned confidentSemiMappedSpanningPairCount = 0; ///< pairs where at least one read is mapped and we've successfully looked up a fragment prob of 0.01 or more
+  // allele pair support
+  unsigned spanningPairCount          = 0;  ///< all mapped pairs compatible with the allele
+  unsigned confidentSpanningPairCount = 0;  ///< pairs where both reads are mapped and we've successfully
+                                            ///< looked up a fragment prob of 0.01 or more
+  unsigned confidentSemiMappedSpanningPairCount =
+      0;  ///< pairs where at least one read is mapped and we've successfully looked up a fragment prob of
+          ///< 0.01 or more
 
-    // allele split support
-    unsigned splitReadCount = 0;
-    float splitReadEvidence = 0;
-    float splitReadMapQ = 0;
+  // allele split support
+  unsigned splitReadCount    = 0;
+  float    splitReadEvidence = 0;
+  float    splitReadMapQ     = 0;
 
-    unsigned confidentSplitReadCount = 0; ///< count by comparing alignment quality vs the other allele
+  unsigned confidentSplitReadCount = 0;  ///< count by comparing alignment quality vs the other allele
 
-    unsigned confidentSplitReadAndPairCountRefBp1 = 0; ///< For 'ref' alleles, the support by split reads and spanning pairs at bp1
-    unsigned confidentSplitReadAndPairCountRefBp2 = 0; ///< For 'ref' alleles, the support at bp2
-
+  unsigned confidentSplitReadAndPairCountRefBp1 =
+      0;  ///< For 'ref' alleles, the support by split reads and spanning pairs at bp1
+  unsigned confidentSplitReadAndPairCountRefBp2 = 0;  ///< For 'ref' alleles, the support at bp2
 };
 
-std::ostream&
-operator<<(std::ostream& os, const SVSampleAlleleInfo& si);
-
-
+std::ostream& operator<<(std::ostream& os, const SVSampleAlleleInfo& si);
 
 /// Sample-specific evidence info
-struct SVSampleInfo
-{
-    void
-    clear()
-    {
-        alt.clear();
-        ref.clear();
-    }
+struct SVSampleInfo {
+  void clear()
+  {
+    alt.clear();
+    ref.clear();
+  }
 
-    SVSampleAlleleInfo alt;
-    SVSampleAlleleInfo ref;
+  SVSampleAlleleInfo alt;
+  SVSampleAlleleInfo ref;
 };
 
-std::ostream&
-operator<<(std::ostream& os, const SVSampleInfo& si);
-
+std::ostream& operator<<(std::ostream& os, const SVSampleInfo& si);
 
 /// Consolidate model-agnostic scoring results applied to an SV candidate
-struct SVScoreInfo
-{
-    void
-    setSampleCount(
-        const unsigned sampleCount)
-    {
-        samples.resize(sampleCount);
-        clear();
+struct SVScoreInfo {
+  void setSampleCount(const unsigned sampleCount)
+  {
+    samples.resize(sampleCount);
+    clear();
+  }
+
+  void clear()
+  {
+    for (auto& sample : samples) {
+      sample.clear();
     }
 
-    void
-    clear()
-    {
-        for (auto& sample : samples)
-        {
-            sample.clear();
-        }
+    bp1MaxDepth = 0;
+    bp2MaxDepth = 0;
 
-        bp1MaxDepth = 0;
-        bp2MaxDepth = 0;
+    bp1MQ0Frac = 0.;
+    bp2MQ0Frac = 0.;
+  }
 
-        bp1MQ0Frac = 0.;
-        bp2MQ0Frac = 0.;
-    }
+  std::vector<SVSampleInfo> samples;
 
-    std::vector<SVSampleInfo> samples;
+  unsigned bp1MaxDepth = 0;
+  unsigned bp2MaxDepth = 0;
 
-    unsigned bp1MaxDepth = 0;
-    unsigned bp2MaxDepth = 0;
-
-    float bp1MQ0Frac = 0;
-    float bp2MQ0Frac = 0;
+  float bp1MQ0Frac = 0;
+  float bp2MQ0Frac = 0;
 };
 
-
-std::ostream&
-operator<<(std::ostream& os, const SVScoreInfo& ssi);
+std::ostream& operator<<(std::ostream& os, const SVScoreInfo& ssi);

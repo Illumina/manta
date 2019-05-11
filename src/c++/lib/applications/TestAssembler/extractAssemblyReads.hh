@@ -20,19 +20,17 @@
 #pragma once
 
 #include "assembly/AssemblyReadInfo.hh"
-#include "options/ReadScannerOptions.hh"
 #include "options/IterativeAssemblerOptions.hh"
+#include "options/ReadScannerOptions.hh"
 
 typedef IterativeAssemblerOptions AssemblerOptions;
-
 
 /// load all reads form bam into assembly input structure with minimal
 /// filtration / input manipulation
 ///
-void
-extractAssemblyReadsFromBam(
+void extractAssemblyReadsFromBam(
     const ReadScannerOptions& scanOpt,
-    const AssemblerOptions& asmOpt,
-    const std::string& referenceFilename,
-    const std::string& alignmentFilename,
-    AssemblyReadInput& reads);
+    const AssemblerOptions&   asmOpt,
+    const std::string&        referenceFilename,
+    const std::string&        alignmentFilename,
+    AssemblyReadInput&        reads);

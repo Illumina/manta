@@ -17,25 +17,18 @@
 //
 //
 
-
 #pragma once
 
 #include "common/Program.hh"
 #include "options/AlignmentFileOptions.hh"
 
+struct AlignmentStatsOptions {
+  AlignmentFileOptions alignFileOpt;
 
-struct AlignmentStatsOptions
-{
-    AlignmentFileOptions alignFileOpt;
-
-    std::string referenceFilename;
-    std::string outputFilename;
-    std::string defaultStatsFilename;
+  std::string referenceFilename;
+  std::string outputFilename;
+  std::string defaultStatsFilename;
 };
 
-
-void
-parseAlignmentStatsOptions(
-    const illumina::Program& prog,
-    int argc, char* argv[],
-    AlignmentStatsOptions& opt);
+void parseAlignmentStatsOptions(
+    const illumina::Program& prog, int argc, char* argv[], AlignmentStatsOptions& opt);

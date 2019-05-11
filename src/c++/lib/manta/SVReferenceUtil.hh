@@ -29,23 +29,13 @@
 
 #include <string>
 
-
 /// test whether the two svCandidate breakend regions will overlap
 /// after the extra reference padding has been added
-bool
-isRefRegionOverlap(
-    const bam_header_info& header,
-    const pos_t extraRefEdgeSize,
-    const SVCandidate& sv);
-
+bool isRefRegionOverlap(const bam_header_info& header, const pos_t extraRefEdgeSize, const SVCandidate& sv);
 
 /// test whether the interval intersects a reference contig at all
 ///
-bool
-isRefRegionValid(
-    const bam_header_info& header,
-    const GenomeInterval& interval);
-
+bool isRefRegionValid(const bam_header_info& header, const GenomeInterval& interval);
 
 /// Given a genome interval, attempt to add an extra buffer
 /// to the interval and return the reference sequence corresponding
@@ -59,33 +49,29 @@ isRefRegionValid(
 /// \param[out] trailingTrim indicates how much was cut from the
 ///              end of the requested interval (with edge buffer)
 ///
-void
-getIntervalReferenceSegment(
-    const std::string& referenceFilename,
-    const bam_header_info& header,
-    const pos_t extraRefEdgeSize,
-    const GenomeInterval& interval,
+void getIntervalReferenceSegment(
+    const std::string&        referenceFilename,
+    const bam_header_info&    header,
+    const pos_t               extraRefEdgeSize,
+    const GenomeInterval&     interval,
     reference_contig_segment& intervalRef,
-    unsigned& leadingTrim,
-    unsigned& trailingTrim);
-
+    unsigned&                 leadingTrim,
+    unsigned&                 trailingTrim);
 
 /// alternate interface to getIntervalReferenceSegment for applications
 /// where the returned trim value is not needed:
-inline
-void
-getIntervalReferenceSegment(
-    const std::string& referenceFilename,
-    const bam_header_info& header,
-    const pos_t extraRefEdgeSize,
-    const GenomeInterval& interval,
+inline void getIntervalReferenceSegment(
+    const std::string&        referenceFilename,
+    const bam_header_info&    header,
+    const pos_t               extraRefEdgeSize,
+    const GenomeInterval&     interval,
     reference_contig_segment& intervalRef)
 {
-    unsigned leadingTrim;
-    unsigned trailingTrim;
-    getIntervalReferenceSegment(referenceFilename, header, extraRefEdgeSize, interval, intervalRef,leadingTrim, trailingTrim);
+  unsigned leadingTrim;
+  unsigned trailingTrim;
+  getIntervalReferenceSegment(
+      referenceFilename, header, extraRefEdgeSize, interval, intervalRef, leadingTrim, trailingTrim);
 }
-
 
 /// extract the reference sequence around each breakend into a reference_contig_segment
 /// object
@@ -93,15 +79,14 @@ getIntervalReferenceSegment(
 /// for each region, we extract the hypothetical breakend region + extraRefEdgeSize bases
 /// on each side, but limit the region to [0,chrom_size-1]
 ///
-void
-getSVReferenceSegments(
-    const std::string& referenceFilename,
-    const bam_header_info& header,
-    const pos_t extraRefEdgeSize,
-    const SVCandidate& sv,
+void getSVReferenceSegments(
+    const std::string&        referenceFilename,
+    const bam_header_info&    header,
+    const pos_t               extraRefEdgeSize,
+    const SVCandidate&        sv,
     reference_contig_segment& bp1ref,
     reference_contig_segment& bp2ref,
-    unsigned& bp1LeadingTrim,
-    unsigned& bp1TrailingTrim,
-    unsigned& bp2LeadingTrim,
-    unsigned& bp2TrailingTrim);
+    unsigned&                 bp1LeadingTrim,
+    unsigned&                 bp1TrailingTrim,
+    unsigned&                 bp2LeadingTrim,
+    unsigned&                 bp2TrailingTrim);

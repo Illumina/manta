@@ -19,9 +19,7 @@
 
 #include "applications/SummarizeAlignmentStats/SummarizeAlignmentStats.hh"
 
-
-int
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    return SummarizeAlignmentStats().run(argc,argv);
+  return SummarizeAlignmentStats().run(argc, argv);
 }

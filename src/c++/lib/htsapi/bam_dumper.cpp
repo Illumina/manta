@@ -30,63 +30,46 @@
 #include <iostream>
 #include <sstream>
 
-
-bam_dumper::
-bam_dumper(const char* filename,
-           const bam_hdr_t& header)
-    : _hdr(&header),
-      _stream_name(filename)
+bam_dumper::bam_dumper(const char* filename, const bam_hdr_t& header) : _hdr(&header), _stream_name(filename)
 {
-    assert(filename);
+  assert(filename);
 
-    _hfp = hts_open(filename, "wb");
+  _hfp = hts_open(filename, "wb");
 
-    if (! _hfp)
-    {
-        std::ostringstream oss;
-        oss << "Failed to open SAM/BAM/CRAM file for writing: '" << filename << "'";
-        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
-    }
+  if (!_hfp) {
+    std::ostringstream oss;
+    oss << "Failed to open SAM/BAM/CRAM file for writing: '" << filename << "'";
+    BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
+  }
 
-    const int headerWriteStatus = sam_hdr_write(_hfp,_hdr);
-    if (headerWriteStatus != 0)
-    {
-        std::ostringstream oss;
-        oss << "Failed to write SAM/BAM/CRAM file header for: '" << filename << "'";
-        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
-    }
+  const int headerWriteStatus = sam_hdr_write(_hfp, _hdr);
+  if (headerWriteStatus != 0) {
+    std::ostringstream oss;
+    oss << "Failed to write SAM/BAM/CRAM file header for: '" << filename << "'";
+    BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
+  }
 }
 
-
-
-void
-bam_dumper::
-close()
+void bam_dumper::close()
 {
-    if (! _hfp) return;
-    const int closeStatus = hts_close(_hfp);
-    if (closeStatus != 0)
-    {
-        std::ostringstream oss;
-        oss << "Failed to close SAM/BAM/CRAM file. hts_close return code: " << closeStatus << " stream name: '" << name() <<"'\n";
-        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
-    }
-    _hfp = nullptr;
+  if (!_hfp) return;
+  const int closeStatus = hts_close(_hfp);
+  if (closeStatus != 0) {
+    std::ostringstream oss;
+    oss << "Failed to close SAM/BAM/CRAM file. hts_close return code: " << closeStatus << " stream name: '"
+        << name() << "'\n";
+    BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
+  }
+  _hfp = nullptr;
 }
 
-
-
-void
-bam_dumper::
-put_record(const bam1_t* brec)
+void bam_dumper::put_record(const bam1_t* brec)
 {
-    assert(_hfp);
-    const int recordWriteStatus = sam_write1(_hfp,_hdr,brec);
-    if (recordWriteStatus < 0)
-    {
-        std::ostringstream oss;
-        oss << "Failed to write new record to BAM file: '" << name() << "'";
-        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
-    }
+  assert(_hfp);
+  const int recordWriteStatus = sam_write1(_hfp, _hdr, brec);
+  if (recordWriteStatus < 0) {
+    std::ostringstream oss;
+    oss << "Failed to write new record to BAM file: '" << name() << "'";
+    BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
+  }
 }
-

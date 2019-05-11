@@ -26,73 +26,66 @@
 #include "EdgeRuntimeTracker.hh"
 #include "GSCEdgeStatsManager.hh"
 #include "GSCOptions.hh"
-#include "manta/JunctionIdGenerator.hh"
-#include "manta/SVCandidateSetData.hh"
-#include "manta/SVLocusScanner.hh"
-#include "manta/SVMultiJunctionCandidate.hh"
 #include "SVCandidateAssemblyRefiner.hh"
 #include "SVEvidenceWriter.hh"
 #include "SVScorer.hh"
 #include "SVWriter.hh"
+#include "manta/JunctionIdGenerator.hh"
+#include "manta/SVCandidateSetData.hh"
+#include "manta/SVLocusScanner.hh"
+#include "manta/SVMultiJunctionCandidate.hh"
 
+struct SVCandidateProcessor {
+  SVCandidateProcessor(
+      const GSCOptions&                           opt,
+      const SVLocusScanner&                       readScanner,
+      const SVLocusSet&                           cset,
+      const SVWriter&                             svWriter,
+      std::shared_ptr<SVEvidenceWriterSharedData> svEvidenceWriterSharedData,
+      std::shared_ptr<EdgeRuntimeTracker>         edgeTrackerPtr,
+      GSCEdgeStatsManager&                        edgeStatMan);
 
-struct SVCandidateProcessor
-{
-    SVCandidateProcessor(
-        const GSCOptions& opt,
-        const SVLocusScanner& readScanner,
-        const SVLocusSet& cset,
-        const SVWriter& svWriter,
-        std::shared_ptr<SVEvidenceWriterSharedData> svEvidenceWriterSharedData,
-        std::shared_ptr<EdgeRuntimeTracker> edgeTrackerPtr,
-        GSCEdgeStatsManager& edgeStatMan);
-
-    /// Refine initial low-resolution candidates using an assembly step, then score and output final SVs
-    void
-    evaluateCandidates(
-        const EdgeInfo& edge,
-        const std::vector<SVMultiJunctionCandidate>& mjSVs,
-        const SVCandidateSetData& svData);
+  /// Refine initial low-resolution candidates using an assembly step, then score and output final SVs
+  void evaluateCandidates(
+      const EdgeInfo&                              edge,
+      const std::vector<SVMultiJunctionCandidate>& mjSVs,
+      const SVCandidateSetData&                    svData);
 
 private:
+  void scoreSV(
+      const SVCandidateSetData&                   svData,
+      const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
+      const SVMultiJunctionCandidate&             mjSV,
+      const std::vector<SVId>&                    junctionSVId,
+      std::vector<bool>&                          isJunctionFiltered,
+      bool&                                       isMultiJunctionEvent);
 
-    void
-    scoreSV(
-        const SVCandidateSetData& svData,
-        const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
-        const SVMultiJunctionCandidate& mjSV,
-        const std::vector<SVId>& junctionSVId,
-        std::vector<bool>& isJunctionFiltered,
-        bool& isMultiJunctionEvent);
+  /// Complete scoring a single SV and then write it out to VCF
+  void scoreAndWriteSV(
+      const EdgeInfo&                             edge,
+      const SVCandidateSetData&                   svData,
+      const std::vector<SVCandidateAssemblyData>& assemblyData,
+      const SVMultiJunctionCandidate&             mjSV,
+      const std::vector<bool>&                    isInputJunctionFiltered);
 
-    /// Complete scoring a single SV and then write it out to VCF
-    void
-    scoreAndWriteSV(
-        const EdgeInfo& edge,
-        const SVCandidateSetData& svData,
-        const std::vector<SVCandidateAssemblyData>& assemblyData,
-        const SVMultiJunctionCandidate& mjSV,
-        const std::vector<bool>& isInputJunctionFiltered);
+  void evaluateCandidate(
+      const EdgeInfo&                 edge,
+      const SVMultiJunctionCandidate& mjCandidateSV,
+      const SVCandidateSetData&       svData,
+      const bool                      isFindLargeInsertions);
 
-    void
-    evaluateCandidate(
-        const EdgeInfo& edge,
-        const SVMultiJunctionCandidate& mjCandidateSV,
-        const SVCandidateSetData& svData,
-        const bool isFindLargeInsertions);
+  const GSCOptions&                   _opt;
+  const SVLocusSet&                   _cset;
+  const SVWriter&                     _svWriter;
+  SVEvidenceWriter                    _svEvidenceWriter;
+  std::shared_ptr<EdgeRuntimeTracker> _edgeTrackerPtr;
+  GSCEdgeStatsManager&                _edgeStatMan;
+  SVCandidateAssemblyRefiner          _svRefine;
+  SVScorer                            _svScorer;
+  JunctionIdGenerator                 _idgen;
 
-    const GSCOptions& _opt;
-    const SVLocusSet& _cset;
-    const SVWriter& _svWriter;
-    SVEvidenceWriter _svEvidenceWriter;
-    std::shared_ptr<EdgeRuntimeTracker> _edgeTrackerPtr;
-    GSCEdgeStatsManager& _edgeStatMan;
-    SVCandidateAssemblyRefiner _svRefine;
-    SVScorer _svScorer;
-    JunctionIdGenerator _idgen;
-
-    /// These are only cached here to reduce syscalls:
-    std::vector<SVModelScoreInfo> _mjModelScoreInfo;
-    SVModelScoreInfo _mjJointModelScoreInfo;
-    SVEvidenceWriterData _svEvidenceWriterData;
+  /// These are only cached here to reduce syscalls:
+  std::vector<SVModelScoreInfo> _mjModelScoreInfo;
+  SVModelScoreInfo              _mjJointModelScoreInfo;
+  SVEvidenceWriterData          _svEvidenceWriterData;
 };

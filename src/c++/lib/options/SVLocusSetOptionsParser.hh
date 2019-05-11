@@ -23,13 +23,7 @@
 
 #include "boost/program_options.hpp"
 
+boost::program_options::options_description getOptionsDescription(SVLocusSetOptions& opt);
 
-boost::program_options::options_description
-getOptionsDescription(SVLocusSetOptions& opt);
-
-
-bool
-parseOptions(
-    const boost::program_options::variables_map& vm,
-    SVLocusSetOptions& opt,
-    std::string& errorMsg);
+bool parseOptions(
+    const boost::program_options::variables_map& vm, SVLocusSetOptions& opt, std::string& errorMsg);

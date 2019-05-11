@@ -19,7 +19,6 @@
 
 #pragma once
 
-
 /// \brief Convenience base class for polymorphic objects
 ///
 /// This class helps get around some of the boilerplate imposed by
@@ -30,17 +29,16 @@
 /// Per suggestion on thread:
 /// http://stackoverflow.com/questions/19997646/no-implicit-copy-constructor-in-polymorphic-class
 ///
-struct PolymorphicObject
-{
-    PolymorphicObject() = default;
-    virtual ~PolymorphicObject() = default;
+struct PolymorphicObject {
+  PolymorphicObject()          = default;
+  virtual ~PolymorphicObject() = default;
 
-    PolymorphicObject(const PolymorphicObject&) = default;
-    PolymorphicObject& operator =(const PolymorphicObject&) = default;
+  PolymorphicObject(const PolymorphicObject&) = default;
+  PolymorphicObject& operator=(const PolymorphicObject&) = default;
 
 #if ((!defined(_MSC_VER)) || (_MSC_VER > 1800))
-    // support moving
-    PolymorphicObject(PolymorphicObject&&) = default;
-    PolymorphicObject& operator=(PolymorphicObject&&) = default;
+  // support moving
+  PolymorphicObject(PolymorphicObject&&) = default;
+  PolymorphicObject& operator=(PolymorphicObject&&) = default;
 #endif
 };

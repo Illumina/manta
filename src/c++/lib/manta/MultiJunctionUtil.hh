@@ -28,7 +28,6 @@
 
 #include <vector>
 
-
 /// \brief Convert independent SV candidates into multi-junction event candidates
 ///
 /// Given a set of un-associated single-junction SV candidates, analyze which
@@ -41,11 +40,10 @@
 ///
 /// Note that 'complex' (short assembly targets from self-edges) SVs will not be grouped into
 //
-void
-findMultiJunctionCandidates(
-    const std::vector<SVCandidate>& svs,
-    const unsigned minCandidateSpanningCount,
-    const bool isRNA,
-    unsigned& mjComplexCount,
-    unsigned& mjSpanningFilterCount,
+void findMultiJunctionCandidates(
+    const std::vector<SVCandidate>&        svs,
+    const unsigned                         minCandidateSpanningCount,
+    const bool                             isRNA,
+    unsigned&                              mjComplexCount,
+    unsigned&                              mjSpanningFilterCount,
     std::vector<SVMultiJunctionCandidate>& mjSVs);

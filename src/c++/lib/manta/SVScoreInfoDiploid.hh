@@ -27,155 +27,107 @@
 #include <cmath>
 #include <cstdlib>
 
+#include <array>
 #include <iosfwd>
 #include <set>
 #include <string>
 #include <vector>
-#include <array>
 
-
-namespace DIPLOID_GT
-{
-enum index_t
-{
-    REF,
-    HET,
-    HOM,
-    SIZE
-};
+namespace DIPLOID_GT {
+enum index_t { REF, HET, HOM, SIZE };
 
 /// Prior probability of expected alt allele for each genotype in the order of {REF, HET, HOM}
 /// Note the alt prior for HOM is set to 0.99, allowing minor evidence (0.01) for ref allele
-static const std::array<float,SIZE> altPriors = { 0., 0.5, 0.99 };
+static const std::array<float, SIZE> altPriors = {0., 0.5, 0.99};
 // pre-compute log values for cache
-static const std::array<float,SIZE> altLnPriors = {std::log(altPriors[REF]),
-                                                   std::log(altPriors[HET]),
-                                                   std::log(altPriors[HOM])
-                                                  };
-static const std::array<float,SIZE> altLnCompPriors = {std::log(1-altPriors[REF]),
-                                                       std::log(1-altPriors[HET]),
-                                                       std::log(1-altPriors[HOM])
-                                                      };
+static const std::array<float, SIZE> altLnPriors = {
+    std::log(altPriors[REF]), std::log(altPriors[HET]), std::log(altPriors[HOM])};
+static const std::array<float, SIZE> altLnCompPriors = {
+    std::log(1 - altPriors[REF]), std::log(1 - altPriors[HET]), std::log(1 - altPriors[HOM])};
 
-inline
-const char*
-label(const index_t i)
+inline const char* label(const index_t i)
 {
-    switch (i)
-    {
-    case REF :
-        return "ref";
-    case HET :
-        return "het";
-    case HOM :
-        return "hom";
-    default:
-        assert(false && "Unknown GT state");
-        return nullptr;
-    }
+  switch (i) {
+  case REF:
+    return "ref";
+  case HET:
+    return "het";
+  case HOM:
+    return "hom";
+  default:
+    assert(false && "Unknown GT state");
+    return nullptr;
+  }
 }
 
-inline
-const char*
-label(const unsigned i)
+inline const char* label(const unsigned i)
 {
-    return label(static_cast<index_t>(i));
+  return label(static_cast<index_t>(i));
 }
 
-inline
-float
-altFraction(const index_t i)
+inline float altFraction(const index_t i)
 {
-    assert ((i<SIZE) && "Unknown GT state");
-    return altPriors[i];
+  assert((i < SIZE) && "Unknown GT state");
+  return altPriors[i];
 }
 
-inline
-double
-altLnFraction(const index_t i)
+inline double altLnFraction(const index_t i)
 {
-    assert ((i<SIZE) && "Unknown GT state");
-    return altLnPriors[i];
+  assert((i < SIZE) && "Unknown GT state");
+  return altLnPriors[i];
 }
 
-inline
-double
-altLnCompFraction(const index_t i)
+inline double altLnCompFraction(const index_t i)
 {
-    assert ((i<SIZE) && "Unknown GT state");
-    return altLnCompPriors[i];
+  assert((i < SIZE) && "Unknown GT state");
+  return altLnCompPriors[i];
 }
 
-}
+}  // namespace DIPLOID_GT
 
+struct SVScoreInfoDiploidSample {
+  SVScoreInfoDiploidSample() : phredLoghood(DIPLOID_GT::SIZE, 0), pprob(DIPLOID_GT::SIZE, 0) {}
 
+  void clear()
+  {
+    filters.clear();
+    gt      = DIPLOID_GT::REF;
+    gtScore = 0;
+    std::fill(phredLoghood.begin(), phredLoghood.end(), 0);
+    std::fill(pprob.begin(), pprob.end(), 0);
+  }
 
-struct SVScoreInfoDiploidSample
-{
-    SVScoreInfoDiploidSample() :
-        phredLoghood(DIPLOID_GT::SIZE,0),
-        pprob(DIPLOID_GT::SIZE,0)
-    {}
+  std::set<std::string> filters;
 
-    void
-    clear()
-    {
-        filters.clear();
-        gt=DIPLOID_GT::REF;
-        gtScore=0;
-        std::fill(phredLoghood.begin(),phredLoghood.end(),0);
-        std::fill(pprob.begin(), pprob.end(),0);
-    }
+  DIPLOID_GT::index_t gt = DIPLOID_GT::REF;
 
-    std::set<std::string> filters;
+  unsigned gtScore = 0;  ///< quality score of genotype
 
-    DIPLOID_GT::index_t gt = DIPLOID_GT::REF;
-
-    unsigned gtScore = 0; ///< quality score of genotype
-
-    std::vector<unsigned> phredLoghood;
-    std::vector<double> pprob;
+  std::vector<unsigned> phredLoghood;
+  std::vector<double>   pprob;
 };
 
-
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const SVScoreInfoDiploidSample& sid);
-
-
+std::ostream& operator<<(std::ostream& os, const SVScoreInfoDiploidSample& sid);
 
 /// consolidate all germline scoring results applied to an SV candidate
-struct SVScoreInfoDiploid
-{
-    void
-    setSampleCount(
-        const unsigned sampleCount)
-    {
-        samples.resize(sampleCount);
+struct SVScoreInfoDiploid {
+  void setSampleCount(const unsigned sampleCount) { samples.resize(sampleCount); }
+
+  void clear()
+  {
+    filters.clear();
+    altScore = 0;
+    for (auto& sample : samples) {
+      sample.clear();
     }
+  }
 
-    void
-    clear()
-    {
-        filters.clear();
-        altScore=0;
-        for (auto& sample : samples)
-        {
-            sample.clear();
-        }
-    }
+  std::set<std::string> filters;
 
-    std::set<std::string> filters;
+  unsigned altScore =
+      0;  ///< quality score indicating any non-reference state (regardless of specific genotype)
 
-    unsigned altScore = 0; ///< quality score indicating any non-reference state (regardless of specific genotype)
-
-    std::vector<SVScoreInfoDiploidSample> samples;
+  std::vector<SVScoreInfoDiploidSample> samples;
 };
 
-
-
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const SVScoreInfoDiploid& sid);
+std::ostream& operator<<(std::ostream& os, const SVScoreInfoDiploid& sid);

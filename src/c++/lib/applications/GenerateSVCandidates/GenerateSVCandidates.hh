@@ -25,17 +25,10 @@
 
 #include "common/Program.hh"
 
-
 /// generates candidate calls from graph edges
 ///
-struct GenerateSVCandidates : public illumina::Program
-{
-    const char*
-    name() const
-    {
-        return "GenerateSVCandidates";
-    }
+struct GenerateSVCandidates : public illumina::Program {
+  const char* name() const { return "GenerateSVCandidates"; }
 
-    void
-    runInternal(int argc, char* argv[]) const;
+  void runInternal(int argc, char* argv[]) const;
 };

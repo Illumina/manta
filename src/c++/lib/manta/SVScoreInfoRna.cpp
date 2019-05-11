@@ -28,21 +28,16 @@
 
 const std::string SVScoreInfoRna::rnaFilterLabel = "LowEvidence";
 const std::string SVScoreInfoRna::impreciseLabel = "Imprecise";
-const std::string SVScoreInfoRna::localLabel = "Local";
+const std::string SVScoreInfoRna::localLabel     = "Local";
 
-
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const SVScoreInfoRna& sid)
+std::ostream& operator<<(std::ostream& os, const SVScoreInfoRna& sid)
 {
-    os << "RnaSVScoreInfo "
-       << " altScore=" << sid.altScore;
-    os << " filters:";
-    for (const std::string& filter : sid.filters)
-    {
-        os << " " << filter;
-    }
-    os << "\n";
-    return os;
+  os << "RnaSVScoreInfo "
+     << " altScore=" << sid.altScore;
+  os << " filters:";
+  for (const std::string& filter : sid.filters) {
+    os << " " << filter;
+  }
+  os << "\n";
+  return os;
 }

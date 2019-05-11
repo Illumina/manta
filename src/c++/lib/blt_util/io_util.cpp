@@ -31,66 +31,43 @@
 #include <iostream>
 #include <sstream>
 
-
-
-void
-open_ifstream(
-    std::ifstream& ifs,
-    const char* filename)
+void open_ifstream(std::ifstream& ifs, const char* filename)
 {
-    ifs.open(filename);
-    if (! ifs)
-    {
-        std::ostringstream oss;
-        oss << "Can't open file: '" << filename << "'";
-        throw blt_exception(oss.str().c_str());
-    }
+  ifs.open(filename);
+  if (!ifs) {
+    std::ostringstream oss;
+    oss << "Can't open file: '" << filename << "'";
+    throw blt_exception(oss.str().c_str());
+  }
 }
 
-
-
-StreamScoper::
-StreamScoper(
-    std::ostream& os)
-    : _os(os), _tmp_os(new std::ofstream)
+StreamScoper::StreamScoper(std::ostream& os) : _os(os), _tmp_os(new std::ofstream)
 {
-    _tmp_os->copyfmt(_os);
+  _tmp_os->copyfmt(_os);
 }
 
-
-
-StreamScoper::
-~StreamScoper()
+StreamScoper::~StreamScoper()
 {
-    _os.copyfmt(*_tmp_os);
+  _os.copyfmt(*_tmp_os);
 }
 
-
-
-SynchronizedOutputStream::
-SynchronizedOutputStream(const std::string& outputFile)
+SynchronizedOutputStream::SynchronizedOutputStream(const std::string& outputFile)
 {
-    if (outputFile.empty())
-    {
-        std::ostringstream oss;
-        oss << "No output file specified to SynchronizedOutputStream";
-        throw blt_exception(oss.str().c_str());
-    }
-    m_osPtr.reset(new std::ofstream(outputFile.c_str()));
-    if (! *m_osPtr)
-    {
-        std::ostringstream oss;
-        oss << "Can't open output file: '" << outputFile << "'";
-        throw blt_exception(oss.str().c_str());
-    }
+  if (outputFile.empty()) {
+    std::ostringstream oss;
+    oss << "No output file specified to SynchronizedOutputStream";
+    throw blt_exception(oss.str().c_str());
+  }
+  m_osPtr.reset(new std::ofstream(outputFile.c_str()));
+  if (!*m_osPtr) {
+    std::ostringstream oss;
+    oss << "Can't open output file: '" << outputFile << "'";
+    throw blt_exception(oss.str().c_str());
+  }
 }
 
-
-
-void
-SynchronizedOutputStream::
-write(const std::string& msg)
+void SynchronizedOutputStream::write(const std::string& msg)
 {
-    std::lock_guard<std::mutex> lock(m_writeMutex);
-    *m_osPtr << msg;
+  std::lock_guard<std::mutex> lock(m_writeMutex);
+  *m_osPtr << msg;
 }

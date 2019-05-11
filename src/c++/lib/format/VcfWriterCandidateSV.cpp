@@ -23,63 +23,44 @@
 
 #include "format/VcfWriterCandidateSV.hh"
 
-
-
-
-void
-VcfWriterCandidateSV::
-addHeaderInfo(std::ostream& os) const
+void VcfWriterCandidateSV::addHeaderInfo(std::ostream& os) const
 {
-    os << "##INFO=<ID=PAIR_COUNT,Number=1,Type=Integer,Description=\"Read pairs supporting this variant where both reads are confidently mapped\">\n";
-    os << "##INFO=<ID=BND_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this breakend (mapping may not be confident at remote breakend)\">\n";
-    os << "##INFO=<ID=UPSTREAM_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at the upstream breakend (mapping may not be confident at downstream breakend)\">\n";
-    os << "##INFO=<ID=DOWNSTREAM_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this downstream breakend (mapping may not be confident at upstream breakend)\">\n";
+  os << "##INFO=<ID=PAIR_COUNT,Number=1,Type=Integer,Description=\"Read pairs supporting this variant where both reads are confidently mapped\">\n";
+  os << "##INFO=<ID=BND_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this breakend (mapping may not be confident at remote breakend)\">\n";
+  os << "##INFO=<ID=UPSTREAM_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at the upstream breakend (mapping may not be confident at downstream breakend)\">\n";
+  os << "##INFO=<ID=DOWNSTREAM_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this downstream breakend (mapping may not be confident at upstream breakend)\">\n";
 }
 
-
-
-void
-VcfWriterCandidateSV::
-modifyTranslocInfo(
+void VcfWriterCandidateSV::modifyTranslocInfo(
     const SVCandidate& sv,
     const SVScoreInfo* /*baseScoringInfoPtr*/,
     const bool isFirstOfPair,
     const SVCandidateAssemblyData& /*assemblyData*/,
     InfoTag_t& infoTags) const
 {
-    const SVBreakend& bpA( isFirstOfPair ? sv.bp1 : sv.bp2);
+  const SVBreakend& bpA(isFirstOfPair ? sv.bp1 : sv.bp2);
 
-    infoTags.push_back( str(boost::format("BND_PAIR_COUNT=%i") % bpA.getLocalPairCount()) );
-    infoTags.push_back( str(boost::format("PAIR_COUNT=%i") % bpA.getPairCount()) );
+  infoTags.push_back(str(boost::format("BND_PAIR_COUNT=%i") % bpA.getLocalPairCount()));
+  infoTags.push_back(str(boost::format("PAIR_COUNT=%i") % bpA.getPairCount()));
 }
 
-
-
-void
-VcfWriterCandidateSV::
-modifyInvdelInfo(
-    const SVCandidate& sv,
-    const bool isBp1First,
-    InfoTag_t& infoTags) const
+void VcfWriterCandidateSV::modifyInvdelInfo(
+    const SVCandidate& sv, const bool isBp1First, InfoTag_t& infoTags) const
 {
-    const SVBreakend& bpA( isBp1First ? sv.bp1 : sv.bp2);
-    const SVBreakend& bpB( isBp1First ? sv.bp2 : sv.bp1);
+  const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
+  const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
 
-    infoTags.push_back( str(boost::format("UPSTREAM_PAIR_COUNT=%i") % bpA.getLocalPairCount()) );
-    infoTags.push_back( str(boost::format("DOWNSTREAM_PAIR_COUNT=%i") % bpB.getLocalPairCount()) );
-    infoTags.push_back( str(boost::format("PAIR_COUNT=%i") % bpA.getPairCount()) );
+  infoTags.push_back(str(boost::format("UPSTREAM_PAIR_COUNT=%i") % bpA.getLocalPairCount()));
+  infoTags.push_back(str(boost::format("DOWNSTREAM_PAIR_COUNT=%i") % bpB.getLocalPairCount()));
+  infoTags.push_back(str(boost::format("PAIR_COUNT=%i") % bpA.getPairCount()));
 }
 
-
-
-void
-VcfWriterCandidateSV::
-writeSV(
-    const SVCandidateSetData& svData,
+void VcfWriterCandidateSV::writeSV(
+    const SVCandidateSetData&      svData,
     const SVCandidateAssemblyData& adata,
-    const SVCandidate& sv,
-    const SVId& svId) const
+    const SVCandidate&             sv,
+    const SVId&                    svId) const
 {
-    static const EventInfo event;
-    writeSVCore( svData, adata, sv, svId, nullptr, nullptr, event);
+  static const EventInfo event;
+  writeSVCore(svData, adata, sv, svId, nullptr, nullptr, event);
 }

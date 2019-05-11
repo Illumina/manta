@@ -21,7 +21,6 @@
 
 #include <cstdint>
 
-
 typedef int32_t pos_t;
 
 typedef float blt_float_t;

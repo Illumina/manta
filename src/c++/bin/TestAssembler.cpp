@@ -19,9 +19,7 @@
 
 #include "applications/TestAssembler/TestAssembler.hh"
 
-
-int
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    return TestAssembler().run(argc,argv);
+  return TestAssembler().run(argc, argv);
 }

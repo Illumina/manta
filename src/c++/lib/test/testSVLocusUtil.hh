@@ -26,17 +26,15 @@
 
 #include "svgraph/SVLocus.hh"
 
-
 /// \brief Add a pair of nodes to a SVLocus object.
 /// \param count The evidence count applied to the edge from node1 to node2
-void
-locusAddPair(
-    SVLocus& locus,
-    const int32_t tid1,
-    const int32_t beginPos1,
-    const int32_t endPos1,
-    const int32_t tid2,
-    const int32_t beginPos2,
-    const int32_t endPos2,
-    const bool bothLocal = false,
-    const unsigned count = 1);
+void locusAddPair(
+    SVLocus&       locus,
+    const int32_t  tid1,
+    const int32_t  beginPos1,
+    const int32_t  endPos1,
+    const int32_t  tid2,
+    const int32_t  beginPos2,
+    const int32_t  endPos2,
+    const bool     bothLocal = false,
+    const unsigned count     = 1);

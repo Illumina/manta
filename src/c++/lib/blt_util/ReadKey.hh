@@ -34,86 +34,65 @@
 #include <iosfwd>
 #include <string>
 
-
 /// information required to uniquely identify a read:
 ///
-struct ReadKey
-{
-    ReadKey(
-        const bam_record& br,
-        const bool isCopyPtrs = true)
-        : _isCopyPtrs(isCopyPtrs)
-        , _qname((_isCopyPtrs && (nullptr != br.qname())) ? strdup(br.qname()) : br.qname())
-        , _readNo(br.read_no())
-    {
-        assert(nullptr != _qname);
-    }
+struct ReadKey {
+  ReadKey(const bam_record& br, const bool isCopyPtrs = true)
+    : _isCopyPtrs(isCopyPtrs),
+      _qname((_isCopyPtrs && (nullptr != br.qname())) ? strdup(br.qname()) : br.qname()),
+      _readNo(br.read_no())
+  {
+    assert(nullptr != _qname);
+  }
 
-    ReadKey(
-        const char* initQname,
-        const int initReadNo,
-        const bool isCopyPtrs = true)
-        : _isCopyPtrs(isCopyPtrs)
-        , _qname((_isCopyPtrs && (nullptr != initQname)) ? strdup(initQname) : initQname)
-        , _readNo(initReadNo)
-    {
-        assert(nullptr != _qname);
-    }
+  ReadKey(const char* initQname, const int initReadNo, const bool isCopyPtrs = true)
+    : _isCopyPtrs(isCopyPtrs),
+      _qname((_isCopyPtrs && (nullptr != initQname)) ? strdup(initQname) : initQname),
+      _readNo(initReadNo)
+  {
+    assert(nullptr != _qname);
+  }
 
-    ReadKey(
-        const ReadKey& rhs)
-        : _isCopyPtrs(rhs._isCopyPtrs)
-        , _qname(_isCopyPtrs ? strdup(rhs._qname) : rhs._qname)
-        , _readNo(rhs._readNo)
-    {}
+  ReadKey(const ReadKey& rhs)
+    : _isCopyPtrs(rhs._isCopyPtrs),
+      _qname(_isCopyPtrs ? strdup(rhs._qname) : rhs._qname),
+      _readNo(rhs._readNo)
+  {
+  }
 
 private:
-    ReadKey& operator=(const ReadKey& rhs);
+  ReadKey& operator=(const ReadKey& rhs);
 
 public:
-    ~ReadKey()
-    {
-        if (_isCopyPtrs)
-        {
-            if (nullptr != _qname) free(const_cast<char*>(_qname));
-        }
+  ~ReadKey()
+  {
+    if (_isCopyPtrs) {
+      if (nullptr != _qname) free(const_cast<char*>(_qname));
     }
+  }
 
-    int
-    readNo() const
-    {
-        return _readNo;
-    }
+  int readNo() const { return _readNo; }
 
-    const char*
-    qname() const
-    {
-        return _qname;
-    }
+  const char* qname() const { return _qname; }
 
-    bool operator<(
-        const ReadKey& rhs) const
-    {
-        if (readNo() < rhs.readNo()) return true;
-        if (readNo() == rhs.readNo())
-        {
-            return (strcmp(qname(), rhs.qname()) < 0);
-        }
-        return false;
+  bool operator<(const ReadKey& rhs) const
+  {
+    if (readNo() < rhs.readNo()) return true;
+    if (readNo() == rhs.readNo()) {
+      return (strcmp(qname(), rhs.qname()) < 0);
     }
+    return false;
+  }
 
-    bool operator==(
-        const ReadKey& rhs) const
-    {
-        return ((readNo() == rhs.readNo()) && ((0 == strcmp(qname(), rhs.qname()))));
-    }
+  bool operator==(const ReadKey& rhs) const
+  {
+    return ((readNo() == rhs.readNo()) && ((0 == strcmp(qname(), rhs.qname()))));
+  }
 
 private:
-    const bool _isCopyPtrs;
-    const char* _qname;
-    const int _readNo;
+  const bool  _isCopyPtrs;
+  const char* _qname;
+  const int   _readNo;
 };
 
-std::ostream&
-operator<<(std::ostream& os, const ReadKey& rk);
-
+std::ostream& operator<<(std::ostream& os, const ReadKey& rk);

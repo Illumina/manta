@@ -19,8 +19,8 @@
 
 #include "ReadGroupStatsSet.hh"
 
-#include "blt_util/log.hh"
 #include "blt_util/io_util.hh"
+#include "blt_util/log.hh"
 #include "blt_util/parse_util.hh"
 #include "blt_util/string_util.hh"
 
@@ -28,11 +28,11 @@
 #include "boost/config.hpp"
 #ifdef BOOST_INTEL_CXX_VERSION
 #pragma warning push
-#pragma warning(disable:1944)
+#pragma warning(disable : 1944)
 #endif
 
-#include "boost/archive/xml_oarchive.hpp"
 #include "boost/archive/xml_iarchive.hpp"
+#include "boost/archive/xml_oarchive.hpp"
 
 #ifdef BOOST_INTEL_CXX_VERSION
 #pragma warning pop
@@ -46,101 +46,76 @@
 #include <iostream>
 #include <sstream>
 
-
-
 /// this struct exists for the sole purpose of xml output:
-struct ReadGroupStatsExporter
-{
-    template<class Archive>
-    void serialize(
-        Archive& ar,
-        const unsigned /*version*/)
-    {
+struct ReadGroupStatsExporter {
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned /*version*/)
+  {
 #ifdef READ_GROUPS
-        ar& boost::serialization::make_nvp("bamFile", bamFile);
-        ar& boost::serialization::make_nvp("readGroup", readGroup);
+    ar& boost::serialization::make_nvp("bamFile", bamFile);
+    ar& boost::serialization::make_nvp("readGroup", readGroup);
 #else
-        ar& boost::serialization::make_nvp("groupLabel", bamFile);
+    ar& boost::serialization::make_nvp("groupLabel", bamFile);
 #endif
-        ar& boost::serialization::make_nvp("groupStats", groupStats);
-    }
+    ar& boost::serialization::make_nvp("groupStats", groupStats);
+  }
 
-    std::string bamFile;
-    std::string readGroup;
-    ReadGroupStats groupStats;
+  std::string    bamFile;
+  std::string    readGroup;
+  ReadGroupStats groupStats;
 };
 
 BOOST_CLASS_IMPLEMENTATION(ReadGroupStatsExporter, boost::serialization::object_serializable)
 
-
-
-void
-ReadGroupStatsSet::
-merge(
-    const ReadGroupStatsSet& rhs)
+void ReadGroupStatsSet::merge(const ReadGroupStatsSet& rhs)
 {
-    const unsigned numGroups(rhs.size());
-    for (unsigned i(0); i<numGroups; ++i)
-    {
-        const ReadGroupLabel& mkey(rhs.getKey(i));
-        if (_group.test_key(mkey))
-        {
-            log_os << "Can't merge stats set objects with repeated key: '" << mkey << "'";
-            exit(EXIT_FAILURE);
-        }
-
-        setStats(mkey,rhs.getStats(i));
+  const unsigned numGroups(rhs.size());
+  for (unsigned i(0); i < numGroups; ++i) {
+    const ReadGroupLabel& mkey(rhs.getKey(i));
+    if (_group.test_key(mkey)) {
+      log_os << "Can't merge stats set objects with repeated key: '" << mkey << "'";
+      exit(EXIT_FAILURE);
     }
+
+    setStats(mkey, rhs.getStats(i));
+  }
 }
 
-
-
-void
-ReadGroupStatsSet::
-save(
-    const char* filename) const
+void ReadGroupStatsSet::save(const char* filename) const
 {
-    assert(nullptr != filename);
-    std::ofstream ofs(filename);
-    boost::archive::xml_oarchive oa(ofs);
+  assert(nullptr != filename);
+  std::ofstream                ofs(filename);
+  boost::archive::xml_oarchive oa(ofs);
 
-    const unsigned numGroups(size());
-    oa << boost::serialization::make_nvp("numGroups", numGroups);
-    ReadGroupStatsExporter se;
-    for (unsigned i(0); i<numGroups; ++i)
-    {
-        const KeyType& key(getKey(i));
-        se.bamFile = key.bamLabel;
-        se.readGroup = key.rgLabel;
-        se.groupStats = getStats(i);
+  const unsigned numGroups(size());
+  oa << boost::serialization::make_nvp("numGroups", numGroups);
+  ReadGroupStatsExporter se;
+  for (unsigned i(0); i < numGroups; ++i) {
+    const KeyType& key(getKey(i));
+    se.bamFile    = key.bamLabel;
+    se.readGroup  = key.rgLabel;
+    se.groupStats = getStats(i);
 
-        std::ostringstream oss;
-        oss << "groupStats_" << i;
-        oa << boost::serialization::make_nvp(oss.str().c_str(), se);
-    }
+    std::ostringstream oss;
+    oss << "groupStats_" << i;
+    oa << boost::serialization::make_nvp(oss.str().c_str(), se);
+  }
 }
 
-
-
-void
-ReadGroupStatsSet::
-load(
-    const char* filename)
+void ReadGroupStatsSet::load(const char* filename)
 {
-    clear();
+  clear();
 
-    assert(nullptr != filename);
-    std::ifstream ifs(filename);
-    boost::archive::xml_iarchive ia(ifs);
+  assert(nullptr != filename);
+  std::ifstream                ifs(filename);
+  boost::archive::xml_iarchive ia(ifs);
 
-    int numGroups;
-    ia >> boost::serialization::make_nvp("numGroups", numGroups);
-    ReadGroupStatsExporter se;
-    for (int i=0; i<numGroups; i++)
-    {
-        ia >> boost::serialization::make_nvp("bogus", se);
+  int numGroups;
+  ia >> boost::serialization::make_nvp("numGroups", numGroups);
+  ReadGroupStatsExporter se;
+  for (int i = 0; i < numGroups; i++) {
+    ia >> boost::serialization::make_nvp("bogus", se);
 
-        setStats(KeyType(se.bamFile.c_str(), se.readGroup.c_str()), se.groupStats);
-    }
+    setStats(KeyType(se.bamFile.c_str(), se.readGroup.c_str()), se.groupStats);
+  }
 }
-

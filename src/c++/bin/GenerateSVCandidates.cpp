@@ -19,9 +19,7 @@
 
 #include "applications/GenerateSVCandidates/GenerateSVCandidates.hh"
 
-
-int
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    return GenerateSVCandidates().run(argc,argv);
+  return GenerateSVCandidates().run(argc, argv);
 }

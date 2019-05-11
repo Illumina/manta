@@ -21,52 +21,42 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/log.hh"
 #include "blt_util/sig_handler.hh"
+#include "blt_util/log.hh"
 
-#include <cstdlib>
 #include <signal.h>
+#include <cstdlib>
 
 #include <iostream>
 #include <string>
 
-
 static std::string _progname;
 static std::string _cmdline;
 
-
-
-static
-void
-blt_sig_handler (int sig)
+static void blt_sig_handler(int sig)
 {
-    switch (sig)
-    {
-    case SIGTERM:
-        log_os << "ERROR: " << _progname << " received termination signal. cmdline: " << _cmdline << std::endl;
-        exit(EXIT_FAILURE);
+  switch (sig) {
+  case SIGTERM:
+    log_os << "ERROR: " << _progname << " received termination signal. cmdline: " << _cmdline << std::endl;
+    exit(EXIT_FAILURE);
 #ifndef _WIN32
-    case SIGINT:
-        log_os << "ERROR: " << _progname << " received interrupt signal. cmdline: " << _cmdline << std::endl;
-        exit(EXIT_FAILURE);
+  case SIGINT:
+    log_os << "ERROR: " << _progname << " received interrupt signal. cmdline: " << _cmdline << std::endl;
+    exit(EXIT_FAILURE);
 #endif
-    default:
-        log_os << "INFO: " << _progname << " received signal no: " << sig << std::endl;
-        break;
-    }
+  default:
+    log_os << "INFO: " << _progname << " received signal no: " << sig << std::endl;
+    break;
+  }
 }
 
-
-
-void
-initialize_blt_signals(const char* progname,
-                       const char* cmdline)
+void initialize_blt_signals(const char* progname, const char* cmdline)
 {
-    _progname=progname;
-    _cmdline=cmdline;
+  _progname = progname;
+  _cmdline  = cmdline;
 
-    signal(SIGTERM, blt_sig_handler);
+  signal(SIGTERM, blt_sig_handler);
 #ifndef _WIN32
-    signal(SIGINT, blt_sig_handler);
+  signal(SIGINT, blt_sig_handler);
 #endif
 }

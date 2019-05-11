@@ -17,23 +17,16 @@
 //
 //
 
-
 #pragma once
 
 #include <string>
 #include <vector>
 #include "../../common/Program.hh"
 
-
-struct MergeAlignmentStatsOptions
-{
-    std::vector<std::string> statsFiles;
-    std::string outputFilename;
+struct MergeAlignmentStatsOptions {
+  std::vector<std::string> statsFiles;
+  std::string              outputFilename;
 };
 
-
-void
-parseMergeAlignmentStatsOptions(
-    const illumina::Program& prog,
-    int argc, char* argv[],
-    MergeAlignmentStatsOptions& opt);
+void parseMergeAlignmentStatsOptions(
+    const illumina::Program& prog, int argc, char* argv[], MergeAlignmentStatsOptions& opt);

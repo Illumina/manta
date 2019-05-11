@@ -19,9 +19,7 @@
 
 #include "applications/DumpSVLoci/DumpSVLoci.hh"
 
-
-int
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    return DumpSVLoci().run(argc,argv);
+  return DumpSVLoci().run(argc, argv);
 }

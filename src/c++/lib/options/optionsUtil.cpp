@@ -23,32 +23,22 @@
 
 #include <sstream>
 
-
-
-bool
-checkAndStandardizeRequiredInputFilePath(
-    std::string& filename,
-    const char* fileLabel,
-    std::string& errorMsg)
+bool checkAndStandardizeRequiredInputFilePath(
+    std::string& filename, const char* fileLabel, std::string& errorMsg)
 {
-    errorMsg.clear();
+  errorMsg.clear();
 
-    if (filename.empty())
-    {
-        std::ostringstream oss;
-        oss << "Must specify " << fileLabel << " file";
-        errorMsg = oss.str();
-    }
-    else if (! boost::filesystem::exists(filename))
-    {
-        std::ostringstream oss;
-        oss << "Can't find " << fileLabel << " file '" << filename << "'";
-        errorMsg = oss.str();
-    }
-    else
-    {
-        filename = boost::filesystem::absolute(filename).string();
-    }
+  if (filename.empty()) {
+    std::ostringstream oss;
+    oss << "Must specify " << fileLabel << " file";
+    errorMsg = oss.str();
+  } else if (!boost::filesystem::exists(filename)) {
+    std::ostringstream oss;
+    oss << "Can't find " << fileLabel << " file '" << filename << "'";
+    errorMsg = oss.str();
+  } else {
+    filename = boost::filesystem::absolute(filename).string();
+  }
 
-    return (! errorMsg.empty());
+  return (!errorMsg.empty());
 }

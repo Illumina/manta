@@ -21,17 +21,10 @@
 
 #include "common/Program.hh"
 
-
 /// estimate per-library information from alignment file(s)
 ///
-struct GetChromDepth : public illumina::Program
-{
-    const char*
-    name() const
-    {
-        return "GetChromDepth";
-    }
+struct GetChromDepth : public illumina::Program {
+  const char* name() const { return "GetChromDepth"; }
 
-    void
-    runInternal(int argc, char* argv[]) const;
+  void runInternal(int argc, char* argv[]) const;
 };

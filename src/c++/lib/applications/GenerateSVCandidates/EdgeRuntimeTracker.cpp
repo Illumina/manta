@@ -27,46 +27,32 @@
 #include <iostream>
 #include <sstream>
 
-
-
-EdgeRuntimeTracker::
-EdgeRuntimeTracker(
-    std::shared_ptr<SynchronizedOutputStream> streamPtr) :
-    _streamPtr(streamPtr),
+EdgeRuntimeTracker::EdgeRuntimeTracker(std::shared_ptr<SynchronizedOutputStream> streamPtr)
+  : _streamPtr(streamPtr),
     _candidateCount(0),
     _complexCandidateCount(0),
     _assembledCandidateCount(0),
     _assembledComplexCandidateCount(0)
-{}
-
-
-
-void
-EdgeRuntimeTracker::
-stop(const EdgeInfo& edge)
 {
-    _edgeTime.stop();
-    if (! _streamPtr) return;
+}
 
-    const double lastTime(_edgeTime.getWallSeconds());
+void EdgeRuntimeTracker::stop(const EdgeInfo& edge)
+{
+  _edgeTime.stop();
+  if (!_streamPtr) return;
 
-    /// the purpose of the log is to identify the most troublesome cases only, so cutoff the output at a minimum time:
-    static const double minLogTime(0.5);
-    if (lastTime >= minLogTime)
-    {
-        std::ostringstream oss;
-        oss << std::setprecision(4);
-        edge.write(oss);
-        oss << '\t' << lastTime
-            << '\t' << _candidateCount
-            << '\t' << _complexCandidateCount
-            << '\t' << _assembledCandidateCount
-            << '\t' << _assembledComplexCandidateCount
-            << '\t' << candidacyTime.getWallSeconds()
-            << '\t' << assemblyTime.getWallSeconds()
-            << '\t' << remoteReadRetrievalTime.getWallSeconds()
-            << '\t' << scoreTime.getWallSeconds()
-            << '\n';
-        _streamPtr->write(oss.str());
-    }
+  const double lastTime(_edgeTime.getWallSeconds());
+
+  /// the purpose of the log is to identify the most troublesome cases only, so cutoff the output at a minimum time:
+  static const double minLogTime(0.5);
+  if (lastTime >= minLogTime) {
+    std::ostringstream oss;
+    oss << std::setprecision(4);
+    edge.write(oss);
+    oss << '\t' << lastTime << '\t' << _candidateCount << '\t' << _complexCandidateCount << '\t'
+        << _assembledCandidateCount << '\t' << _assembledComplexCandidateCount << '\t'
+        << candidacyTime.getWallSeconds() << '\t' << assemblyTime.getWallSeconds() << '\t'
+        << remoteReadRetrievalTime.getWallSeconds() << '\t' << scoreTime.getWallSeconds() << '\n';
+    _streamPtr->write(oss.str());
+  }
 }

@@ -21,17 +21,10 @@
 
 #include "common/Program.hh"
 
-
 /// estimate per-library information from alignment file(s)
 ///
-struct GetAlignmentStats : public illumina::Program
-{
-    const char*
-    name() const
-    {
-        return "GetAlignmentStats";
-    }
+struct GetAlignmentStats : public illumina::Program {
+  const char* name() const { return "GetAlignmentStats"; }
 
-    void
-    runInternal(int argc, char* argv[]) const;
+  void runInternal(int argc, char* argv[]) const;
 };

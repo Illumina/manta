@@ -19,21 +19,16 @@
 
 #include "options/CallOptionsTumor.hh"
 
-
-boost::program_options::options_description
-getOptionsDescription(CallOptionsTumor& opt)
+boost::program_options::options_description getOptionsDescription(CallOptionsTumor& opt)
 {
-    namespace po = boost::program_options;
-    po::options_description desc("tumor-only-variant-calling");
-    desc.add_options()
-    ("tumor-max-depth-factor", po::value(&opt.maxDepthFactor)->default_value(opt.maxDepthFactor),
-     "Variants where the tumor-sample depth around the breakpoint is greater than this factor x the chromosomal mean will be filtered out")
-    ;
+  namespace po = boost::program_options;
+  po::options_description desc("tumor-only-variant-calling");
+  // clang-format off
+  desc.add_options()
+  ("tumor-max-depth-factor", po::value(&opt.maxDepthFactor)->default_value(opt.maxDepthFactor),
+   "Variants where the tumor-sample depth around the breakpoint is greater than this factor x the chromosomal mean will be filtered out")
+  ;
+  // clang-format on
 
-    return desc;
+  return desc;
 }
-
-
-
-
-

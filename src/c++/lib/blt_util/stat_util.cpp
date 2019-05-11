@@ -25,19 +25,13 @@
 
 #include "boost/math/distributions/chi_squared.hpp"
 
-
-
-bool
-is_chi_sqr_reject(
-    const double xsq,
-    const unsigned df,
-    const double alpha)
+bool is_chi_sqr_reject(const double xsq, const unsigned df, const double alpha)
 {
-    assert(xsq>=0);
-    assert(df>0);
+  assert(xsq >= 0);
+  assert(df > 0);
 
-    boost::math::chi_squared dist(df);
-    return ((1.-boost::math::cdf(dist,xsq)) < alpha);
+  boost::math::chi_squared dist(df);
+  return ((1. - boost::math::cdf(dist, xsq)) < alpha);
 
 #if 0
     // alternate implementation (is one faster?):
@@ -46,19 +40,13 @@ is_chi_sqr_reject(
 #endif
 }
 
-
-
-bool
-is_lrt_reject_null(
-    const double null_loghood,
-    const double alt_loghood,
-    const unsigned df,
-    const double alpha)
+bool is_lrt_reject_null(
+    const double null_loghood, const double alt_loghood, const unsigned df, const double alpha)
 {
-    if (df == 0) return false;
-    if (null_loghood>alt_loghood) return false;
+  if (df == 0) return false;
+  if (null_loghood > alt_loghood) return false;
 
-    const double log_lrt(-2.*(null_loghood-alt_loghood));
+  const double log_lrt(-2. * (null_loghood - alt_loghood));
 
-    return is_chi_sqr_reject(log_lrt,df,alpha);
+  return is_chi_sqr_reject(log_lrt, df, alpha);
 }

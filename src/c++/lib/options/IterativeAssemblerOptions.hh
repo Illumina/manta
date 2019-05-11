@@ -21,41 +21,39 @@
 
 #include <string>
 
-
 /// Input parameters for IterativeAssembler
 ///
-struct IterativeAssemblerOptions
-{
-    IterativeAssemblerOptions() {}
+struct IterativeAssemblerOptions {
+  IterativeAssemblerOptions() {}
 
-    /// the symbol set used during assembly
-    std::string alphabet = "ACGT";
+  /// the symbol set used during assembly
+  std::string alphabet = "ACGT";
 
-    /// minimum basecall quality for assembly input
-    int minQval = 5;
+  /// minimum basecall quality for assembly input
+  int minQval = 5;
 
-    /// initial word (kmer) length
-    unsigned minWordLength = 41;
+  /// initial word (kmer) length
+  unsigned minWordLength = 41;
 
-    unsigned maxWordLength = 76;
-    unsigned wordStepSize = 5;
-    unsigned minContigLength = 15;
+  unsigned maxWordLength   = 76;
+  unsigned wordStepSize    = 5;
+  unsigned minContigLength = 15;
 
-    /// min. coverage required for contig extension
-    unsigned minCoverage = 1;
+  /// min. coverage required for contig extension
+  unsigned minCoverage = 1;
 
-    /// coverage required for conservative contig sub-range
-    unsigned minConservativeCoverage = 2;
+  /// coverage required for conservative contig sub-range
+  unsigned minConservativeCoverage = 2;
 
-    /// max error rates allowed during contig extension
-    double maxError = 0.35;
+  /// max error rates allowed during contig extension
+  double maxError = 0.35;
 
-    /// min. number of unused reads to enable search for more contigs
-    unsigned minUnusedReads = 3;
+  /// min. number of unused reads to enable search for more contigs
+  unsigned minUnusedReads = 3;
 
-    /// min. number of reads required to start assembly
-    unsigned minSupportReads = 2;
+  /// min. number of reads required to start assembly
+  unsigned minSupportReads = 2;
 
-    /// Max. number of assembly returned for a given set of reads
-    unsigned maxAssemblyCount = 10;
+  /// Max. number of assembly returned for a given set of reads
+  unsigned maxAssemblyCount = 10;
 };

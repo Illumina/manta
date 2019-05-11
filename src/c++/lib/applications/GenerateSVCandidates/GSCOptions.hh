@@ -36,75 +36,60 @@
 #include <string>
 #include <vector>
 
+struct GSCOptions {
+  bool isSomatic() const { return (!somaticOutputFilename.empty()); }
 
-struct GSCOptions
-{
-    bool
-    isSomatic() const
-    {
-        return (! somaticOutputFilename.empty());
-    }
+  bool isTumorOnly() const { return (!tumorOutputFilename.empty()); }
 
-    bool
-    isTumorOnly() const
-    {
-        return (! tumorOutputFilename.empty());
-    }
+  bool isGenerateEvidenceBam() const { return (!evidenceBamStub.empty()); }
 
-    bool
-    isGenerateEvidenceBam() const
-    {
-        return (! evidenceBamStub.empty());
-    }
+  AlignmentFileOptions alignFileOpt;
+  EdgeOptions          edgeOpt;
+  ReadScannerOptions   scanOpt;
+  SVRefinerOptions     refineOpt;
+  CallOptionsShared    callOpt;
+  CallOptionsDiploid   diploidOpt;
+  CallOptionsSomatic   somaticOpt;
+  CallOptionsTumor     tumorOpt;
 
-    AlignmentFileOptions alignFileOpt;
-    EdgeOptions edgeOpt;
-    ReadScannerOptions scanOpt;
-    SVRefinerOptions refineOpt;
-    CallOptionsShared callOpt;
-    CallOptionsDiploid diploidOpt;
-    CallOptionsSomatic somaticOpt;
-    CallOptionsTumor tumorOpt;
+  int workerThreadCount = 1;
 
-    int workerThreadCount = 1;
+  std::string graphFilename;
+  std::string referenceFilename;
+  std::string statsFilename;
+  std::string chromDepthFilename;
+  std::string edgeRuntimeFilename;
+  std::string edgeStatsFilename;
+  std::string edgeStatsReportFilename;
 
-    std::string graphFilename;
-    std::string referenceFilename;
-    std::string statsFilename;
-    std::string chromDepthFilename;
-    std::string edgeRuntimeFilename;
-    std::string edgeStatsFilename;
-    std::string edgeStatsReportFilename;
+  std::string candidateOutputFilename;
+  std::string diploidOutputFilename;
+  std::string somaticOutputFilename;
+  std::string tumorOutputFilename;
+  std::string rnaOutputFilename;
+  std::string evidenceBamStub;
 
-    std::string candidateOutputFilename;
-    std::string diploidOutputFilename;
-    std::string somaticOutputFilename;
-    std::string tumorOutputFilename;
-    std::string rnaOutputFilename;
-    std::string evidenceBamStub;
+  bool isVerbose = false;  ///< provide some high-level log info to assist in debugging
 
-    bool isVerbose = false; ///< provide some high-level log info to assist in debugging
+  bool isSkipAssembly =
+      false;  ///< if true, skip assembly and run a low-resolution, breakdancer-like subset of the workflow
 
-    bool isSkipAssembly = false; ///< if true, skip assembly and run a low-resolution, breakdancer-like subset of the workflow
+  bool isSkipScoring = false;  ///< if true, skip quality scoring and output candidates only
 
-    bool isSkipScoring = false; ///< if true, skip quality scoring and output candidates only
+  bool enableRemoteReadRetrieval =
+      false;  ///< if true, turn on retrieval of poorly mapped remote reads for assembly
 
-    bool enableRemoteReadRetrieval = false; ///< if true, turn on retrieval of poorly mapped remote reads for assembly
+  bool isRNA = false;  ///< if true, RNA specific filtering on candidates and diploid scoring is used
 
-    bool isRNA = false; ///< if true, RNA specific filtering on candidates and diploid scoring is used
+  bool isUnstrandedRNA = false;  ///< For unstranded RNA data, the direction of fusion transcripts is unknown
 
-    bool isUnstrandedRNA = false; ///< For unstranded RNA data, the direction of fusion transcripts is unknown
+  unsigned minCandidateSpanningCount =
+      3;  ///< how many spanning evidence observations are required to become a candidate?
 
-    unsigned minCandidateSpanningCount = 3; ///< how many spanning evidence observations are required to become a candidate?
+  unsigned minScoredVariantSize =
+      50;  ///< min size for scoring and scored output following candidate generation
 
-    unsigned minScoredVariantSize = 50; ///< min size for scoring and scored output following candidate generation
-
-    bool isOutputContig = false; ///< if true, an assembled contig is written in VCF
+  bool isOutputContig = false;  ///< if true, an assembled contig is written in VCF
 };
 
-
-void
-parseGSCOptions(
-    const illumina::Program& prog,
-    int argc, char* argv[],
-    GSCOptions& opt);
+void parseGSCOptions(const illumina::Program& prog, int argc, char* argv[], GSCOptions& opt);

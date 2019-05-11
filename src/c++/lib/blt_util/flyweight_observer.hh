@@ -33,34 +33,25 @@
 template <typename T>
 struct flyweight_notifier;
 
-
 template <typename T>
-struct flyweight_observer
-{
-    friend struct flyweight_notifier<T>;
+struct flyweight_observer {
+  friend struct flyweight_notifier<T>;
 
-    flyweight_observer& operator=(const flyweight_observer&) = default;
+  flyweight_observer& operator=(const flyweight_observer&) = default;
 
-    virtual ~flyweight_observer() {}
+  virtual ~flyweight_observer() {}
 
 private:
-    virtual void
-    recieve_flyweight_notification(const T&) = 0;
+  virtual void recieve_flyweight_notification(const T&) = 0;
 };
-
 
 template <typename T>
-struct flyweight_notifier
-{
-    typedef flyweight_observer<T> flyweight_observer_t;
+struct flyweight_notifier {
+  typedef flyweight_observer<T> flyweight_observer_t;
 
 protected:
-    void
-    notify_flyweight_observer(
-        flyweight_observer_t* val,
-        const T& msg) const
-    {
-        val->recieve_flyweight_notification(msg);
-    }
+  void notify_flyweight_observer(flyweight_observer_t* val, const T& msg) const
+  {
+    val->recieve_flyweight_notification(msg);
+  }
 };
-

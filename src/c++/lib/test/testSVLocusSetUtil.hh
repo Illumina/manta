@@ -27,8 +27,5 @@
 
 #include <memory>
 
-
 /// Serialize, then deserialize object and pass back a pointer to the resulting object copy
-std::unique_ptr<SVLocusSet>
-getSerializedSVLocusSetCopy(
-    const SVLocusSet& set);
+std::unique_ptr<SVLocusSet> getSerializedSVLocusSetCopy(const SVLocusSet& set);

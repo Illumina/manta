@@ -19,23 +19,22 @@
 
 #include "options/CallOptionsDiploid.hh"
 
-
-boost::program_options::options_description
-getOptionsDescription(CallOptionsDiploid& opt)
+boost::program_options::options_description getOptionsDescription(CallOptionsDiploid& opt)
 {
-    namespace po = boost::program_options;
-    po::options_description desc("germline-variant-calling");
-    desc.add_options()
-    ("diploid-max-depth-factor", po::value(&opt.maxDepthFactor)->default_value(opt.maxDepthFactor),
-     "Variants where the depth around the breakpoint is greater than this factor x the chromosomal mean will be filtered out")
-    ("min-qual-score", po::value(&opt.minOutputAltScore)->default_value(opt.minOutputAltScore),
-     "minimum QUAL score for variants included in the germline output vcf")
-    ("min-pass-qual-score", po::value(&opt.minPassAltScore)->default_value(opt.minPassAltScore),
-     "minimum QUAL score for variants to PASS in germline output vcf")
-    ("min-pass-gt-score", po::value(&opt.minPassGTScore)->default_value(opt.minPassGTScore),
-     "minimum genotype quality score below which samples are filtered for a variant in the germline output vcf")
-    ;
+  namespace po = boost::program_options;
+  po::options_description desc("germline-variant-calling");
+  // clang-format off
+  desc.add_options()
+  ("diploid-max-depth-factor", po::value(&opt.maxDepthFactor)->default_value(opt.maxDepthFactor),
+   "Variants where the depth around the breakpoint is greater than this factor x the chromosomal mean will be filtered out")
+  ("min-qual-score", po::value(&opt.minOutputAltScore)->default_value(opt.minOutputAltScore),
+   "minimum QUAL score for variants included in the germline output vcf")
+  ("min-pass-qual-score", po::value(&opt.minPassAltScore)->default_value(opt.minPassAltScore),
+   "minimum QUAL score for variants to PASS in germline output vcf")
+  ("min-pass-gt-score", po::value(&opt.minPassGTScore)->default_value(opt.minPassGTScore),
+   "minimum genotype quality score below which samples are filtered for a variant in the germline output vcf")
+  ;
+  // clang-format on
 
-    return desc;
+  return desc;
 }
-

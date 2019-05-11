@@ -22,10 +22,10 @@
 #include "blt_util/thirdparty_push.h"
 
 extern "C" {
-#include <unistd.h> // this simplifies zlib on windows
+#include <unistd.h>  // this simplifies zlib on windows
 #define __STDC_LIMIT_MACROS
-#include "htslib/vcf.h"
 #include "htslib/tbx.h"
+#include "htslib/vcf.h"
 }
 
 #include "blt_util/thirdparty_pop.h"

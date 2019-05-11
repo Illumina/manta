@@ -30,33 +30,24 @@
 
 #include <vector>
 
-
 /// hold information about chrom depth cutoffs
 ///
 /// preprocess the chrom depth file so that the filter value can be
 /// efficiently looked up by bam tid
 ///
-struct ChromDepthFilterUtil
-{
-    ChromDepthFilterUtil(
-        const std::string& chromDepthFile,
-        const double maxDepthFactor,
-        const bam_header_info& header);
+struct ChromDepthFilterUtil {
+  ChromDepthFilterUtil(
+      const std::string& chromDepthFile, const double maxDepthFactor, const bam_header_info& header);
 
-    bool
-    isMaxDepthFilter() const
-    {
-        return _isMaxDepthFilter;
-    }
+  bool isMaxDepthFilter() const { return _isMaxDepthFilter; }
 
-    double
-    maxDepth(const int32_t tid) const
-    {
-        assert((tid >= 0) && (tid < static_cast<int32_t>(_maxDepthFilter.size())));
-        return _maxDepthFilter[tid];
-    }
+  double maxDepth(const int32_t tid) const
+  {
+    assert((tid >= 0) && (tid < static_cast<int32_t>(_maxDepthFilter.size())));
+    return _maxDepthFilter[tid];
+  }
 
 private:
-    bool _isMaxDepthFilter;
-    std::vector<double> _maxDepthFilter;
+  bool                _isMaxDepthFilter;
+  std::vector<double> _maxDepthFilter;
 };

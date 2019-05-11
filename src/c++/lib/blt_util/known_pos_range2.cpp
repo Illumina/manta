@@ -25,16 +25,11 @@
 
 #include <iostream>
 
-
 // output is always 1-indexed inclusive interval:
 //
 std::ostream& operator<<(std::ostream& os, const known_pos_range2& pr)
 {
-    os << '['
-       << pr.begin_pos()
-       << ','
-       << pr.end_pos()
-       << ')';
+  os << '[' << pr.begin_pos() << ',' << pr.end_pos() << ')';
 
-    return os;
+  return os;
 }

@@ -26,17 +26,12 @@
 
 #include <iostream>
 
-
-
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const SVScoreInfoSomatic& sis)
+std::ostream& operator<<(std::ostream& os, const SVScoreInfoSomatic& sis)
 {
-    os << "SomaticSVScoreInfo somaticScore: " << sis.somaticScore << " sstier: " << sis.somaticScoreTier << " filters: ";
-    for (const std::string& filter : sis.filters)
-    {
-        os << " " << filter;
-    }
-    return os;
+  os << "SomaticSVScoreInfo somaticScore: " << sis.somaticScore << " sstier: " << sis.somaticScoreTier
+     << " filters: ";
+  for (const std::string& filter : sis.filters) {
+    os << " " << filter;
+  }
+  return os;
 }

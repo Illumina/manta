@@ -17,24 +17,17 @@
 //
 //
 
-
 #pragma once
 
 #include "common/Program.hh"
 #include "options/AlignmentFileOptions.hh"
 
+struct TestAssemblerOptions {
+  AlignmentFileOptions alignFileOpt;
 
-struct TestAssemblerOptions
-{
-    AlignmentFileOptions alignFileOpt;
-
-    std::string referenceFilename;
-    std::string outputFilename;
+  std::string referenceFilename;
+  std::string outputFilename;
 };
 
-
-void
-parseTestAssemblerOptions(
-    const illumina::Program& prog,
-    int argc, char* argv[],
-    TestAssemblerOptions& opt);
+void parseTestAssemblerOptions(
+    const illumina::Program& prog, int argc, char* argv[], TestAssemblerOptions& opt);

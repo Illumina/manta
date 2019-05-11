@@ -26,17 +26,13 @@
 
 #include <string>
 
-
 /// \brief Return the name of a new temp file which is unused at the time the function is called
-std::string
-getNewTempFile();
+std::string getNewTempFile();
 
 /// \brief Return the value for the given key from a key/value tsv file
 ///
 /// \param tsvFile Input file to search
 /// \param key Key value to search for in first column of \p tsvFile
-/// \return Second-column value from first line in \p tsvFile matching \p key, or empty string if key not found.
-std::string
-getValueFromTSVKeyValFile(
-    const std::string& tsvFile,
-    const std::string& key);
+/// \return Second-column value from first line in \p tsvFile matching \p key, or empty string if key not
+/// found.
+std::string getValueFromTSVKeyValFile(const std::string& tsvFile, const std::string& key);

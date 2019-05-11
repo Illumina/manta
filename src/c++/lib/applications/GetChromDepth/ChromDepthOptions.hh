@@ -17,7 +17,6 @@
 //
 //
 
-
 #pragma once
 
 #include "common/Program.hh"
@@ -25,19 +24,12 @@
 #include <string>
 #include <vector>
 
+struct ChromDepthOptions {
+  std::string              alignmentFilename;
+  std::vector<std::string> chromNames;
 
-struct ChromDepthOptions
-{
-    std::string alignmentFilename;
-    std::vector<std::string> chromNames;
-
-    std::string referenceFilename;
-    std::string outputFilename;
+  std::string referenceFilename;
+  std::string outputFilename;
 };
 
-
-void
-parseChromDepthOptions(
-    const illumina::Program& prog,
-    int argc, char* argv[],
-    ChromDepthOptions& opt);
+void parseChromDepthOptions(const illumina::Program& prog, int argc, char* argv[], ChromDepthOptions& opt);

@@ -32,50 +32,41 @@ struct SVLocusSet;
 /// Provide access to temporary file and limit lifetime of the temporary file to the object filetime
 ///
 /// This object should not be directly instantiated by client code.
-struct TestFileMakerBase
-{
-    ~TestFileMakerBase();
+struct TestFileMakerBase {
+  ~TestFileMakerBase();
 
-    const std::string&
-    getFilename() const
-    {
-        return _tempFilename;
-    }
+  const std::string& getFilename() const { return _tempFilename; }
 
 protected:
-    // don't allow this to be directly instantiated:
-    TestFileMakerBase() = default;
+  // don't allow this to be directly instantiated:
+  TestFileMakerBase() = default;
 
-    std::string _tempFilename;
+  std::string _tempFilename;
 };
 
 /// \brief Get a non-existing temporary file name
 ///
-/// If the temporary file name exists in the filesystem, it will be deleted when this object goes out of scope.
-struct TestFilenameMaker : public TestFileMakerBase
-{
-    TestFilenameMaker();
+/// If the temporary file name exists in the filesystem, it will be deleted when this object goes out of
+/// scope.
+struct TestFilenameMaker : public TestFileMakerBase {
+  TestFilenameMaker();
 };
 
 /// \brief Get a non-existing temporary file name
 ///
-/// If the temporary file name exists in the filesystem, it will be deleted when this object goes out of scope.
-/// if the temporary file name with the suffix ".bai" exists in the filesystem, this will be deleted when the object
-/// goes out of scope as well.
-struct BamFilenameMaker : public TestFileMakerBase
-{
-    BamFilenameMaker();
-    ~BamFilenameMaker();
+/// If the temporary file name exists in the filesystem, it will be deleted when this object goes out of
+/// scope. if the temporary file name with the suffix ".bai" exists in the filesystem, this will be deleted
+/// when the object goes out of scope as well.
+struct BamFilenameMaker : public TestFileMakerBase {
+  BamFilenameMaker();
+  ~BamFilenameMaker();
 };
-
 
 /// \brief Given a bam_header_info, serialize this content to a temporary file for test purposes.
 ///
 /// The temporary file will be deleted when this object goes out of scope.
-struct TestAlignHeaderFileMaker : public TestFileMakerBase
-{
-    explicit
-    TestAlignHeaderFileMaker(const bam_header_info& info);
+struct TestAlignHeaderFileMaker : public TestFileMakerBase {
+  explicit TestAlignHeaderFileMaker(const bam_header_info& info);
 };
 
 /// \brief Mock a GetAlignmentStats output file for test purposes.
@@ -83,25 +74,21 @@ struct TestAlignHeaderFileMaker : public TestFileMakerBase
 /// Mocked stats output has 4 elements with 250 observations each for 50, 75, 100, 125
 ///
 /// The temporary file will be deleted when this object goes out of scope.
-struct TestStatsFileMaker : public TestFileMakerBase
-{
-    TestStatsFileMaker();
+struct TestStatsFileMaker : public TestFileMakerBase {
+  TestStatsFileMaker();
 };
 
 /// \brief Given an SVLocusSet, dump its stats to a temporary file.
 ///
 /// The temporary file will be deleted when this object goes out of scope.
-struct SVLocusSetStatsFileMaker : public TestFileMakerBase
-{
-    explicit
-    SVLocusSetStatsFileMaker(
-        const SVLocusSet& svLocusSet);
+struct SVLocusSetStatsFileMaker : public TestFileMakerBase {
+  explicit SVLocusSetStatsFileMaker(const SVLocusSet& svLocusSet);
 };
 
 /// \brief Get a non-existing temporary file name
 ///
-/// If the temporary file name exists in the filesystem, it will be deleted when this object goes out of scope.
-struct TestChromosomeDepthFileMaker : public TestFileMakerBase
-{
-    TestChromosomeDepthFileMaker();
+/// If the temporary file name exists in the filesystem, it will be deleted when this object goes out of
+/// scope.
+struct TestChromosomeDepthFileMaker : public TestFileMakerBase {
+  TestChromosomeDepthFileMaker();
 };

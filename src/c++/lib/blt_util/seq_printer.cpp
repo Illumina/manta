@@ -28,28 +28,23 @@
 
 #include <iostream>
 
-
-
 /// pretty print sequence is such a way that it's easy to locate position number
 ///
-void
-printSeq(
-    const char* seq,
-    std::ostream& os)
+void printSeq(const char* seq, std::ostream& os)
 {
-    static const unsigned rowSize(100);
-    static const unsigned sectionSize(10);
+  static const unsigned rowSize(100);
+  static const unsigned sectionSize(10);
 
-    assert(nullptr != seq);
-    const unsigned seqLen(strlen(seq));
+  assert(nullptr != seq);
+  const unsigned seqLen(strlen(seq));
 
-    for (unsigned i(0); i<seqLen; ++i)
-    {
-        if (i)
-        {
-            if      (0 == (i % rowSize))     os << '\n';
-            else if (0 == (i % sectionSize)) os << ' ';
-        }
-        os << seq[i];
+  for (unsigned i(0); i < seqLen; ++i) {
+    if (i) {
+      if (0 == (i % rowSize))
+        os << '\n';
+      else if (0 == (i % sectionSize))
+        os << ' ';
     }
+    os << seq[i];
+  }
 }

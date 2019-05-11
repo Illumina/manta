@@ -26,51 +26,39 @@
 
 #include <iosfwd>
 
-
 /// Accumulates genome intervals, then provides tests on how any new genome interval interacts with the
 /// accumulated interval set
 ///
-struct GenomeIntervalTracker
-{
-    void
-    clear()
-    {
-        _regions.clear();
-    }
+struct GenomeIntervalTracker {
+  void clear() { _regions.clear(); }
 
-    void
-    addInterval(
-        const GenomeInterval& gi)
-    {
-        assert(gi.tid >= 0);
-        if (static_cast<unsigned>(gi.tid) >= _regions.size()) _regions.resize(gi.tid+1);
-        _regions[gi.tid].addRegion(gi.range);
-    }
+  void addInterval(const GenomeInterval& gi)
+  {
+    assert(gi.tid >= 0);
+    if (static_cast<unsigned>(gi.tid) >= _regions.size()) _regions.resize(gi.tid + 1);
+    _regions[gi.tid].addRegion(gi.range);
+  }
 
-    /// Merge genome interval content from rhs into this
-    void
-    merge(const GenomeIntervalTracker& rhs);
+  /// Merge genome interval content from rhs into this
+  void merge(const GenomeIntervalTracker& rhs);
 
-    /// Return true if \p gi intersects any of the intervals already added to this object
-    bool
-    isIntersectRegion(const GenomeInterval& gi) const;
+  /// Return true if \p gi intersects any of the intervals already added to this object
+  bool isIntersectRegion(const GenomeInterval& gi) const;
 
-    /// Return true if \p gi is entirely contained within the intervals already added to this object
-    bool
-    isSubsetOfRegion(const GenomeInterval& gi) const;
+  /// Return true if \p gi is entirely contained within the intervals already added to this object
+  bool isSubsetOfRegion(const GenomeInterval& gi) const;
 
-    /// debug util
-    void
-    dump(std::ostream& os) const;
+  /// debug util
+  void dump(std::ostream& os) const;
 
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned /* version */)
-    {
-        ar& _regions;
-    }
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned /* version */)
+  {
+    ar& _regions;
+  }
 
 private:
-    std::vector<RegionTracker> _regions;
+  std::vector<RegionTracker> _regions;
 };
 
 BOOST_CLASS_IMPLEMENTATION(GenomeIntervalTracker, boost::serialization::object_serializable)

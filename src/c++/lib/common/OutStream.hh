@@ -27,37 +27,26 @@
 #include <memory>
 #include <string>
 
-
-
 /// provide an output stream which comes from either a file or a tty default
 ///
-struct OutStream
-{
-    explicit
-    OutStream(const std::string& fileName);
+struct OutStream {
+  explicit OutStream(const std::string& fileName);
 
-    ~OutStream();
+  ~OutStream();
 
-    std::ostream&
-    getStream()
-    {
-        if (! _isInit) initStream();
-        return *_osptr;
-    }
+  std::ostream& getStream()
+  {
+    if (!_isInit) initStream();
+    return *_osptr;
+  }
 
 private:
+  void initStream();
 
-    void
-    initStream();
+  static void openFile(const std::string& filename, std::ofstream& ofs);
 
-    static
-    void
-    openFile(
-        const std::string& filename,
-        std::ofstream& ofs);
-
-    bool _isInit;
-    std::string _fileName;
-    std::ostream* _osptr;
-    std::unique_ptr<std::ofstream> _ofsptr;
+  bool                           _isInit;
+  std::string                    _fileName;
+  std::ostream*                  _osptr;
+  std::unique_ptr<std::ofstream> _ofsptr;
 };

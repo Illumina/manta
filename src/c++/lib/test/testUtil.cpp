@@ -29,44 +29,33 @@
 
 #include <fstream>
 
-
-std::string
-getNewTempFile()
+std::string getNewTempFile()
 {
-    using namespace boost::filesystem;
+  using namespace boost::filesystem;
 
-    const path tempDir(temp_directory_path());
-    while (true)
-    {
-        path tempFile = tempDir / unique_path();
-        if (exists(tempFile)) continue;
-        return tempFile.string();
-    }
+  const path tempDir(temp_directory_path());
+  while (true) {
+    path tempFile = tempDir / unique_path();
+    if (exists(tempFile)) continue;
+    return tempFile.string();
+  }
 }
 
-
-
-std::string
-getValueFromTSVKeyValFile(
-    const std::string& tsvFile,
-    const std::string& key)
+std::string getValueFromTSVKeyValFile(const std::string& tsvFile, const std::string& key)
 {
-    std::ifstream is(tsvFile);
+  std::ifstream is(tsvFile);
 
-    static const char delimiter('\t');
-    std::string line;
-    std::vector<std::string> words;
-    while (std::getline(is,line))
-    {
-        if (line.find(key) == std::string::npos) continue;
-        split_string(line, delimiter, words);
-        if (words.size() < 2) continue;
-        if (words[0] == key) return words[1];
-    }
-    return "";
+  static const char        delimiter('\t');
+  std::string              line;
+  std::vector<std::string> words;
+  while (std::getline(is, line)) {
+    if (line.find(key) == std::string::npos) continue;
+    split_string(line, delimiter, words);
+    if (words.size() < 2) continue;
+    if (words[0] == key) return words[1];
+  }
+  return "";
 }
-
-
 
 #if 0
 #include "blt_util/align_path.hh"
@@ -75,15 +64,15 @@ getValueFromTSVKeyValFile(
 #include <memory>
 
 #include "htsapi/SimpleAlignment_bam_util.hh"
-#include "htsapi/bam_record_util.hh"
-#include "htsapi/bam_record.hh"
 #include "htsapi/bam_dumper.hh"
+#include "htsapi/bam_record.hh"
+#include "htsapi/bam_record_util.hh"
 #include "htsapi/sam_util.hh"
 #include "manta/SVLocusScanner.hh"
 
+#include "boost/algorithm/string.hpp"
 #include "boost/scoped_array.hpp"
 #include "boost/test/unit_test.hpp"
-#include "boost/algorithm/string.hpp"
 
 #include <fstream>
 #include <iostream>

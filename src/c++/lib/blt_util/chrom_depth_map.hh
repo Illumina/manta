@@ -26,11 +26,7 @@
 #include <map>
 #include <string>
 
-
-typedef std::map<std::string,double> cdmap_t;
-
+typedef std::map<std::string, double> cdmap_t;
 
 // parse the chrom depth file
-void
-parse_chrom_depth(const std::string& chrom_depth_file,
-                  cdmap_t& chrom_depth);
+void parse_chrom_depth(const std::string& chrom_depth_file, cdmap_t& chrom_depth);

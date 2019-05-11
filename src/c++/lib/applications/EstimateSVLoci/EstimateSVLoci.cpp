@@ -22,34 +22,25 @@
 
 #include "common/OutStream.hh"
 
-
-
-static
-void
-runEstimateSVLoci(const ESLOptions& opt)
+static void runEstimateSVLoci(const ESLOptions& opt)
 {
-    {
-        // early test that we have permission to write to output file
-        OutStream outs(opt.outputFilename);
-    }
+  {
+    // early test that we have permission to write to output file
+    OutStream outs(opt.outputFilename);
+  }
 
-    EstimateSVLociRunner eslRunner(opt);
-    for (const auto& region : opt.regions)
-    {
-        eslRunner.estimateSVLociForSingleRegion(region);
-    }
+  EstimateSVLociRunner eslRunner(opt);
+  for (const auto& region : opt.regions) {
+    eslRunner.estimateSVLociForSingleRegion(region);
+  }
 
-    eslRunner.getLocusSet().save(opt.outputFilename.c_str());
+  eslRunner.getLocusSet().save(opt.outputFilename.c_str());
 }
 
-
-
-void
-EstimateSVLoci::
-runInternal(int argc, char* argv[]) const
+void EstimateSVLoci::runInternal(int argc, char* argv[]) const
 {
-    ESLOptions opt;
+  ESLOptions opt;
 
-    parseESLOptions(*this,argc,argv,opt);
-    runEstimateSVLoci(opt);
+  parseESLOptions(*this, argc, argv, opt);
+  runEstimateSVLoci(opt);
 }

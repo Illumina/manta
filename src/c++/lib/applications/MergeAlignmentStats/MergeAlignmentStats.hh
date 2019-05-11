@@ -21,17 +21,10 @@
 
 #include "common/Program.hh"
 
-
 /// merge alignment stats information from multiple bam files
 ///
-struct MergeAlignmentStats : public illumina::Program
-{
-    const char*
-    name() const override
-    {
-        return "MergeAlignmentStats";
-    }
+struct MergeAlignmentStats : public illumina::Program {
+  const char* name() const override { return "MergeAlignmentStats"; }
 
-    void
-    runInternal(int argc, char* argv[]) const override;
+  void runInternal(int argc, char* argv[]) const override;
 };

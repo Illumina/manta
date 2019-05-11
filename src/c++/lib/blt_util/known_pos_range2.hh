@@ -35,175 +35,112 @@
 #include <algorithm>
 #include <iosfwd>
 
-
 /// \brief integer ranges which are right open
 ///
-struct known_pos_range2
-{
-    known_pos_range2() :
-        known_pos_range2(0,0)
-    {}
+struct known_pos_range2 {
+  known_pos_range2() : known_pos_range2(0, 0) {}
 
-    known_pos_range2(
-        const pos_t bp,
-        const pos_t ep) :
-        _begin_pos(bp),
-        _end_pos(ep)
-    {}
+  known_pos_range2(const pos_t bp, const pos_t ep) : _begin_pos(bp), _end_pos(ep) {}
 
-    void
-    set_begin_pos(const pos_t pos)
-    {
-        _begin_pos=pos;
+  void set_begin_pos(const pos_t pos) { _begin_pos = pos; }
+
+  void set_end_pos(const pos_t pos) { _end_pos = pos; }
+
+  void set_range(const pos_t begin, const pos_t end)
+  {
+    set_begin_pos(begin);
+    set_end_pos(end);
+  }
+
+  /// expand (or contract) range
+  void expandBy(const pos_t expandSize)
+  {
+    _begin_pos -= expandSize;
+    _end_pos += expandSize;
+    if ((expandSize < 0) && (_end_pos < _begin_pos)) {
+      _begin_pos = (_begin_pos + _end_pos) / 2;
+      _end_pos   = _begin_pos;
     }
+  }
 
-    void
-    set_end_pos(const pos_t pos)
-    {
-        _end_pos=pos;
-    }
+  /// shift range position
+  void offsetBy(const pos_t offsetSize)
+  {
+    _begin_pos += offsetSize;
+    _end_pos += offsetSize;
+  }
 
-    void
-    set_range(const pos_t begin,
-              const pos_t end)
-    {
-        set_begin_pos(begin);
-        set_end_pos(end);
-    }
+  void makeNonNegative()
+  {
+    if (_begin_pos < 0) _begin_pos = 0;
+    if (_end_pos < 0) _end_pos = 0;
+  }
 
-    /// expand (or contract) range
-    void
-    expandBy(
-        const pos_t expandSize)
-    {
-        _begin_pos-=expandSize;
-        _end_pos+=expandSize;
-        if ((expandSize<0) && (_end_pos < _begin_pos))
-        {
-            _begin_pos = (_begin_pos+_end_pos)/2;
-            _end_pos = _begin_pos;
-        }
-    }
+  pos_t begin_pos() const { return _begin_pos; }
 
-    /// shift range position
-    void
-    offsetBy(
-        const pos_t offsetSize)
-    {
-        _begin_pos += offsetSize;
-        _end_pos += offsetSize;
-    }
+  pos_t end_pos() const { return _end_pos; }
 
-    void
-    makeNonNegative()
-    {
-        if (_begin_pos < 0) _begin_pos = 0;
-        if (_end_pos < 0) _end_pos = 0;
-    }
+  pos_t center_pos() const { return _begin_pos + ((std::max(size(), 1u) - 1) / 2); }
 
-    pos_t
-    begin_pos() const
-    {
-        return _begin_pos;
-    }
+  bool is_pos_intersect(const pos_t pos) const { return ((pos >= _begin_pos) && (pos < _end_pos)); }
 
-    pos_t
-    end_pos() const
-    {
-        return _end_pos;
-    }
+  bool is_range_intersect(const known_pos_range2& pr) const
+  {
+    return ((pr._end_pos > _begin_pos) && (pr._begin_pos < _end_pos));
+  }
 
-    pos_t
-    center_pos() const
-    {
-        return _begin_pos + ((std::max(size(),1u)-1)/2);
-    }
+  /// does this range completely overlap pr?
+  bool is_superset_of(const known_pos_range2& pr) const
+  {
+    return ((pr._end_pos <= _end_pos) && (pr._begin_pos >= _begin_pos));
+  }
 
-    bool
-    is_pos_intersect(const pos_t pos) const
-    {
-        return ((pos >= _begin_pos) &&
-                (pos < _end_pos));
-    }
+  unsigned size() const { return std::max(0, _end_pos - _begin_pos); }
 
-    bool
-    is_range_intersect(const known_pos_range2& pr) const
-    {
-        return ((pr._end_pos > _begin_pos) &&
-                (pr._begin_pos < _end_pos));
-    }
+  bool operator<(const known_pos_range2& rhs) const
+  {
+    if (_begin_pos < rhs._begin_pos) return true;
+    if (_begin_pos != rhs._begin_pos) return false;
+    return (_end_pos < rhs._end_pos);
+  }
 
-    /// does this range completely overlap pr?
-    bool
-    is_superset_of(const known_pos_range2& pr) const
-    {
-        return
-            ((pr._end_pos <= _end_pos) &&
-             (pr._begin_pos >= _begin_pos));
-    }
+  bool operator==(const known_pos_range2& rhs) const
+  {
+    return ((_begin_pos == rhs._begin_pos) && (_end_pos == rhs._end_pos));
+  }
 
-    unsigned
-    size() const
-    {
-        return std::max(0,_end_pos-_begin_pos);
-    }
+  // expand range to extend of a second range:
+  void merge_range(const known_pos_range2& kpr)
+  {
+    if (kpr._begin_pos < _begin_pos) _begin_pos = kpr._begin_pos;
+    if (kpr._end_pos > _end_pos) _end_pos = kpr._end_pos;
+  }
 
-    bool
-    operator<(const known_pos_range2& rhs) const
-    {
-        if (_begin_pos < rhs._begin_pos) return true;
-        if (_begin_pos != rhs._begin_pos) return false;
-        return (_end_pos < rhs._end_pos);
-    }
+  void clear()
+  {
+    _begin_pos = 0;
+    _end_pos   = 0;
+  }
 
-    bool
-    operator==(const known_pos_range2& rhs) const
-    {
-        return ((_begin_pos==rhs._begin_pos) && (_end_pos==rhs._end_pos));
-    }
-
-    // expand range to extend of a second range:
-    void
-    merge_range(const known_pos_range2& kpr)
-    {
-        if (kpr._begin_pos<_begin_pos) _begin_pos=kpr._begin_pos;
-        if (kpr._end_pos>_end_pos) _end_pos=kpr._end_pos;
-    }
-
-    void
-    clear()
-    {
-        _begin_pos=0;
-        _end_pos=0;
-    }
-
-
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned /* version */)
-    {
-        ar& _begin_pos& _end_pos;
-    }
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned /* version */)
+  {
+    ar& _begin_pos& _end_pos;
+  }
 
 private:
-    pos_t _begin_pos;
-    pos_t _end_pos;
+  pos_t _begin_pos;
+  pos_t _end_pos;
 };
 
-
-
 /// return the union of two ranges:
-inline
-known_pos_range2
-merge_range(
-    const known_pos_range2& kpr1,
-    const known_pos_range2& kpr2)
+inline known_pos_range2 merge_range(const known_pos_range2& kpr1, const known_pos_range2& kpr2)
 {
-    known_pos_range2 res;
-    res.set_begin_pos(std::min(kpr1.begin_pos(),kpr2.begin_pos()));
-    res.set_end_pos(std::max(kpr1.end_pos(),kpr2.end_pos()));
-    return res;
+  known_pos_range2 res;
+  res.set_begin_pos(std::min(kpr1.begin_pos(), kpr2.begin_pos()));
+  res.set_end_pos(std::max(kpr1.end_pos(), kpr2.end_pos()));
+  return res;
 }
-
 
 /// generalized intersection test
 ///
@@ -212,19 +149,14 @@ merge_range(
 ///
 /// For example, if windowSize is 100 this returns true if the two ranges are within 100
 /// of each other
-inline
-bool
-is_intersect_window(
-    const known_pos_range2& kpr1,
-    const known_pos_range2& kpr2,
-    const pos_t windowSize = 0)
+inline bool is_intersect_window(
+    const known_pos_range2& kpr1, const known_pos_range2& kpr2, const pos_t windowSize = 0)
 {
-    return (((kpr1.end_pos()+windowSize) > kpr2.begin_pos()) &&
-            ((kpr2.end_pos()+windowSize) > kpr1.begin_pos()));
-
+  return (
+      ((kpr1.end_pos() + windowSize) > kpr2.begin_pos()) &&
+      ((kpr2.end_pos() + windowSize) > kpr1.begin_pos()));
 }
 
 std::ostream& operator<<(std::ostream& os, const known_pos_range2& pr);
 
 BOOST_CLASS_IMPLEMENTATION(known_pos_range2, boost::serialization::object_serializable)
-

@@ -21,29 +21,22 @@
 
 #include <iostream>
 
-
-
-bam_header_info::
-bam_header_info(const bam_hdr_t& header)
+bam_header_info::bam_header_info(const bam_hdr_t& header)
 {
-    for (int i(0); i<header.n_targets; ++i)
-    {
-        chrom_data.emplace_back(header.target_name[i],header.target_len[i]);
-        chrom_to_index[header.target_name[i]] = (int32_t)i;
-    }
+  for (int i(0); i < header.n_targets; ++i) {
+    chrom_data.emplace_back(header.target_name[i], header.target_len[i]);
+    chrom_to_index[header.target_name[i]] = (int32_t)i;
+  }
 }
 
-
-std::ostream&
-operator<<(std::ostream& os, const bam_header_info& bhi)
+std::ostream& operator<<(std::ostream& os, const bam_header_info& bhi)
 {
-    unsigned index(0);
+  unsigned index(0);
 
-    os << "chomosome_id_map:\n";
-    for (const bam_header_info::chrom_info& info : bhi.chrom_data)
-    {
-        os << "index: " << index << " label: " << info.label << " length: " << info.length << '\n';
-        index++;
-    }
-    return os;
+  os << "chomosome_id_map:\n";
+  for (const bam_header_info::chrom_info& info : bhi.chrom_data) {
+    os << "index: " << index << " label: " << info.label << " length: " << info.length << '\n';
+    index++;
+  }
+  return os;
 }

@@ -23,21 +23,19 @@
 
 #pragma once
 
-#include <vector>
 #include <string>
-
+#include <vector>
 
 /// Information added to each read in the process of assembly
 ///
-struct AssemblyReadInfo
-{
-    bool isUsed = false;
-    bool isFiltered = false; ///< if true, the read was 'used' but filtered out, so there is no meaningful contig id association
-    bool isPseudo = false; ///< if true, the read was an assembled contig
-    std::vector<unsigned> contigIds; ///< index of the contigs that this read is used in
+struct AssemblyReadInfo {
+  bool isUsed     = false;
+  bool isFiltered = false;  ///< if true, the read was 'used' but filtered out, so there is no meaningful
+                            ///< contig id association
+  bool                  isPseudo = false;  ///< if true, the read was an assembled contig
+  std::vector<unsigned> contigIds;         ///< index of the contigs that this read is used in
 };
 
-
-typedef std::vector<std::string> AssemblyReadInput;
-typedef std::vector<bool> AssemblyReadReversal;
+typedef std::vector<std::string>      AssemblyReadInput;
+typedef std::vector<bool>             AssemblyReadReversal;
 typedef std::vector<AssemblyReadInfo> AssemblyReadOutput;

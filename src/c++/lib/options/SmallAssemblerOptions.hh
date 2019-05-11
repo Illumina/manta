@@ -19,37 +19,35 @@
 
 #pragma once
 
-
 /// Input parameters for SmallAssembler, a simple local de-bruijn graph assembler
 ///
-struct SmallAssemblerOptions
-{
-    SmallAssemblerOptions() {}
+struct SmallAssemblerOptions {
+  SmallAssemblerOptions() {}
 
-    /// the symbol set used during assembly
-    std::string alphabet = "ACGT";
+  /// the symbol set used during assembly
+  std::string alphabet = "ACGT";
 
-    /// minimum basecall quality for assembly input
-    uint8_t minQval = 5;
+  /// minimum basecall quality for assembly input
+  uint8_t minQval = 5;
 
-    /// initial word (kmer) length
-    unsigned minWordLength = 41;
-    unsigned maxWordLength = 76;
-    unsigned wordStepSize = 5;
-    unsigned minContigLength = 15;
+  /// initial word (kmer) length
+  unsigned minWordLength   = 41;
+  unsigned maxWordLength   = 76;
+  unsigned wordStepSize    = 5;
+  unsigned minContigLength = 15;
 
-    /// min. coverage required for contig extension
-    unsigned minCoverage = 1;
+  /// min. coverage required for contig extension
+  unsigned minCoverage = 1;
 
-    /// coverage required for conservative contig sub-range
-    unsigned minConservativeCoverage = 2;
+  /// coverage required for conservative contig sub-range
+  unsigned minConservativeCoverage = 2;
 
-    /// max error rates allowed during contig extension
-    double maxError = 0.35;
+  /// max error rates allowed during contig extension
+  double maxError = 0.35;
 
-    /// min. number of reads required to start assembly
-    unsigned minSeedReads = 3;
+  /// min. number of reads required to start assembly
+  unsigned minSeedReads = 3;
 
-    /// Max. number of assembly iterations for a cluster before we give up
-    unsigned maxAssemblyIterations = 10;
+  /// Max. number of assembly iterations for a cluster before we give up
+  unsigned maxAssemblyIterations = 10;
 };

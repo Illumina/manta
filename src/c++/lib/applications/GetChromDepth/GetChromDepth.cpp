@@ -29,40 +29,33 @@
 #include <iomanip>
 #include <iostream>
 
-
-
-static
-void
-getChromDepth(const ChromDepthOptions& opt)
+static void getChromDepth(const ChromDepthOptions& opt)
 {
-    // check that we have write permission on the output file early:
-    {
-        OutStream outs(opt.outputFilename);
-    }
-
-    std::vector<double> chromDepth;
-    for (const std::string& chromName : opt.chromNames)
-    {
-        chromDepth.push_back(readChromDepthFromAlignment(opt.referenceFilename, opt.alignmentFilename, chromName));
-    }
-
+  // check that we have write permission on the output file early:
+  {
     OutStream outs(opt.outputFilename);
-    std::ostream& os(outs.getStream());
+  }
 
-    const unsigned chromCount(opt.chromNames.size());
-    for (unsigned chromIndex(0); chromIndex<chromCount; ++chromIndex)
-    {
-        os << opt.chromNames[chromIndex] << "\t" << std::fixed << std::setprecision(2) << chromDepth[chromIndex] << "\n";
-    }
+  std::vector<double> chromDepth;
+  for (const std::string& chromName : opt.chromNames) {
+    chromDepth.push_back(
+        readChromDepthFromAlignment(opt.referenceFilename, opt.alignmentFilename, chromName));
+  }
+
+  OutStream     outs(opt.outputFilename);
+  std::ostream& os(outs.getStream());
+
+  const unsigned chromCount(opt.chromNames.size());
+  for (unsigned chromIndex(0); chromIndex < chromCount; ++chromIndex) {
+    os << opt.chromNames[chromIndex] << "\t" << std::fixed << std::setprecision(2) << chromDepth[chromIndex]
+       << "\n";
+  }
 }
 
-
-void
-GetChromDepth::
-runInternal(int argc, char* argv[]) const
+void GetChromDepth::runInternal(int argc, char* argv[]) const
 {
-    ChromDepthOptions opt;
+  ChromDepthOptions opt;
 
-    parseChromDepthOptions(*this,argc,argv,opt);
-    getChromDepth(opt);
+  parseChromDepthOptions(*this, argc, argv, opt);
+  getChromDepth(opt);
 }

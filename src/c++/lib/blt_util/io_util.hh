@@ -29,42 +29,30 @@
 
 #include "boost/noncopyable.hpp"
 
-
-void
-open_ifstream(
-    std::ifstream& ifs,
-    const char* filename);
-
+void open_ifstream(std::ifstream& ifs, const char* filename);
 
 /// use this class to set scope specific stream formatting
 ///
 /// see unit test for example usage
 ///
-struct StreamScoper
-{
-    explicit
-    StreamScoper(
-        std::ostream& os);
+struct StreamScoper {
+  explicit StreamScoper(std::ostream& os);
 
-    ~StreamScoper();
+  ~StreamScoper();
 
 private:
-    std::ostream& _os;
-    std::unique_ptr<std::ofstream> _tmp_os;
+  std::ostream&                  _os;
+  std::unique_ptr<std::ofstream> _tmp_os;
 };
 
 /// Synchronizes access to a file stream from multiple threads:
-class SynchronizedOutputStream : private boost::noncopyable
-{
+class SynchronizedOutputStream : private boost::noncopyable {
 public:
-    explicit
-    SynchronizedOutputStream(const std::string& outputFile);
+  explicit SynchronizedOutputStream(const std::string& outputFile);
 
-    void
-    write(const std::string& msg);
+  void write(const std::string& msg);
 
 private:
-    std::unique_ptr<std::ostream> m_osPtr;
-    std::mutex m_writeMutex;
+  std::unique_ptr<std::ostream> m_osPtr;
+  std::mutex                    m_writeMutex;
 };
-

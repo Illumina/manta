@@ -26,34 +26,22 @@
 #include "svgraph/EdgeInfo.hh"
 #include "svgraph/SVLocusSet.hh"
 
-
 /// Provide an iterator over edges in a set of SV locus graphs
 ///
-struct EdgeRetriever
-{
-    EdgeRetriever(
-        const SVLocusSet& set,
-        const unsigned graphNodeMaxEdgeCount) :
-        _set(set),
-        _graphNodeMaxEdgeCount(graphNodeMaxEdgeCount)
-    {}
+struct EdgeRetriever {
+  EdgeRetriever(const SVLocusSet& set, const unsigned graphNodeMaxEdgeCount)
+    : _set(set), _graphNodeMaxEdgeCount(graphNodeMaxEdgeCount)
+  {
+  }
 
-    virtual
-    ~EdgeRetriever()
-    {}
+  virtual ~EdgeRetriever() {}
 
-    virtual
-    bool
-    next() = 0;
+  virtual bool next() = 0;
 
-    const EdgeInfo&
-    getEdge() const
-    {
-        return _edge;
-    }
+  const EdgeInfo& getEdge() const { return _edge; }
 
 protected:
-    const SVLocusSet& _set;
-    const unsigned _graphNodeMaxEdgeCount;
-    EdgeInfo _edge;
+  const SVLocusSet& _set;
+  const unsigned    _graphNodeMaxEdgeCount;
+  EdgeInfo          _edge;
 };

@@ -33,117 +33,81 @@
 #include "blt_util/log.hh"
 #endif
 
-
-
-EdgeRetrieverLocus::
-EdgeRetrieverLocus(
-    const SVLocusSet& set,
-    const unsigned graphNodeMaxEdgeCount,
-    const LocusEdgeOptions& opt) :
-    EdgeRetriever(set, graphNodeMaxEdgeCount),
-    _opt(opt),
-    _isInit(false)
+EdgeRetrieverLocus::EdgeRetrieverLocus(
+    const SVLocusSet& set, const unsigned graphNodeMaxEdgeCount, const LocusEdgeOptions& opt)
+  : EdgeRetriever(set, graphNodeMaxEdgeCount), _opt(opt), _isInit(false)
 {
-    assert(_opt.locusIndex<set.size());
+  assert(_opt.locusIndex < set.size());
 }
-
-
 
 /// this filter enables a special option to filter down to all edges connected to
 /// a single node or only the edge connecting two nodes:
-static
-bool
-isEdgeFiltered(
-    const LocusEdgeOptions& opt,
-    const EdgeInfo& edge)
+static bool isEdgeFiltered(const LocusEdgeOptions& opt, const EdgeInfo& edge)
 {
-    if (! opt.isNodeIndex1) return false;
-    if (opt.isNodeIndex2)
-    {
-        const bool isMatch(
-            (edge.nodeIndex1 == opt.nodeIndex1) &&
-            (edge.nodeIndex2 == opt.nodeIndex2));
-        const bool isSwapMatch(
-            (edge.nodeIndex2 == opt.nodeIndex1) &&
-            (edge.nodeIndex1 == opt.nodeIndex2));
+  if (!opt.isNodeIndex1) return false;
+  if (opt.isNodeIndex2) {
+    const bool isMatch((edge.nodeIndex1 == opt.nodeIndex1) && (edge.nodeIndex2 == opt.nodeIndex2));
+    const bool isSwapMatch((edge.nodeIndex2 == opt.nodeIndex1) && (edge.nodeIndex1 == opt.nodeIndex2));
 
-        return (! (isMatch || isSwapMatch));
-    }
-    else
-    {
-        const bool isMatch
-        (edge.nodeIndex1 == opt.nodeIndex1);
-        const bool isSwapMatch
-        (edge.nodeIndex2 == opt.nodeIndex1);
+    return (!(isMatch || isSwapMatch));
+  } else {
+    const bool isMatch(edge.nodeIndex1 == opt.nodeIndex1);
+    const bool isSwapMatch(edge.nodeIndex2 == opt.nodeIndex1);
 
-        return (! (isMatch || isSwapMatch));
-    }
+    return (!(isMatch || isSwapMatch));
+  }
 }
 
-
-
-void
-EdgeRetrieverLocus::
-advanceEdge()
+void EdgeRetrieverLocus::advanceEdge()
 {
-    typedef SVLocusEdgesType::const_iterator edgeiter_t;
+  typedef SVLocusEdgesType::const_iterator edgeiter_t;
 
-    if (_isInit)
-    {
-        _edge.nodeIndex2++;
+  if (_isInit) {
+    _edge.nodeIndex2++;
+  } else {
+    _edge.locusIndex = _opt.locusIndex;
+    _edge.nodeIndex1 = 0;
+    _edge.nodeIndex2 = 0;
+    _isInit          = true;
+  }
+
+  const SVLocus& locus(_set.getLocus(_edge.locusIndex));
+  while (_edge.nodeIndex1 < locus.size()) {
+    const SVLocusNode& node1(locus.getNode(_edge.nodeIndex1));
+    const bool isEdgeFilterNode1((_graphNodeMaxEdgeCount > 0) && node1.size() > _graphNodeMaxEdgeCount);
+    const SVLocusEdgeManager node1Manager(node1.getEdgeManager());
+    edgeiter_t               edgeIter(node1Manager.getMap().lower_bound(_edge.nodeIndex2));
+    const edgeiter_t         edgeIterEnd(node1Manager.getMap().cend());
+
+    for (; edgeIter != edgeIterEnd; ++edgeIter) {
+      _edge.nodeIndex2 = edgeIter->first;
+
+      // check whether this edge is in the requested set:
+      if (isEdgeFiltered(_opt, _edge)) continue;
+
+      // check whether this is a noise edge that we skip:
+      if (isEdgeFilterNode1) {
+        const SVLocusNode& node2(locus.getNode(_edge.nodeIndex2));
+        const bool         isEdgeFilterNode2(node2.size() > _graphNodeMaxEdgeCount);
+        if (isEdgeFilterNode2) continue;
+      }
+      return;
     }
-    else
-    {
-        _edge.locusIndex=_opt.locusIndex;
-        _edge.nodeIndex1=0;
-        _edge.nodeIndex2=0;
-        _isInit=true;
-    }
+    _edge.nodeIndex1++;
+    _edge.nodeIndex2 = _edge.nodeIndex1;
+  }
 
-    const SVLocus& locus(_set.getLocus(_edge.locusIndex));
-    while (_edge.nodeIndex1<locus.size())
-    {
-        const SVLocusNode& node1(locus.getNode(_edge.nodeIndex1));
-        const bool isEdgeFilterNode1((_graphNodeMaxEdgeCount>0) && node1.size()>_graphNodeMaxEdgeCount);
-        const SVLocusEdgeManager node1Manager(node1.getEdgeManager());
-        edgeiter_t edgeIter(node1Manager.getMap().lower_bound(_edge.nodeIndex2));
-        const edgeiter_t edgeIterEnd(node1Manager.getMap().cend());
-
-        for (; edgeIter != edgeIterEnd; ++edgeIter)
-        {
-            _edge.nodeIndex2 = edgeIter->first;
-
-            // check whether this edge is in the requested set:
-            if (isEdgeFiltered(_opt,_edge)) continue;
-
-            // check whether this is a noise edge that we skip:
-            if (isEdgeFilterNode1)
-            {
-                const SVLocusNode& node2(locus.getNode(_edge.nodeIndex2));
-                const bool isEdgeFilterNode2(node2.size()>_graphNodeMaxEdgeCount);
-                if (isEdgeFilterNode2) continue;
-            }
-            return;
-        }
-        _edge.nodeIndex1++;
-        _edge.nodeIndex2=_edge.nodeIndex1;
-    }
-
-    _edge.locusIndex++;
+  _edge.locusIndex++;
 }
 
-
-
-bool
-EdgeRetrieverLocus::
-next()
+bool EdgeRetrieverLocus::next()
 {
 #ifdef DEBUG_EDGER
-    log_os << "EDGERL: start\n";
+  log_os << "EDGERL: start\n";
 #endif
 
-    if (_edge.locusIndex > _opt.locusIndex) return false;
-    advanceEdge();
+  if (_edge.locusIndex > _opt.locusIndex) return false;
+  advanceEdge();
 
-    return (_edge.locusIndex == _opt.locusIndex);
+  return (_edge.locusIndex == _opt.locusIndex);
 }

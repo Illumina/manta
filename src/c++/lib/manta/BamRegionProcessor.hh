@@ -34,19 +34,13 @@
 /// tasks over a single pass of the BAM records while maintaining
 /// isolation of methods
 ///
-struct BamRegionProcessor
-{
-    virtual
-    ~BamRegionProcessor() {}
+struct BamRegionProcessor {
+  virtual ~BamRegionProcessor() {}
 
-    /// Provide the index of the next bam file, must be called before switching files/samples
-    ///
-    /// For each bam index, return the requested interval for this operation,
-    /// operations with closely related intervals will be combined
-    /// and the union of intervals will be processed.
-    virtual
-    const GenomeInterval&
-    nextBamIndex(
-        const unsigned bamIndex) = 0;
-
+  /// Provide the index of the next bam file, must be called before switching files/samples
+  ///
+  /// For each bam index, return the requested interval for this operation,
+  /// operations with closely related intervals will be combined
+  /// and the union of intervals will be processed.
+  virtual const GenomeInterval& nextBamIndex(const unsigned bamIndex) = 0;
 };

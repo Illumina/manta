@@ -19,9 +19,7 @@
 
 #include "applications/MergeAlignmentStats/MergeAlignmentStats.hh"
 
-
-int
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    return MergeAlignmentStats().run(argc,argv);
+  return MergeAlignmentStats().run(argc, argv);
 }

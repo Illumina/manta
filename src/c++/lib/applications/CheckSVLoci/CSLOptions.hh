@@ -27,19 +27,10 @@
 
 #include <string>
 
+struct CSLOptions {
+  CSLOptions() {}
 
-
-struct CSLOptions
-{
-
-    CSLOptions()
-    {}
-
-    std::string graphFilename;
+  std::string graphFilename;
 };
 
-
-void
-parseCSLOptions(const illumina::Program& prog,
-                int argc, char* argv[],
-                CSLOptions& opt);
+void parseCSLOptions(const illumina::Program& prog, int argc, char* argv[], CSLOptions& opt);

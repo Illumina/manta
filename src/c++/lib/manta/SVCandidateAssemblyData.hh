@@ -22,9 +22,9 @@
 
 #pragma once
 
-#include "assembly/AssembledContig.hh"
 #include "alignment/GlobalAligner.hh"
 #include "alignment/GlobalJumpAligner.hh"
+#include "assembly/AssembledContig.hh"
 #include "blt_util/reference_contig_segment.hh"
 #include "manta/SVCandidate.hh"
 
@@ -33,77 +33,61 @@
 #include <unordered_map>
 #include <vector>
 
-
 /// \brief Minimum set of information required to describe bp transformations between SVCandidate and its
 ///        corresponding contig alignment
 ///
-struct BPOrientation
-{
-    void
-    clear()
-    {
-        isBp2AlignedFirst=false;
-        isBp1Reversed=false;
-        isBp2Reversed=false;
-        isBp1First=true;
-        isTranscriptStrandKnown=false;
-    }
+struct BPOrientation {
+  void clear()
+  {
+    isBp2AlignedFirst       = false;
+    isBp1Reversed           = false;
+    isBp2Reversed           = false;
+    isBp1First              = true;
+    isTranscriptStrandKnown = false;
+  }
 
-    bool isBp2AlignedFirst = false; ///< should the contig on the fwd strand align bp2->bp1 (true) or bp1->bp2 (false)
-    bool isBp1Reversed = false; ///< should all bp1 reads be reversed for the contig to assemble correctly?
-    bool isBp2Reversed = false; ///< should all bp2 reads be reversed for the contig to assemble correctly?
-    bool isBp1First = true; ///< Is this candidate oriented from bp1 to bp2 (used in RNA)? Valid if isTranscriptStrandKnown is true
-    bool isTranscriptStrandKnown = false; ///< Do we know the strand for this candidate (RNA)
+  bool isBp2AlignedFirst =
+      false;  ///< should the contig on the fwd strand align bp2->bp1 (true) or bp1->bp2 (false)
+  bool isBp1Reversed = false;  ///< should all bp1 reads be reversed for the contig to assemble correctly?
+  bool isBp2Reversed = false;  ///< should all bp2 reads be reversed for the contig to assemble correctly?
+  bool isBp1First    = true;   ///< Is this candidate oriented from bp1 to bp2 (used in RNA)? Valid if
+                               ///< isTranscriptStrandKnown is true
+  bool isTranscriptStrandKnown = false;  ///< Do we know the strand for this candidate (RNA)
 };
 
+struct LargeInsertionInfo {
+  void clear()
+  {
+    isLeftCandidate  = false;
+    isRightCandidate = false;
+    contigOffset     = 0;
+    refOffset        = 0;
+    score            = 0;
+  }
 
-
-struct LargeInsertionInfo
-{
-    void
-    clear()
-    {
-        isLeftCandidate=false;
-        isRightCandidate=false;
-        contigOffset=0;
-        refOffset=0;
-        score=0;
-    }
-
-    bool isLeftCandidate = false;
-    bool isRightCandidate = false;
-    unsigned contigOffset = 0; ///< If candidate, how far into the contig is the breakend?
-    unsigned refOffset = 0; ///< If candidate, how far from the start of the contig alignment is the breakend on reference?
-    int score = 0; ///< What is the alignment score of the contig up to the insertion breakpoint?
+  bool     isLeftCandidate  = false;
+  bool     isRightCandidate = false;
+  unsigned contigOffset     = 0;  ///< If candidate, how far into the contig is the breakend?
+  unsigned refOffset =
+      0;  ///< If candidate, how far from the start of the contig alignment is the breakend on reference?
+  int score = 0;  ///< What is the alignment score of the contig up to the insertion breakpoint?
 };
 
-std::ostream&
-operator<<(std::ostream& os, const LargeInsertionInfo& lii);
+std::ostream& operator<<(std::ostream& os, const LargeInsertionInfo& lii);
 
+struct RemoteReadPayload {
+  RemoteReadPayload() : readNo(0) {}
 
+  RemoteReadPayload(const int initReadNo, const std::string& initReadSeq)
+    : readNo(initReadNo), readSeq(initReadSeq)
+  {
+  }
 
-struct RemoteReadPayload
-{
-    RemoteReadPayload() :
-        readNo(0)
-    {}
-
-    RemoteReadPayload(
-        const int initReadNo,
-        const std::string& initReadSeq) :
-        readNo(initReadNo),
-        readSeq(initReadSeq)
-    {}
-
-    uint8_t readNo; ///< Read no of the remote read, ie. the readno matching readSeq
-    std::string readSeq;
+  uint8_t     readNo;  ///< Read no of the remote read, ie. the readno matching readSeq
+  std::string readSeq;
 };
 
-
-
-typedef std::unordered_map<std::string,RemoteReadPayload> RemoteReadCache;
-
-
+typedef std::unordered_map<std::string, RemoteReadPayload> RemoteReadCache;
 
 /// \brief Assembly data pertaining to a specific SV candidate
 ///
@@ -121,62 +105,68 @@ typedef std::unordered_map<std::string,RemoteReadPayload> RemoteReadCache;
 /// it's hard to see the right strategy/interface until the scoring modules reach greater maturity
 /// (the scoring modules are the primary non-local consumer of information from this struct)
 ///
-struct SVCandidateAssemblyData
-{
-    void
-    clear()
-    {
-        contigs.clear();
-        isCandidateSpanning=false;
-        isSpanning=false;
-        bporient.clear();
-        extendedContigs.clear();
-        smallSVAlignments.clear();
-        spanningAlignments.clear();
-        smallSVSegments.clear();
-        largeInsertInfo.clear();
-        remoteReads.clear();
-        bestAlignmentIndex=0;
-        bp1ref.clear();
-        bp2ref.clear();
-        svs.clear();
-        isOverlapSkip=false;
-    }
+struct SVCandidateAssemblyData {
+  void clear()
+  {
+    contigs.clear();
+    isCandidateSpanning = false;
+    isSpanning          = false;
+    bporient.clear();
+    extendedContigs.clear();
+    smallSVAlignments.clear();
+    spanningAlignments.clear();
+    smallSVSegments.clear();
+    largeInsertInfo.clear();
+    remoteReads.clear();
+    bestAlignmentIndex = 0;
+    bp1ref.clear();
+    bp2ref.clear();
+    svs.clear();
+    isOverlapSkip = false;
+  }
 
-    typedef AlignmentResult<int> SmallAlignmentResultType;
-    typedef JumpAlignmentResult<int> JumpAlignmentResultType;
+  typedef AlignmentResult<int>     SmallAlignmentResultType;
+  typedef JumpAlignmentResult<int> JumpAlignmentResultType;
 
-    typedef std::pair<unsigned,unsigned> CandidateSegmentType; ///< 'segments' only pertain to small-event alignments
-    typedef std::vector<CandidateSegmentType> CandidateSegmentSetType; ///< 'segments' only pertain to small-event alignments
+  typedef std::pair<unsigned, unsigned>
+      CandidateSegmentType;  ///< 'segments' only pertain to small-event alignments
+  typedef std::vector<CandidateSegmentType>
+      CandidateSegmentSetType;  ///< 'segments' only pertain to small-event alignments
 
-    Assembly contigs; ///< assembled contigs for both breakpoints
+  Assembly contigs;  ///< assembled contigs for both breakpoints
 
-    /// note that isCandidateSpanning can be != isSpanning in cases where the breakends are so close that the assembler decides to fuse
-    /// them and treat a spanning hypothesis as non-spanning:
-    bool isCandidateSpanning = false; ///< before assembly, was this a 2-locus event (spanning), or a local-assembly?
-    bool isSpanning = false; ///< at assembly time, was this treated as a 2-locus event (spanning), or a local-assembly?
+  /// note that isCandidateSpanning can be != isSpanning in cases where the breakends are so close that the
+  /// assembler decides to fuse
+  /// them and treat a spanning hypothesis as non-spanning:
+  bool isCandidateSpanning =
+      false;  ///< before assembly, was this a 2-locus event (spanning), or a local-assembly?
+  bool isSpanning =
+      false;  ///< at assembly time, was this treated as a 2-locus event (spanning), or a local-assembly?
 
-    BPOrientation bporient;
+  BPOrientation bporient;
 
-    /// Assembled contigs with additional reference sequence padding added onto each edge
-    std::vector<std::string> extendedContigs;
+  /// Assembled contigs with additional reference sequence padding added onto each edge
+  std::vector<std::string> extendedContigs;
 
-    std::vector<SmallAlignmentResultType> smallSVAlignments; ///< contig smallSV alignments, one per contig, may be empty
-    std::vector<JumpAlignmentResultType> spanningAlignments; ///< contig spanning alignments, one per contig, may be empty
-    std::vector<CandidateSegmentSetType> smallSVSegments; ///< list of indel sets, one per small alignment
+  std::vector<SmallAlignmentResultType>
+      smallSVAlignments;  ///< contig smallSV alignments, one per contig, may be empty
+  std::vector<JumpAlignmentResultType>
+                                       spanningAlignments;  ///< contig spanning alignments, one per contig, may be empty
+  std::vector<CandidateSegmentSetType> smallSVSegments;  ///< list of indel sets, one per small alignment
 
-    std::vector<LargeInsertionInfo> largeInsertInfo; ///< data specific to searching for a large insertion candidate
+  std::vector<LargeInsertionInfo>
+      largeInsertInfo;  ///< data specific to searching for a large insertion candidate
 
-    RemoteReadCache remoteReads; ///< remote reads retrieved to improve assembly and scoring for this locus
+  RemoteReadCache remoteReads;  ///< remote reads retrieved to improve assembly and scoring for this locus
 
-    unsigned bestAlignmentIndex = 0; ///< if non-empty sv candidate set, which contig/alignment produced them?
+  unsigned bestAlignmentIndex = 0;  ///< if non-empty sv candidate set, which contig/alignment produced them?
 
-    // expanded reference regions around the candidate SV breakend regions, for small events we use only bp1ref:
-    reference_contig_segment bp1ref;
-    reference_contig_segment bp2ref;
+  // expanded reference regions around the candidate SV breakend regions, for small events we use only bp1ref:
+  reference_contig_segment bp1ref;
+  reference_contig_segment bp2ref;
 
-    std::vector<SVCandidate> svs; ///< summarize candidate refined sv candidates
+  std::vector<SVCandidate> svs;  ///< summarize candidate refined sv candidates
 
-    /// If true, assembly was skipped for this case because of an overlapping assembly
-    bool isOverlapSkip = false;
+  /// If true, assembly was skipped for this case because of an overlapping assembly
+  bool isOverlapSkip = false;
 };

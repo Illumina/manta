@@ -26,31 +26,16 @@
 #include <string>
 #include <vector>
 
-
-void
-split_string(
-    const char* str,
-    const char delimiter,
-    std::vector<std::string>& v);
+void split_string(const char* str, const char delimiter, std::vector<std::string>& v);
 
 /// insert nulls into str to create a vector of c-strs without new allocation
-void
-destructive_split_string(
-    char* str,
-    const char delimiter,
-    std::vector<const char*>& v);
+void destructive_split_string(char* str, const char delimiter, std::vector<const char*>& v);
 
-void
-split_string(
-    const std::string& str,
-    const char delimiter,
+void split_string(
+    const std::string&        str,
+    const char                delimiter,
     std::vector<std::string>& v,
-    const bool isSkipEmpty = false);
+    const bool                isSkipEmpty = false);
 
 /// check for exact match to pattern after delimiting str by delimiter
-bool
-split_match(
-    const std::string& str,
-    const char delimiter,
-    const char* needle);
-
+bool split_match(const std::string& str, const char delimiter, const char* needle);

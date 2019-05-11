@@ -26,34 +26,29 @@
 #include "blt_util/known_pos_range2.hh"
 
 #include <iosfwd>
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
-
 
 /// \brief data pertaining to a de-novo assembly contig
 ///
 /// stores for each contig the sequence and the number of reads
 /// containing its seeding k-mer
 ///
-struct AssembledContig
-{
-    std::string seq; ///< contigsequence
+struct AssembledContig {
+  std::string seq;  ///< contigsequence
 
-    // reads used for assembly of contig <read_no,mapping position to contig>
-    //std::map<std::string,int> contigReads;
+  // reads used for assembly of contig <read_no,mapping position to contig>
+  //std::map<std::string,int> contigReads;
 
-    unsigned seedReadCount = 0; ///< no of reads containing the seeding kmer
+  unsigned seedReadCount = 0;  ///< no of reads containing the seeding kmer
 
-    std::set<unsigned> supportReads;
-    std::set<unsigned> rejectReads;
+  std::set<unsigned> supportReads;
+  std::set<unsigned> rejectReads;
 
-    known_pos_range2 conservativeRange; ///< subsection of the contig with conservative coverage
+  known_pos_range2 conservativeRange;  ///< subsection of the contig with conservative coverage
 };
-
 
 std::ostream& operator<<(std::ostream& os, const AssembledContig& contig);
 
-
 typedef std::vector<AssembledContig> Assembly;
-

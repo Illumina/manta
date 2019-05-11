@@ -30,10 +30,8 @@
 
 #include <iostream>
 
-
-std::ostream&
-operator<<(std::ostream& os, const ReadPairOrient& rpo)
+std::ostream& operator<<(std::ostream& os, const ReadPairOrient& rpo)
 {
-    os << PAIR_ORIENT::label(rpo.val());
-    return os;
+  os << PAIR_ORIENT::label(rpo.val());
+  return os;
 }

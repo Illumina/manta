@@ -23,21 +23,20 @@
 
 #include "SVScorerShared.hh"
 
-void
-setReadEvidence(
-    const unsigned minMapQ,
-    const unsigned minTier2MapQ,
-    const unsigned mapq,
-    const unsigned readSize,
-    const bool isShadow,
+void setReadEvidence(
+    const unsigned          minMapQ,
+    const unsigned          minTier2MapQ,
+    const unsigned          mapq,
+    const unsigned          readSize,
+    const bool              isShadow,
     SVFragmentEvidenceRead& read)
 {
-    if (read.isScanned) return;
+  if (read.isScanned) return;
 
-    read.isScanned = true;
-    read.mapq = mapq;
-    read.isShadow = isShadow;
-    read.setAnchored(read.mapq >= minMapQ);
-    read.setTier2Anchored(read.mapq >= minTier2MapQ);
-    read.size = readSize;
+  read.isScanned = true;
+  read.mapq      = mapq;
+  read.isShadow  = isShadow;
+  read.setAnchored(read.mapq >= minMapQ);
+  read.setTier2Anchored(read.mapq >= minTier2MapQ);
+  read.size = readSize;
 }

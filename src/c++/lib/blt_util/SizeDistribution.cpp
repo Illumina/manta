@@ -33,198 +33,152 @@
 
 //#define DEBUG_RPS
 
-
-static
-void
-populateCdfQuantiles(
-    SizeDistribution::map_type& sizeMap,
-    const unsigned totalCount,
-    std::vector<int>& quantiles)
+static void populateCdfQuantiles(
+    SizeDistribution::map_type& sizeMap, const unsigned totalCount, std::vector<int>& quantiles)
 {
-    const unsigned quantileNum(quantiles.size());
-    const float pFactor(1/static_cast<float>(totalCount));
+  const unsigned quantileNum(quantiles.size());
+  const float    pFactor(1 / static_cast<float>(totalCount));
 
-    unsigned fillBase(0);
-    unsigned cumulativeCount(0);
-    BOOST_REVERSE_FOREACH(SizeDistribution::map_type::value_type& val, sizeMap)
-    {
-        cumulativeCount += (val.second.count);
-        assert(cumulativeCount <= totalCount);
+  unsigned fillBase(0);
+  unsigned cumulativeCount(0);
+  BOOST_REVERSE_FOREACH(SizeDistribution::map_type::value_type & val, sizeMap)
+  {
+    cumulativeCount += (val.second.count);
+    assert(cumulativeCount <= totalCount);
 
-        // update the hash map with cumulative prob value
-        val.second.cprob = (cumulativeCount * pFactor);
+    // update the hash map with cumulative prob value
+    val.second.cprob = (cumulativeCount * pFactor);
 
-        const unsigned fillNext = static_cast<unsigned>(rint(val.second.cprob * quantileNum));
-        for (; fillBase < fillNext; fillBase++)
-        {
-            quantiles[fillBase] = val.first;
-        }
+    const unsigned fillNext = static_cast<unsigned>(rint(val.second.cprob * quantileNum));
+    for (; fillBase < fillNext; fillBase++) {
+      quantiles[fillBase] = val.first;
     }
+  }
 }
 
-
-
-
-void
-SizeDistribution::
-calcStats() const
+void SizeDistribution::calcStats() const
 {
 #ifdef DEBUG_RPS
-    log_os << "Calculating stats...\n"
-           << "numOfSized=" << _sizeMap.size() << "\n";
+  log_os << "Calculating stats...\n"
+         << "numOfSized=" << _sizeMap.size() << "\n";
 #endif
-    _isStatsComputed=true;
-    if (_sizeMap.empty()) return;
+  _isStatsComputed = true;
+  if (_sizeMap.empty()) return;
 
-    populateCdfQuantiles(_sizeMap, _totalCount, _quantiles);
+  populateCdfQuantiles(_sizeMap, _totalCount, _quantiles);
 }
 
-
-
-int
-SizeDistribution::
-quantile(const float prob) const
+int SizeDistribution::quantile(const float prob) const
 {
-    assert((prob >= 0.) && (prob <= 1.));
+  assert((prob >= 0.) && (prob <= 1.));
 
-    static const int maxBin(_quantileNum - 1);
-    if (! _isStatsComputed) calcStats();
+  static const int maxBin(_quantileNum - 1);
+  if (!_isStatsComputed) calcStats();
 
-    int bin(static_cast<int>(ceil(prob * _quantileNum) - 1));
-    if (bin < 0) bin=0;
-    if (bin > maxBin) bin=maxBin;
-    return _quantiles[bin];
+  int bin(static_cast<int>(ceil(prob * _quantileNum) - 1));
+  if (bin < 0) bin = 0;
+  if (bin > maxBin) bin = maxBin;
+  return _quantiles[bin];
 }
 
-
-
-float
-SizeDistribution::
-cdf(const int size) const
+float SizeDistribution::cdf(const int size) const
 {
-    if (! _isStatsComputed) calcStats();
+  if (!_isStatsComputed) calcStats();
 
-    // map uses greater<int> for comp, so lower bound is "first element not greater than" size, from a list sorted high->low
-    const map_type::const_iterator sizeIter(_sizeMap.lower_bound(size));
-    if (sizeIter == _sizeMap.end()) return 0;
-    return sizeIter->second.cprob;
+  // map uses greater<int> for comp, so lower bound is "first element not greater than" size, from a list
+  // sorted high->low
+  const map_type::const_iterator sizeIter(_sizeMap.lower_bound(size));
+  if (sizeIter == _sizeMap.end()) return 0;
+  return sizeIter->second.cprob;
 }
 
-
-
-float
-SizeDistribution::
-pdf(const int size) const
+float SizeDistribution::pdf(const int size) const
 {
-    if (! _isStatsComputed) calcStats();
+  if (!_isStatsComputed) calcStats();
 
-    static const unsigned targetSampleSize(5);
+  static const unsigned targetSampleSize(5);
 
-    unsigned count(0);
-    int minSize(size);
-    int maxSize(size);
+  unsigned count(0);
+  int      minSize(size);
+  int      maxSize(size);
 
-    bool isMinBound(false);
-    bool isMaxBound(false);
+  bool isMinBound(false);
+  bool isMaxBound(false);
 
-    /// scheme: get the five closest (in bin space) samples and sum them divided by the range required to find them
+  /// scheme: get the five closest (in bin space) samples and sum them divided by the range required to find
+  /// them
 
-    // map uses greater<int> for comp, so lower bound is "first element not greater than" size, from a list sorted high->low
-    map_type::const_iterator lowIter(_sizeMap.lower_bound(size));
+  // map uses greater<int> for comp, so lower bound is "first element not greater than" size, from a list
+  // sorted high->low
+  map_type::const_iterator lowIter(_sizeMap.lower_bound(size));
 
-    if (lowIter == _sizeMap.end())
-    {
-        isMinBound=true;
+  if (lowIter == _sizeMap.end()) {
+    isMinBound = true;
+  }
+
+  map_type::const_iterator highIter(lowIter);
+
+  if (highIter == _sizeMap.begin()) {
+    isMaxBound = true;
+  } else {
+    --highIter;
+  }
+
+  for (unsigned sampleIndex(0); sampleIndex < targetSampleSize; ++sampleIndex) {
+    // determine whether fwd or rev pointer is closer to size:
+    if (isMinBound && isMaxBound) break;
+
+    bool isChooseLow(true);
+    if (isMinBound) {
+      isChooseLow = false;
+    } else if (isMaxBound) {
+      isChooseLow = true;
+    } else {
+      isChooseLow = (std::abs(lowIter->first - size) <= std::abs(highIter->first - size));
     }
 
-    map_type::const_iterator highIter(lowIter);
+    if (isChooseLow) {
+      minSize = lowIter->first;
+      count += lowIter->second.count;
+      ++lowIter;
 
-    if (highIter == _sizeMap.begin())
-    {
-        isMaxBound=true;
-    }
-    else
-    {
+      if (lowIter == _sizeMap.end()) isMinBound = true;
+    } else {
+      maxSize = highIter->first;
+      count += highIter->second.count;
+      if (highIter == _sizeMap.begin()) {
+        isMaxBound = true;
+      } else {
         --highIter;
+      }
     }
+  }
 
+  assert(maxSize >= minSize);
 
-    for (unsigned sampleIndex(0); sampleIndex<targetSampleSize; ++sampleIndex)
-    {
-        // determine whether fwd or rev pointer is closer to size:
-        if (isMinBound && isMaxBound) break;
-
-        bool isChooseLow(true);
-        if (isMinBound)
-        {
-            isChooseLow=false;
-        }
-        else if (isMaxBound)
-        {
-            isChooseLow=true;
-        }
-        else
-        {
-            isChooseLow=(std::abs(lowIter->first-size) <= std::abs(highIter->first-size));
-        }
-
-        if (isChooseLow)
-        {
-            minSize = lowIter->first;
-            count += lowIter->second.count;
-            ++lowIter;
-
-            if (lowIter == _sizeMap.end()) isMinBound=true;
-        }
-        else
-        {
-            maxSize = highIter->first;
-            count += highIter->second.count;
-            if (highIter == _sizeMap.begin())
-            {
-                isMaxBound=true;
-            }
-            else
-            {
-                --highIter;
-            }
-        }
-    }
-
-    assert(maxSize >= minSize);
-
-    return count/(static_cast<float>(_totalCount)*static_cast<float>(1+maxSize-minSize));
+  return count / (static_cast<float>(_totalCount) * static_cast<float>(1 + maxSize - minSize));
 }
 
-
-
-void
-SizeDistribution::
-filterObservationsOverQuantile(const float prob)
+void SizeDistribution::filterObservationsOverQuantile(const float prob)
 {
-    const int maxSize(quantile(prob));
-    const map_type::iterator sizeBegin(_sizeMap.begin());
-    map_type::iterator sizeEnd(_sizeMap.lower_bound(maxSize));
+  const int                maxSize(quantile(prob));
+  const map_type::iterator sizeBegin(_sizeMap.begin());
+  map_type::iterator       sizeEnd(_sizeMap.lower_bound(maxSize));
 
-    for (map_type::iterator sizeIter(sizeBegin); sizeIter != sizeEnd; ++sizeIter)
-    {
-        if (sizeIter->first <= maxSize)
-        {
-            sizeEnd = sizeIter;
-            break;
-        }
-        _totalCount -= sizeIter->second.count;
+  for (map_type::iterator sizeIter(sizeBegin); sizeIter != sizeEnd; ++sizeIter) {
+    if (sizeIter->first <= maxSize) {
+      sizeEnd = sizeIter;
+      break;
     }
-    _sizeMap.erase(sizeBegin,sizeEnd);
+    _totalCount -= sizeIter->second.count;
+  }
+  _sizeMap.erase(sizeBegin, sizeEnd);
 
-    _isStatsComputed=false;
+  _isStatsComputed = false;
 }
 
-
-
-std::ostream&
-operator<<(std::ostream& os, const SizeDistribution& sd)
+std::ostream& operator<<(std::ostream& os, const SizeDistribution& sd)
 {
-    os << sd.totalObservations() << '\n';
-    return os;
+  os << sd.totalObservations() << '\n';
+  return os;
 }

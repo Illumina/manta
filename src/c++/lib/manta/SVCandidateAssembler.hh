@@ -32,7 +32,6 @@
 #include <string>
 #include <vector>
 
-
 /// Assembles reads across suspected breakends of both 'spanning' (2 breakend regions) and
 /// 'complex' (1 breakend region) low-resolution SVCandidates
 ///
@@ -41,90 +40,88 @@
 /// iterating over a range of word lengths until the first successful assembly. If unused
 /// reads remain, the assembly is re-started using this subset.
 ///
-struct SVCandidateAssembler
-{
-    typedef IterativeAssemblerOptions AssemblerOptions;
+struct SVCandidateAssembler {
+  typedef IterativeAssemblerOptions AssemblerOptions;
 
-    SVCandidateAssembler(
-        const ReadScannerOptions& scanOpt,
-        const AssemblerOptions& assembleOpt,
-        const AlignmentFileOptions& alignFileOpt,
-        const std::string& referenceFilename,
-        const std::string& statsFilename,
-        const std::string& chromDepthFilename,
-        const bam_header_info& bamHeader,
-        const AllSampleReadCounts& counts,
-        const bool isRNA,
-        TimeTracker& remoteReadRetrievalTime);
+  SVCandidateAssembler(
+      const ReadScannerOptions&   scanOpt,
+      const AssemblerOptions&     assembleOpt,
+      const AlignmentFileOptions& alignFileOpt,
+      const std::string&          referenceFilename,
+      const std::string&          statsFilename,
+      const std::string&          chromDepthFilename,
+      const bam_header_info&      bamHeader,
+      const AllSampleReadCounts&  counts,
+      const bool                  isRNA,
+      TimeTracker&                remoteReadRetrievalTime);
 
-    /// Given a 'complex' SV candidate with 1 breakend region, assemble reads
-    /// over the breakend region
-    void
-    assembleComplexSVCandidate(
-        const SVBreakend& bp,
-        const reference_contig_segment& refSeq,
-        const bool isSearchRemoteInsertionReads,
-        RemoteReadCache& remoteReads,
-        Assembly& as) const;
+  /// Given a 'complex' SV candidate with 1 breakend region, assemble reads
+  /// over the breakend region
+  void assembleComplexSVCandidate(
+      const SVBreakend&               bp,
+      const reference_contig_segment& refSeq,
+      const bool                      isSearchRemoteInsertionReads,
+      RemoteReadCache&                remoteReads,
+      Assembly&                       as) const;
 
-    /// Given a 'spanning' SV candidate with 2 breakend regions, assemble reads
-    /// over the junction of the 2 breakend regions
-    void
-    assembleSpanningSVCandidate(
-        const SVBreakend& bp1,
-        const SVBreakend& bp2,
-        const bool isBp1Reversed,
-        const bool isBp2Reversed,
-        const reference_contig_segment& refSeq1,
-        const reference_contig_segment& refSeq2,
-        Assembly& as) const;
+  /// Given a 'spanning' SV candidate with 2 breakend regions, assemble reads
+  /// over the junction of the 2 breakend regions
+  void assembleSpanningSVCandidate(
+      const SVBreakend&               bp1,
+      const SVBreakend&               bp2,
+      const bool                      isBp1Reversed,
+      const bool                      isBp2Reversed,
+      const reference_contig_segment& refSeq1,
+      const reference_contig_segment& refSeq2,
+      Assembly&                       as) const;
 
-    const AssemblerOptions&
-    getAssembleOpt() const
-    {
-        return _assembleOpt;
-    }
+  const AssemblerOptions& getAssembleOpt() const { return _assembleOpt; }
 
-
-    typedef std::map<std::string,unsigned> ReadIndexType;
+  typedef std::map<std::string, unsigned> ReadIndexType;
 
 private:
-    typedef std::shared_ptr<bam_streamer> streamPtr;
+  typedef std::shared_ptr<bam_streamer> streamPtr;
 
-    /// Collect reads crossing an SV breakpoint and add them to 'reads'
-    ///
-    /// \param[in] isReversed if true revcomp all reads on input
-    /// \param[in] refSeq this is used to find reads which have poorly aligned ends, such reads are added to the breakend assembly pool
-    /// \param[in] isSearchRemoteInsertionReads if true search the remote end of chimeric pairs for MAPQ0 insertion support
-    /// \param[out] remoteReadsCache stores any discovered remote reads so that these can be reused during scoring
-    /// \param[out] reads collected breakend assembly candidate reads
-    void
-    getBreakendReads(
-        const SVBreakend& bp,
-        const bool isReversed,
-        const reference_contig_segment& refSeq,
-        const bool isSearchRemoteInsertionReads,
-        RemoteReadCache& remoteReadsCache,
-        ReadIndexType& readIndex,
-        AssemblyReadInput& reads) const;
+  /// Collect reads crossing an SV breakpoint and add them to 'reads'
+  ///
+  /// \param[in] isReversed if true revcomp all reads on input
+  ///
+  /// \param[in] refSeq this is used to find reads which have poorly aligned ends, such reads are added to the
+  /// breakend assembly pool
+  ///
+  /// \param[in] isSearchRemoteInsertionReads if true search the remote end of chimeric pairs for MAPQ0
+  /// insertion support
+  ///
+  /// \param[out] remoteReadsCache stores any discovered remote reads so that these can be reused during
+  /// scoring
+  ///
+  /// \param[out] reads collected breakend assembly candidate reads
+  void getBreakendReads(
+      const SVBreakend&               bp,
+      const bool                      isReversed,
+      const reference_contig_segment& refSeq,
+      const bool                      isSearchRemoteInsertionReads,
+      RemoteReadCache&                remoteReadsCache,
+      ReadIndexType&                  readIndex,
+      AssemblyReadInput&              reads) const;
 
-    const ReadScannerOptions _scanOpt;
-    const AssemblerOptions _assembleOpt;
-    const std::vector<bool> _isAlignmentTumor;
+  const ReadScannerOptions _scanOpt;
+  const AssemblerOptions   _assembleOpt;
+  const std::vector<bool>  _isAlignmentTumor;
 
-    /// This depth filters tracks the maximum depth for procssing and assembling a locus
-    const ChromDepthFilterUtil _dFilter;
+  /// This depth filters tracks the maximum depth for procssing and assembling a locus
+  const ChromDepthFilterUtil _dFilter;
 
-    /// This depth filter tracks the maximum depth of a source locus which qualifies for remote read recovery
-    /// used to assemble large insertions
-    const ChromDepthFilterUtil _dFilterLocalDepthForRemoteReadRetrieval;
+  /// This depth filter tracks the maximum depth of a source locus which qualifies for remote read recovery
+  /// used to assemble large insertions
+  const ChromDepthFilterUtil _dFilterLocalDepthForRemoteReadRetrieval;
 
-    // contains functions to detect/classify anomalous reads
-    SVLocusScanner _readScanner;
-    std::vector<streamPtr> _bamStreams;
-    TimeTracker& _remoteReadRetrievalTime;
+  // contains functions to detect/classify anomalous reads
+  SVLocusScanner         _readScanner;
+  std::vector<streamPtr> _bamStreams;
+  TimeTracker&           _remoteReadRetrievalTime;
 
-    /// In each sample, store the background rate of reads which would qualify for remove recovery at an insertion
-    /// locus
-    std::vector<double> _sampleRemoteRecoveryCandidateRate;
+  /// In each sample, store the background rate of reads which would qualify for remove recovery at an
+  /// insertion locus
+  std::vector<double> _sampleRemoteRecoveryCandidateRate;
 };

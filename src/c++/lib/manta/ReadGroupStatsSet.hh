@@ -28,93 +28,50 @@
 #include <iosfwd>
 #include <string>
 
-
 /// \brief manages multiple read_group_stats
 ///
-struct ReadGroupStatsSet
-{
-    typedef ReadGroupLabel KeyType;
+struct ReadGroupStatsSet {
+  typedef ReadGroupLabel KeyType;
 
-    bool
-    empty() const
-    {
-        return _group.empty();
-    }
+  bool empty() const { return _group.empty(); }
 
-    unsigned
-    size() const
-    {
-        return _group.size();
-    }
+  unsigned size() const { return _group.size(); }
 
-    /// \brief get the index of a read group
-    ///
-    /// the index can be used for fast lookup of the
-    /// stats for that group
-    ///
-    /// if the group does not exist, the returned value
-    /// evaluates to false per boost::optional
-    ///
-    /// Each read group is identified as a combination of a bam filename and
-    /// an RG tag label. An empty label refers to the "default" read group
-    /// for the file (all records that had no RG tag).
-    boost::optional<unsigned>
-    getGroupIndex(
-        const ReadGroupLabel& rgLabel) const
-    {
-        return _group.get_optional_id(rgLabel);
-    }
+  /// \brief get the index of a read group
+  ///
+  /// the index can be used for fast lookup of the
+  /// stats for that group
+  ///
+  /// if the group does not exist, the returned value
+  /// evaluates to false per boost::optional
+  ///
+  /// Each read group is identified as a combination of a bam filename and
+  /// an RG tag label. An empty label refers to the "default" read group
+  /// for the file (all records that had no RG tag).
+  boost::optional<unsigned> getGroupIndex(const ReadGroupLabel& rgLabel) const
+  {
+    return _group.get_optional_id(rgLabel);
+  }
 
-    /// get stats associated with index
-    const ReadGroupStats&
-    getStats(
-        const unsigned groupIndex) const
-    {
-        return _group.get_value(groupIndex);
-    }
+  /// get stats associated with index
+  const ReadGroupStats& getStats(const unsigned groupIndex) const { return _group.get_value(groupIndex); }
 
-    const KeyType&
-    getKey(
-        const unsigned groupIndex) const
-    {
-        return _group.get_key(groupIndex);
-    }
+  const KeyType& getKey(const unsigned groupIndex) const { return _group.get_key(groupIndex); }
 
-    /// set stats for index
-    void
-    setStats(
-        const ReadGroupLabel& rgLabel,
-        const ReadGroupStats& rps)
-    {
-        _group.insert(rgLabel,rps);
-    }
+  /// set stats for index
+  void setStats(const ReadGroupLabel& rgLabel, const ReadGroupStats& rps) { _group.insert(rgLabel, rps); }
 
-    /// merge in the contents of another stats set object:
-    void
-    merge(
-        const ReadGroupStatsSet& rhs);
+  /// merge in the contents of another stats set object:
+  void merge(const ReadGroupStatsSet& rhs);
 
-    void
-    save(
-        const char* filename) const;
+  void save(const char* filename) const;
 
-    void
-    load(
-        const char* filename);
+  void load(const char* filename);
 
-    bool
-    isEmpty()
-    {
-        return _group.empty();
-    }
+  bool isEmpty() { return _group.empty(); }
 
 private:
-    void
-    clear()
-    {
-        _group.clear();
-    }
+  void clear() { _group.clear(); }
 
-    id_map<KeyType, ReadGroupStats> _group;
+  id_map<KeyType, ReadGroupStats> _group;
 };
-

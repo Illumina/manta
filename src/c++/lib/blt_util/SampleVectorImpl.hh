@@ -23,28 +23,20 @@
 
 #include <random>
 
-
-
 template <typename T, typename RNG>
-void
-SampleVector<T,RNG>::
-push(const T& val)
+void SampleVector<T, RNG>::push(const T& val)
 {
-    if (_inputCount < _data.size())
-    {
-        // initial fill of the reservoir array is deterministic:
-        _data[_inputCount] = val;
-    }
-    else
-    {
-        // replace elements with gradually decreasing probability:
-        std::uniform_int_distribution<unsigned> rdist(0,_inputCount);
-        const unsigned rval(rdist(_rng));
+  if (_inputCount < _data.size()) {
+    // initial fill of the reservoir array is deterministic:
+    _data[_inputCount] = val;
+  } else {
+    // replace elements with gradually decreasing probability:
+    std::uniform_int_distribution<unsigned> rdist(0, _inputCount);
+    const unsigned                          rval(rdist(_rng));
 
-        if (rval < _data.size())
-        {
-            _data[rval] = val;
-        }
+    if (rval < _data.size()) {
+      _data[rval] = val;
     }
-    _inputCount++;
+  }
+  _inputCount++;
 }

@@ -22,18 +22,14 @@
 
 #include "boost/make_unique.hpp"
 
-
-
-std::unique_ptr<SVLocusSet>
-getSerializedSVLocusSetCopy(
-    const SVLocusSet& set)
+std::unique_ptr<SVLocusSet> getSerializedSVLocusSetCopy(const SVLocusSet& set)
 {
-    TestFilenameMaker testFilenameMaker;
-    const char* testFilenamePtr(testFilenameMaker.getFilename().c_str());
+  TestFilenameMaker testFilenameMaker;
+  const char*       testFilenamePtr(testFilenameMaker.getFilename().c_str());
 
-    // serialize
-    set.save(testFilenamePtr);
+  // serialize
+  set.save(testFilenamePtr);
 
-    // deserialize
-    return boost::make_unique<SVLocusSet>(testFilenamePtr);
+  // deserialize
+  return boost::make_unique<SVLocusSet>(testFilenamePtr);
 }

@@ -25,17 +25,10 @@
 
 #include "common/Program.hh"
 
-
 /// estimate per-library information from alignment file(s)
 ///
-struct DumpSVLoci : public illumina::Program
-{
-    const char*
-    name() const
-    {
-        return "DumpSVLoci";
-    }
+struct DumpSVLoci : public illumina::Program {
+  const char* name() const { return "DumpSVLoci"; }
 
-    void
-    runInternal(int argc, char* argv[]) const;
+  void runInternal(int argc, char* argv[]) const;
 };

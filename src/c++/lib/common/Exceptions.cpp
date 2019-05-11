@@ -26,24 +26,20 @@
 
 #include "Exceptions.hh"
 
-#include <cstring>
-#include <cerrno>
 #include <boost/date_time.hpp>
+#include <cerrno>
+#include <cstring>
 
-
-namespace illumina
-{
-namespace common
-{
+namespace illumina {
+namespace common {
 
 std::string ExceptionData::getContext() const
 {
-    const std::string now = boost::posix_time::to_simple_string(boost::posix_time::second_clock::local_time());
-    std::string errorInfo;
-    if (_errorNumber != 0) errorInfo = " '" + std::string(strerror(_errorNumber)) + "'";
-    return now + errorInfo + " " + boost::diagnostic_information(*this);
+  const std::string now = boost::posix_time::to_simple_string(boost::posix_time::second_clock::local_time());
+  std::string       errorInfo;
+  if (_errorNumber != 0) errorInfo = " '" + std::string(strerror(_errorNumber)) + "'";
+  return now + errorInfo + " " + boost::diagnostic_information(*this);
 }
 
-
-}
-}
+}  // namespace common
+}  // namespace illumina

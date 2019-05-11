@@ -26,17 +26,9 @@
 #include <string>
 #include "../../common/Program.hh"
 
-
-struct SASOptions
-{
-    std::string statsFilename;
-    std::string outputFilename;
+struct SASOptions {
+  std::string statsFilename;
+  std::string outputFilename;
 };
 
-
-void
-parseSASOptions(
-    const illumina::Program& prog,
-    int argc, char* argv[],
-    SASOptions& opt);
-
+void parseSASOptions(const illumina::Program& prog, int argc, char* argv[], SASOptions& opt);

@@ -27,74 +27,58 @@
 
 #include <iosfwd>
 
-
-struct istream_line_splitter
-{
-
-    istream_line_splitter(std::istream& is,
-                          const unsigned line_buf_size=8*1024,
-                          const char word_seperator='\t',
-                          const unsigned max_word=0)
-        : _is(is)
-        , _line_no(0)
-        , _n_word(0)
-        , _buf_size(line_buf_size)
-        , _sep(word_seperator)
-        , _max_word(max_word)
-        , _buf(new char[_buf_size])
-    {
-
-        if ((0==_max_word) || (MAX_WORD_COUNT < _max_word))
-        {
-            _max_word=MAX_WORD_COUNT;
-        }
+struct istream_line_splitter {
+  istream_line_splitter(
+      std::istream&  is,
+      const unsigned line_buf_size  = 8 * 1024,
+      const char     word_seperator = '\t',
+      const unsigned max_word       = 0)
+    : _is(is),
+      _line_no(0),
+      _n_word(0),
+      _buf_size(line_buf_size),
+      _sep(word_seperator),
+      _max_word(max_word),
+      _buf(new char[_buf_size])
+  {
+    if ((0 == _max_word) || (MAX_WORD_COUNT < _max_word)) {
+      _max_word = MAX_WORD_COUNT;
     }
+  }
 
-    ~istream_line_splitter()
-    {
-        if (nullptr != _buf)
-        {
-            delete [] _buf;
-            _buf=nullptr;
-        }
+  ~istream_line_splitter()
+  {
+    if (nullptr != _buf) {
+      delete[] _buf;
+      _buf = nullptr;
     }
+  }
 
-    unsigned
-    n_word() const
-    {
-        return _n_word;
-    }
+  unsigned n_word() const { return _n_word; }
 
-    /// returns false for regular end of input:
-    bool
-    parse_line();
+  /// returns false for regular end of input:
+  bool parse_line();
 
-    // recreates the line before parsing
-    void
-    write_line(std::ostream& os) const;
+  // recreates the line before parsing
+  void write_line(std::ostream& os) const;
 
-    // debug output, which provides line number and other info before calling write_line
-    void
-    dump(std::ostream& os) const;
+  // debug output, which provides line number and other info before calling write_line
+  void dump(std::ostream& os) const;
 
+  enum { MAX_WORD_COUNT = 50 };
+  char* word[MAX_WORD_COUNT];
 
-    enum { MAX_WORD_COUNT = 50 };
-    char* word[MAX_WORD_COUNT];
 private:
+  void increase_buffer_size();
 
-    void
-    increase_buffer_size();
-
-    std::istream& _is;
-    unsigned _line_no;
-    unsigned _n_word;
-    unsigned _buf_size;
-    char _sep;
-    unsigned _max_word;
-    char* _buf;
+  std::istream& _is;
+  unsigned      _line_no;
+  unsigned      _n_word;
+  unsigned      _buf_size;
+  char          _sep;
+  unsigned      _max_word;
+  char*         _buf;
 };
-
-
 
 #if 0
 {
@@ -123,5 +107,3 @@ private:
     }
 }
 #endif
-
-

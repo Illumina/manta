@@ -17,7 +17,6 @@
 //
 //
 
-
 ///
 /// \file
 /// \author Trevor Ramsay
@@ -29,22 +28,18 @@
 
 #include "boost/make_unique.hpp"
 
-
-std::unique_ptr<SVLocusScanner>
-buildTestSVLocusScanner(
-    const bam_header_info& bamHeaderInfo,
-    bool isRNA,
-    int minCandidateVariantSizeInput)
+std::unique_ptr<SVLocusScanner> buildTestSVLocusScanner(
+    const bam_header_info& bamHeaderInfo, bool isRNA, int minCandidateVariantSizeInput)
 {
-    ReadScannerOptions opts = ReadScannerOptions();
-    opts.minCandidateVariantSize = minCandidateVariantSizeInput;
-    opts.useOverlapPairEvidence = isRNA;
-    const ReadScannerOptions& constRefOpts(opts);
+  ReadScannerOptions opts      = ReadScannerOptions();
+  opts.minCandidateVariantSize = minCandidateVariantSizeInput;
+  opts.useOverlapPairEvidence  = isRNA;
+  const ReadScannerOptions& constRefOpts(opts);
 
-    TestStatsFileMaker statsFile;
-    TestAlignHeaderFileMaker alignFile(bamHeaderInfo);
-    const std::vector<std::string> alignFilenameVector = { alignFile.getFilename() };
+  TestStatsFileMaker             statsFile;
+  TestAlignHeaderFileMaker       alignFile(bamHeaderInfo);
+  const std::vector<std::string> alignFilenameVector = {alignFile.getFilename()};
 
-    return boost::make_unique<SVLocusScanner>(constRefOpts, statsFile.getFilename(),
-                                              alignFilenameVector, isRNA);
+  return boost::make_unique<SVLocusScanner>(
+      constRefOpts, statsFile.getFilename(), alignFilenameVector, isRNA);
 }

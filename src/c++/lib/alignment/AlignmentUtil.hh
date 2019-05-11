@@ -24,114 +24,82 @@
 #pragma once
 
 #include "alignment/Alignment.hh"
-#include "alignment/GlobalJumpAligner.hh"
 #include "alignment/GlobalAligner.hh"
-
+#include "alignment/GlobalJumpAligner.hh"
 
 /// return end position of alignment
-inline
-pos_t
-alignEnd(const Alignment& align)
+inline pos_t alignEnd(const Alignment& align)
 {
-    return (align.beginPos + ALIGNPATH::apath_ref_length(align.apath));
+  return (align.beginPos + ALIGNPATH::apath_ref_length(align.apath));
 }
-
 
 /// get begin position of alignment, accounting for a possibly reversed reference/alignment:
 ///
-inline
-pos_t
-getAlignBeginOffset(
-    const Alignment& align,
-    const unsigned refSize,
-    const bool isReversed)
+inline pos_t getAlignBeginOffset(const Alignment& align, const unsigned refSize, const bool isReversed)
 {
-    if (isReversed)
-    {
-        return (refSize - alignEnd(align));
-    }
-    else
-    {
-        return align.beginPos;
-    }
+  if (isReversed) {
+    return (refSize - alignEnd(align));
+  } else {
+    return align.beginPos;
+  }
 }
-
 
 /// get end position of alignment, accounting for a possibly reversed reference/alignment:
 ///
-inline
-pos_t
-getAlignEndOffset(
-    const Alignment& align,
-    const unsigned refSize,
-    const bool isReversed)
+inline pos_t getAlignEndOffset(const Alignment& align, const unsigned refSize, const bool isReversed)
 {
-    if (isReversed)
-    {
-        return (refSize - align.beginPos);
-    }
-    else
-    {
-        return alignEnd(align);
-    }
+  if (isReversed) {
+    return (refSize - align.beginPos);
+  } else {
+    return alignEnd(align);
+  }
 }
-
-
 
 /// check a jump alignment for consistency (only one end aligning)
 /// FIXME: not used, need to think what makes an alignment consistent
 /// (how about : total number of matches shouldn't exceed sequence length?)
-//bool
+// bool
 //isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned minAlignContext = 0);
 
-
 /// extend the contig by padding the flanking regions of the aligned reference regions on each end
-void
-getExtendedContig(
+void getExtendedContig(
     const JumpAlignmentResult<int>& align,
-    const std::string& querySeq,
-    const std::string& ref1Seq,
-    const std::string& ref2Seq,
-    std::string& extendedContig);
-
+    const std::string&              querySeq,
+    const std::string&              ref1Seq,
+    const std::string&              ref2Seq,
+    std::string&                    extendedContig);
 
 /// extend the somatic contig by padding the flanking regions of the aligned reference regions on each end
-void
-getExtendedContig(
+void getExtendedContig(
     const AlignmentResult<int>& alignment,
-    const std::string& querySeq,
-    const std::string& refSeq,
-    std::string& extendedContig);
+    const std::string&          querySeq,
+    const std::string&          refSeq,
+    std::string&                extendedContig);
 
 /// given a jump alignment and query sequence, return the bp1,insert and bp2 query sequences
 ///
 /// the insert sequence is converted to fwd-strand by assuming it is "attached" to bp1
 /// note this is targeted for debug-code only
 ///
-void
-getFwdStrandQuerySegments(
+void getFwdStrandQuerySegments(
     const JumpAlignmentResult<int>& align,
-    const std::string& querySeq,
-    const bool isBp2AlignedFirst,
-    const bool isBp1Reversed,
-    const bool isBp2Reversed,
-    std::string& bp1Seq,
-    std::string& bp2Seq,
-    std::string& insertSeq);
-
+    const std::string&              querySeq,
+    const bool                      isBp2AlignedFirst,
+    const bool                      isBp1Reversed,
+    const bool                      isBp2Reversed,
+    std::string&                    bp1Seq,
+    std::string&                    bp2Seq,
+    std::string&                    insertSeq);
 
 /// given a jump alignment and query sequence, return the insert sequence
 ///
 /// the insert sequence is converted to fwd-strand by assuming it is "attached" to bp1
 ///
-void
-getFwdStrandInsertSegment(
+void getFwdStrandInsertSegment(
     const JumpAlignmentResult<int>& align,
-    const std::string& querySeq,
-    const bool isBp1Reversed,
-    std::string& insertSeq);
-
+    const std::string&              querySeq,
+    const bool                      isBp1Reversed,
+    std::string&                    insertSeq);
 
 /// TODO: document this if it serves a general purpose, or make private to AssembleSVBreakend
-int
-estimateBreakPointPos(const Alignment& al, const unsigned refOffset);
+int estimateBreakPointPos(const Alignment& al, const unsigned refOffset);

@@ -26,7 +26,6 @@
 #include "bed_record.hh"
 #include "hts_streamer.hh"
 
-
 /// \brief Stream records from BED files.
 //
 // Example use:
@@ -37,31 +36,30 @@
 //     if(bre.end > 100) foo++;
 // }
 //
-struct bed_streamer : public hts_streamer
-{
-    /// \param[in] filename BED filename, must be non-null & non-empty
-    /// \param[in] region Region string in samtools format (eg. "chr2:20-30"), must both be non-null & non-empty
-    /// \param[in] requireNonZeroRegionLength If true, an exception is thrown for any input bed record with region
-    ///                                       size of 0 or less, otherwise such records are skipped without error.
-    bed_streamer(
-        const char* filename,
-        const char* region,
-        const bool requireNonZeroRegionLength = true);
+struct bed_streamer : public hts_streamer {
+  /// \param[in] filename BED filename, must be non-null & non-empty
+  /// \param[in] region Region string in samtools format (eg. "chr2:20-30"), must both be non-null & non-empty
+  /// \param[in] requireNonZeroRegionLength If true, an exception is thrown for any input bed record with
+  /// region
+  ///                                       size of 0 or less, otherwise such records are skipped without
+  ///                                       error.
+  bed_streamer(const char* filename, const char* region, const bool requireNonZeroRegionLength = true);
 
-    /// \brief Advance to next record
-    ///
-    bool next();
+  /// \brief Advance to next record
+  ///
+  bool next();
 
-    const bed_record*
-    get_record_ptr() const
-    {
-        if (_is_record_set) return &_bedrec;
-        else                return nullptr;
-    }
+  const bed_record* get_record_ptr() const
+  {
+    if (_is_record_set)
+      return &_bedrec;
+    else
+      return nullptr;
+  }
 
-    void report_state(std::ostream& os) const;
+  void report_state(std::ostream& os) const;
 
 private:
-    bed_record _bedrec;
-    bool _requireNonZeroRegionLength;
+  bed_record _bedrec;
+  bool       _requireNonZeroRegionLength;
 };

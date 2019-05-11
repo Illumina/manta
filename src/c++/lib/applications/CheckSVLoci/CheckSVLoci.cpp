@@ -22,25 +22,17 @@
 
 #include "svgraph/SVLocusSet.hh"
 
-
-
-static
-void
-runCSL(const CSLOptions& opt)
+static void runCSL(const CSLOptions& opt)
 {
-    SVLocusSet set(opt.graphFilename.c_str());
-    set.finalize();
-    set.checkState(true,true);
+  SVLocusSet set(opt.graphFilename.c_str());
+  set.finalize();
+  set.checkState(true, true);
 }
 
-
-
-void
-CheckSVLoci::
-runInternal(int argc, char* argv[]) const
+void CheckSVLoci::runInternal(int argc, char* argv[]) const
 {
-    CSLOptions opt;
+  CSLOptions opt;
 
-    parseCSLOptions(*this,argc,argv,opt);
-    runCSL(opt);
+  parseCSLOptions(*this, argc, argv, opt);
+  runCSL(opt);
 }

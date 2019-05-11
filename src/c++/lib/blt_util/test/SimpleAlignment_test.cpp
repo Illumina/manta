@@ -21,41 +21,36 @@
 
 #include "blt_util/SimpleAlignment.hh"
 
+BOOST_AUTO_TEST_SUITE(SimpleAlignment_path)
 
-BOOST_AUTO_TEST_SUITE( SimpleAlignment_path )
-
-
-BOOST_AUTO_TEST_CASE( test_SimpleAlignment )
+BOOST_AUTO_TEST_CASE(test_SimpleAlignment)
 {
-    using namespace ALIGNPATH;
+  using namespace ALIGNPATH;
 
-    SimpleAlignment al;
+  SimpleAlignment al;
 
-    al.pos = 100;
-    cigar_to_apath("100M", al.path);
+  al.pos = 100;
+  cigar_to_apath("100M", al.path);
 
-    const known_pos_range2 testRange(matchifyEdgeSoftClipRefRange(al));
+  const known_pos_range2 testRange(matchifyEdgeSoftClipRefRange(al));
 
-    BOOST_REQUIRE_EQUAL(testRange.begin_pos(), 100);
-    BOOST_REQUIRE_EQUAL(testRange.end_pos(), 200);
+  BOOST_REQUIRE_EQUAL(testRange.begin_pos(), 100);
+  BOOST_REQUIRE_EQUAL(testRange.end_pos(), 200);
 }
 
-
-BOOST_AUTO_TEST_CASE( test_SimpleAlignment2 )
+BOOST_AUTO_TEST_CASE(test_SimpleAlignment2)
 {
-    using namespace ALIGNPATH;
+  using namespace ALIGNPATH;
 
-    SimpleAlignment al;
+  SimpleAlignment al;
 
-    al.pos = 100;
-    cigar_to_apath("10S50M10D40M10S", al.path);
+  al.pos = 100;
+  cigar_to_apath("10S50M10D40M10S", al.path);
 
-    const known_pos_range2 testRange(matchifyEdgeSoftClipRefRange(al));
+  const known_pos_range2 testRange(matchifyEdgeSoftClipRefRange(al));
 
-    BOOST_REQUIRE_EQUAL(testRange.begin_pos(), 90);
-    BOOST_REQUIRE_EQUAL(testRange.end_pos(), 210);
+  BOOST_REQUIRE_EQUAL(testRange.begin_pos(), 90);
+  BOOST_REQUIRE_EQUAL(testRange.end_pos(), 210);
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
-

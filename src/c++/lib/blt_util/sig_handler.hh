@@ -25,6 +25,4 @@
 
 /// \brief logs sigint/sigterm events (with cmdline):
 ///
-void
-initialize_blt_signals(const char* progname,
-                       const char* cmdline);
+void initialize_blt_signals(const char* progname, const char* cmdline);

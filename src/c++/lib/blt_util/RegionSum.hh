@@ -28,7 +28,6 @@
 
 #include "boost/icl/interval_map.hpp"
 
-
 /// \brief Accumulates region specific sum(T) give a set of (region,T) associations.
 ///
 /// Example:
@@ -47,40 +46,29 @@
 /// ..and the maxVal() function below will return 4.
 ///
 template <typename T>
-struct RegionSum
-{
-    void
-    clear()
-    {
-        _map.clear();
-    }
+struct RegionSum {
+  void clear() { _map.clear(); }
 
-    void
-    add(
-        const known_pos_range2 pr,
-        const T val)
-    {
-        _map.add(std::make_pair(boost::icl::interval<pos_t>::right_open(pr.begin_pos(),pr.end_pos()),val));
-    }
+  void add(const known_pos_range2 pr, const T val)
+  {
+    _map.add(std::make_pair(boost::icl::interval<pos_t>::right_open(pr.begin_pos(), pr.end_pos()), val));
+  }
 
-    /// return peak value for all regions:
-    T
-    maxVal() const
-    {
-        T max(0);
-        bool isFirst(true);
-        for (const auto& val : _map)
-        {
-            if (isFirst || val.second > max)
-            {
-                max = val.second;
-                isFirst = false;
-            }
-        }
-        return max;
+  /// return peak value for all regions:
+  T maxVal() const
+  {
+    T    max(0);
+    bool isFirst(true);
+    for (const auto& val : _map) {
+      if (isFirst || val.second > max) {
+        max     = val.second;
+        isFirst = false;
+      }
     }
+    return max;
+  }
 
 private:
-    using map_t = boost::icl::interval_map<pos_t,T>;
-    map_t _map;
+  using map_t = boost::icl::interval_map<pos_t, T>;
+  map_t _map;
 };

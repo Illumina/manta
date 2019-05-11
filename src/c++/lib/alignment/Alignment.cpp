@@ -21,12 +21,8 @@
 
 #include <iostream>
 
-
-std::ostream&
-operator<<(std::ostream& os, const Alignment& align)
+std::ostream& operator<<(std::ostream& os, const Alignment& align)
 {
-    os << "start: " << align.beginPos << " cigar: " << apath_to_cigar(align.apath);
-    return os;
+  os << "start: " << align.beginPos << " cigar: " << apath_to_cigar(align.apath);
+  return os;
 }
-
-

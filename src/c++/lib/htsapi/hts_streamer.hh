@@ -30,52 +30,37 @@
 
 #include <string>
 
-
 /// \brief Stream records various htslib file types
-struct hts_streamer : private boost::noncopyable
-{
-    /// \param[in] filename (required)
-    /// \param[in] region (may be nullptr)
-    ///
-    /// Note that region must be set before iteration will produce any output
-    /// (ie. there is no "whole genome iteration" enabled if no region is provided)
-    hts_streamer(
-        const char* filename,
-        const char* region);
+struct hts_streamer : private boost::noncopyable {
+  /// \param[in] filename (required)
+  /// \param[in] region (may be nullptr)
+  ///
+  /// Note that region must be set before iteration will produce any output
+  /// (ie. there is no "whole genome iteration" enabled if no region is provided)
+  hts_streamer(const char* filename, const char* region);
 
-    ~hts_streamer();
+  ~hts_streamer();
 
-    const char*
-    name() const
-    {
-        return _stream_name.c_str();
-    }
+  const char* name() const { return _stream_name.c_str(); }
 
-    unsigned
-    record_no() const
-    {
-        return _record_no;
-    }
+  unsigned record_no() const { return _record_no; }
 
-    /// \brief Set new region for indexed file
-    ///
-    /// \param[in] region htslib-style region string in format: "chromName:beginPos-endPos", cannot be nullptr
-    void
-    resetRegion(
-        const char* region);
+  /// \brief Set new region for indexed file
+  ///
+  /// \param[in] region htslib-style region string in format: "chromName:beginPos-endPos", cannot be nullptr
+  void resetRegion(const char* region);
 
 protected:
-    /// \brief Load index if it hasn't been set already
-    void
-    _load_index();
+  /// \brief Load index if it hasn't been set already
+  void _load_index();
 
-    bool _is_record_set;
-    bool _is_stream_end;
-    unsigned _record_no;
-    std::string _stream_name;
+  bool        _is_record_set;
+  bool        _is_stream_end;
+  unsigned    _record_no;
+  std::string _stream_name;
 
-    htsFile* _hfp;
-    tbx_t* _tidx;
-    hts_itr_t* _titr;
-    kstring_t _kstr;
+  htsFile*   _hfp;
+  tbx_t*     _tidx;
+  hts_itr_t* _titr;
+  kstring_t  _kstr;
 };

@@ -25,19 +25,13 @@
 
 #include <string>
 
-
 /// data related to a multi-junction event
 ///
-struct EventInfo
-{
-    EventInfo() {}
+struct EventInfo {
+  EventInfo() {}
 
-    bool
-    isEvent() const
-    {
-        return (! label.empty());
-    }
+  bool isEvent() const { return (!label.empty()); }
 
-    unsigned junctionCount = 1;
-    std::string label;
+  unsigned    junctionCount = 1;
+  std::string label;
 };

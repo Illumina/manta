@@ -26,20 +26,10 @@
 #include "blt_util/SimpleAlignment.hh"
 #include "htsapi/bam_record.hh"
 
+void getAlignment(const bam_record& bamRead, SimpleAlignment& al);
 
-void
-getAlignment(
-    const bam_record& bamRead,
-    SimpleAlignment& al);
+SimpleAlignment getAlignment(const bam_record& bamRead);
 
-SimpleAlignment
-getAlignment(
-    const bam_record& bamRead);
-
-/// generate a mate alignment, using the MATE CIGAR (MC) BAM tag if available, else assuming same read length and perfect alignment
-SimpleAlignment
-getKnownOrFakedMateAlignment(
-    const bam_record& bamRead);
-
-
-
+/// generate a mate alignment, using the MATE CIGAR (MC) BAM tag if available, else assuming same read length
+/// and perfect alignment
+SimpleAlignment getKnownOrFakedMateAlignment(const bam_record& bamRead);

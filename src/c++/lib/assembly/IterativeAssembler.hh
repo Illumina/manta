@@ -27,21 +27,18 @@
 #include "assembly/AssemblyReadInfo.hh"
 #include "options/IterativeAssemblerOptions.hh"
 
-
 /// \brief run a de-bruijn graph assembler intended for small-scale allele discovery
 ///
 /// the assembler iteratively builds multiple contigs through a range of word sizes
 ///
 /// \param[in] opt assembly parameters
 /// \param[in] reads the set of reads to use for the assembly
-/// \param[out] assembledReadInfo for each read in 'reads', provide information on if and how it was assembled into a contig
+/// \param[out] assembledReadInfo for each read in 'reads', provide information on if and how it was assembled
+/// into a contig
 /// \param[out] contigs zero to many assembled contigs
 ///
-void
-runIterativeAssembler(
+void runIterativeAssembler(
     const IterativeAssemblerOptions& opt,
-    AssemblyReadInput& reads,
-    AssemblyReadOutput& assembledReadInfo,
-    Assembly& contigs);
-
-
+    AssemblyReadInput&               reads,
+    AssemblyReadOutput&              assembledReadInfo,
+    Assembly&                        contigs);

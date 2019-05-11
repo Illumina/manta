@@ -21,59 +21,39 @@
 /// \author Chris Saunders
 ///
 
-#include "common/Exceptions.hh"
 #include "svgraph/SVLocusNode.hh"
+#include "common/Exceptions.hh"
 
 #include <iostream>
 #include <sstream>
 
-
-std::ostream&
-operator<<(std::ostream& os, const SVLocusEdge& edge)
+std::ostream& operator<<(std::ostream& os, const SVLocusEdge& edge)
 {
-    os << "Edgecount: " << edge.getCount() << " isCountExact?: " << edge.isCountExact();
-    return os;
+  os << "Edgecount: " << edge.getCount() << " isCountExact?: " << edge.isCountExact();
+  return os;
 }
-
-
 
 const SVLocusEdgesType SVLocusEdgeManager::staticMap;
 
-
-
-void
-SVLocusNode::
-getEdgeException(
-    const NodeIndexType toIndex,
-    const char* label) const
+void SVLocusNode::getEdgeException(const NodeIndexType toIndex, const char* label) const
 {
-    using namespace illumina::common;
+  using namespace illumina::common;
 
-    std::ostringstream oss;
-    oss << "SVLocusNode::" << label << "() no edge exists\n";
-    oss << "\tfrom node: " << (*this) << "\n";
-    oss << "\tto_node index: " << toIndex;
-    BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
+  std::ostringstream oss;
+  oss << "SVLocusNode::" << label << "() no edge exists\n";
+  oss << "\tfrom node: " << (*this) << "\n";
+  oss << "\tto_node index: " << toIndex;
+  BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
 }
 
-
-
-std::ostream&
-operator<<(std::ostream& os, const SVLocusNode& node)
+std::ostream& operator<<(std::ostream& os, const SVLocusNode& node)
 {
-    os << "LocusNode: " << node.getInterval()
-       << " n_edges: " << node.size()
-       << " out_count: " << node.outCount()
-       << " evidence: " << node.getEvidenceRange()
-       << "\n";
+  os << "LocusNode: " << node.getInterval() << " n_edges: " << node.size()
+     << " out_count: " << node.outCount() << " evidence: " << node.getEvidenceRange() << "\n";
 
-    const SVLocusEdgeManager edgeMap(node.getEdgeManager());
-    for (const SVLocusEdgesType::value_type& edgeIter : edgeMap.getMap())
-    {
-        os << "\tEdgeTo: " << edgeIter.first
-           << " out_count: " << edgeIter.second.getCount()
-           << "\n";
-    }
-    return os;
+  const SVLocusEdgeManager edgeMap(node.getEdgeManager());
+  for (const SVLocusEdgesType::value_type& edgeIter : edgeMap.getMap()) {
+    os << "\tEdgeTo: " << edgeIter.first << " out_count: " << edgeIter.second.getCount() << "\n";
+  }
+  return os;
 }
-

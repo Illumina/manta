@@ -23,35 +23,26 @@
 
 #include "common/config.h"
 
-namespace illumina
-{
+namespace illumina {
 
-inline
-const char*
-getVersion()
+inline const char* getVersion()
 {
-    return WORKFLOW_VERSION;
+  return WORKFLOW_VERSION;
 }
 
-inline
-const char*
-getBuildTime()
+inline const char* getBuildTime()
 {
-    return BUILD_TIME;
+  return BUILD_TIME;
 }
 
-inline
-const char*
-cxxCompilerName()
+inline const char* cxxCompilerName()
 {
-    return CXX_COMPILER_NAME;
+  return CXX_COMPILER_NAME;
 }
 
-inline
-const char*
-compilerVersion()
+inline const char* compilerVersion()
 {
-    return COMPILER_VERSION;
+  return COMPILER_VERSION;
 }
 
-}
+}  // namespace illumina

@@ -19,4 +19,3 @@
 
 #define BOOST_TEST_MODULE libhtsapi
 #include "boost/test/unit_test.hpp"
-

@@ -33,138 +33,110 @@
 #include <map>
 #include <vector>
 
+struct SizeData {
+  SizeData(unsigned initCount = 0, float initCprob = 0.) : count(initCount), cprob(initCprob) {}
 
-struct SizeData
-{
-    SizeData(
-        unsigned initCount = 0,
-        float initCprob = 0.) :
-        count(initCount),
-        cprob(initCprob)
-    {}
-
-    unsigned count;
-    float cprob;
+  unsigned count;
+  float    cprob;
 };
-
 
 /// \brief XML Output helper object
 ///
 /// This structure's only purpose is to provide neat xml output.
 /// it is not used outside of serialize/deserialize steps
-struct SizeMapXmlElement
-{
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned /*version*/)
-    {
-        ar& boost::serialization::make_nvp("size", size);
-        ar& boost::serialization::make_nvp("count", count);
-    }
+struct SizeMapXmlElement {
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned /*version*/)
+  {
+    ar& boost::serialization::make_nvp("size", size);
+    ar& boost::serialization::make_nvp("count", count);
+  }
 
-    int size;
-    unsigned count;
+  int      size;
+  unsigned count;
 };
 
 BOOST_CLASS_IMPLEMENTATION(SizeMapXmlElement, object_serializable)
 
-
 /// \brief Accumulate size observations and provide cdf/quantile/smoothed-pdf for the distribution
 ///
-struct SizeDistribution
-{
-    SizeDistribution() :
-        _isStatsComputed(false),
-        _totalCount(0),
-        _quantiles(_quantileNum,0)
-    {}
+struct SizeDistribution {
+  SizeDistribution() : _isStatsComputed(false), _totalCount(0), _quantiles(_quantileNum, 0) {}
 
-    /// \brief Implements the quantile function for this distribution
-    ///
-    /// \return The size at which all sizes equal or less are observed with probability \p prob
-    int
-    quantile(const float prob) const;
+  /// \brief Implements the quantile function for this distribution
+  ///
+  /// \return The size at which all sizes equal or less are observed with probability \p prob
+  int quantile(const float prob) const;
 
-    /// \return Probability of observing value <= \p x
-    float
-    cdf(const int x) const;
+  /// \return Probability of observing value <= \p x
+  float cdf(const int x) const;
 
-    /// \return Probability of observing value \p x, (with a smoothing window)
-    float
-    pdf(const int x) const;
+  /// \return Probability of observing value \p x, (with a smoothing window)
+  float pdf(const int x) const;
 
-    unsigned
-    totalObservations() const
-    {
-        return _totalCount;
-    }
+  unsigned totalObservations() const { return _totalCount; }
 
-    void
-    addObservation(const int size)
-    {
-        _isStatsComputed = false;
-        _totalCount++;
-        _sizeMap[size].count++;
-    }
+  void addObservation(const int size)
+  {
+    _isStatsComputed = false;
+    _totalCount++;
+    _sizeMap[size].count++;
+  }
 
-    /// filter high value outliers:
-    void
-    filterObservationsOverQuantile(const float prob);
+  /// filter high value outliers:
+  void filterObservationsOverQuantile(const float prob);
 
-    typedef std::map<int, SizeData, std::greater<int> > map_type;
+  typedef std::map<int, SizeData, std::greater<int>> map_type;
 
 private:
-    void
-    calcStats() const;
+  void calcStats() const;
 
-    friend class boost::serialization::access;
-    template<class Archive>
-    void save(Archive& ar, const unsigned /*version*/) const
+  friend class boost::serialization::access;
+  template <class Archive>
+  void save(Archive& ar, const unsigned /*version*/) const
+  {
+    ar << boost::serialization::make_nvp("totalObservationCount", _totalCount);
+    unsigned mapSize(_sizeMap.size());
+    ar << boost::serialization::make_nvp("elementCount", mapSize);
+
+    SizeMapXmlElement xe;
+    BOOST_REVERSE_FOREACH(const map_type::value_type& val, _sizeMap)
     {
-        ar << boost::serialization::make_nvp("totalObservationCount", _totalCount);
-        unsigned mapSize(_sizeMap.size());
-        ar << boost::serialization::make_nvp("elementCount", mapSize);
-
-        SizeMapXmlElement xe;
-        BOOST_REVERSE_FOREACH(const map_type::value_type& val, _sizeMap)
-        {
-            xe.size = val.first;
-            xe.count = val.second.count;
-            ar << boost::serialization::make_nvp("element", xe);
-        }
+      xe.size  = val.first;
+      xe.count = val.second.count;
+      ar << boost::serialization::make_nvp("element", xe);
     }
+  }
 
-    template<class Archive>
-    void load(Archive& ar, const unsigned /*version*/)
-    {
-        ar >> boost::serialization::make_nvp("totalObservationCount", _totalCount);
-        unsigned mapSize(0);
-        ar >> boost::serialization::make_nvp("elementCount", mapSize);
+  template <class Archive>
+  void load(Archive& ar, const unsigned /*version*/)
+  {
+    ar >> boost::serialization::make_nvp("totalObservationCount", _totalCount);
+    unsigned mapSize(0);
+    ar >> boost::serialization::make_nvp("elementCount", mapSize);
 
-        SizeMapXmlElement xe;
-        _sizeMap.clear();
+    SizeMapXmlElement xe;
+    _sizeMap.clear();
 
-        for (unsigned i(0); i<mapSize; ++i)
-        {
-            ar >> boost::serialization::make_nvp("element", xe);
-            _sizeMap[xe.size].count = xe.count;
-        }
-        _isStatsComputed = false;
+    for (unsigned i(0); i < mapSize; ++i) {
+      ar >> boost::serialization::make_nvp("element", xe);
+      _sizeMap[xe.size].count = xe.count;
     }
+    _isStatsComputed = false;
+  }
 
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
+  BOOST_SERIALIZATION_SPLIT_MEMBER()
 
-    ///////////////////////////////////// data:
+  ///////////////////////////////////// data:
 
-    static const int _quantileNum = 1000;
+  static const int _quantileNum = 1000;
 
-    mutable bool _isStatsComputed;
-    unsigned _totalCount;
-    mutable std::vector<int> _quantiles;
-    mutable map_type _sizeMap;
+  mutable bool             _isStatsComputed;
+  unsigned                 _totalCount;
+  mutable std::vector<int> _quantiles;
+  mutable map_type         _sizeMap;
 };
 
 BOOST_CLASS_IMPLEMENTATION(SizeDistribution, object_serializable)
 
-
-std::ostream&
-operator<<(std::ostream& os, const SizeDistribution& sd);
+std::ostream& operator<<(std::ostream& os, const SizeDistribution& sd);

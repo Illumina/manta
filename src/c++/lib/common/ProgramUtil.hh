@@ -29,12 +29,10 @@
 
 #include <iosfwd>
 
-
-void
-usage(
-    std::ostream& os,
-    const illumina::Program& prog,
+void usage(
+    std::ostream&                                      os,
+    const illumina::Program&                           prog,
     const boost::program_options::options_description& visible,
-    const char* desc,
-    const char* afteropts,
-    const char* msg);
+    const char*                                        desc,
+    const char*                                        afteropts,
+    const char*                                        msg);

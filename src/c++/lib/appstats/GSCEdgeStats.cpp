@@ -30,42 +30,32 @@
 #include <fstream>
 #include <iostream>
 
-
-
-void
-SimpleHist::
-report(std::ostream& os) const
+void SimpleHist::report(std::ostream& os) const
 {
-    for (unsigned i(0); i<histdata.size(); ++i)
-    {
-        os << i;
-        if (i+1 == histdata.size()) os << "+";
-        os << "\t" << histdata[i] << "\n";
-    }
+  for (unsigned i(0); i < histdata.size(); ++i) {
+    os << i;
+    if (i + 1 == histdata.size()) os << "+";
+    os << "\t" << histdata[i] << "\n";
+  }
 }
 
-
-
-static
-void
-reportTime(
-    const char* label,
+static void reportTime(
+    const char*    label,
     const CpuTimes ltime,
     const uint64_t edgeCount,
     const uint64_t candCount,
-    std::ostream& os)
+    std::ostream&  os)
 {
-    os << label << "Hours\t";
-    ltime.reportHr(os);
-    os << "\n";
-    os << label << "SecsPerEdge\t";
-    ltime.report(safeFrac(1,edgeCount),"s",os);
-    os << "\n";
-    os << label << "SecsPerCand\t";
-    ltime.report(safeFrac(1,candCount),"s",os);
-    os << "\n";
+  os << label << "Hours\t";
+  ltime.reportHr(os);
+  os << "\n";
+  os << label << "SecsPerEdge\t";
+  ltime.report(safeFrac(1, edgeCount), "s", os);
+  os << "\n";
+  os << label << "SecsPerCand\t";
+  ltime.report(safeFrac(1, candCount), "s", os);
+  os << "\n";
 }
-
 
 #if 0
 void
@@ -84,107 +74,83 @@ reportTime(
 }
 #endif
 
-
-
-void
-GSCEdgeGroupStats::
-report(std::ostream& os) const
+void GSCEdgeGroupStats::report(std::ostream& os) const
 {
-    CpuTimes catTime(candTime);
-    catTime.merge(assemblyTime);
-    catTime.merge(scoringTime);
-    CpuTimes nocatTime(totalTime);
-    nocatTime.difference(catTime);
+  CpuTimes catTime(candTime);
+  catTime.merge(assemblyTime);
+  catTime.merge(scoringTime);
+  CpuTimes nocatTime(totalTime);
+  nocatTime.difference(catTime);
 
-    os << "InputEdgeCount\t" << totalInputEdgeCount << "\n";
-    os << "InputEdgeCandidatesPerEdge:\n";
-    candidatesPerEdge.report(os);
-    os << "CandidateCount\t" << totalCandidateCount << "\n";
-    os << "ComplexCandidateCount\t" << totalComplexCandidate << "\n";
-    finderStats.report(os);
-    os << "SpanningComplexCandidateFiltered\t" << totalSpanningCandidateFilter << "\n";
-    os << "JunctionAssemblyOverlapSkipped\t" << totalJunctionAssemblyOverlapSkips << "\n";
-    os << "JunctionCount\t" << totalJunctionCount << "\n";
-    os << "ComplexJunctionCount\t" << totalComplexJunctionCount << "\n";
-    os << "BreaksPerJunction:\n";
-    breaksPerJunction.report(os);
-    os << "TotalAssemblyCandidates\t" << totalAssemblyCandidates << "\n";
-    os << "TotalSpanningAssemblyCandidates\t" << totalSpanningAssemblyCandidates << "\n";
-    os << "AssemblyCandidatesPerJunction:\n";
-    assemblyCandidatesPerJunction.report(os);
-    reportTime("total",totalTime,totalInputEdgeCount,totalCandidateCount, os);
-    reportTime("candi",candTime,totalInputEdgeCount,totalCandidateCount, os);
-    reportTime("assem",assemblyTime,totalInputEdgeCount,totalCandidateCount, os);
-    reportTime("score",scoringTime,totalInputEdgeCount,totalCandidateCount, os);
-    reportTime("nocat",nocatTime,totalInputEdgeCount,totalCandidateCount, os);
+  os << "InputEdgeCount\t" << totalInputEdgeCount << "\n";
+  os << "InputEdgeCandidatesPerEdge:\n";
+  candidatesPerEdge.report(os);
+  os << "CandidateCount\t" << totalCandidateCount << "\n";
+  os << "ComplexCandidateCount\t" << totalComplexCandidate << "\n";
+  finderStats.report(os);
+  os << "SpanningComplexCandidateFiltered\t" << totalSpanningCandidateFilter << "\n";
+  os << "JunctionAssemblyOverlapSkipped\t" << totalJunctionAssemblyOverlapSkips << "\n";
+  os << "JunctionCount\t" << totalJunctionCount << "\n";
+  os << "ComplexJunctionCount\t" << totalComplexJunctionCount << "\n";
+  os << "BreaksPerJunction:\n";
+  breaksPerJunction.report(os);
+  os << "TotalAssemblyCandidates\t" << totalAssemblyCandidates << "\n";
+  os << "TotalSpanningAssemblyCandidates\t" << totalSpanningAssemblyCandidates << "\n";
+  os << "AssemblyCandidatesPerJunction:\n";
+  assemblyCandidatesPerJunction.report(os);
+  reportTime("total", totalTime, totalInputEdgeCount, totalCandidateCount, os);
+  reportTime("candi", candTime, totalInputEdgeCount, totalCandidateCount, os);
+  reportTime("assem", assemblyTime, totalInputEdgeCount, totalCandidateCount, os);
+  reportTime("score", scoringTime, totalInputEdgeCount, totalCandidateCount, os);
+  reportTime("nocat", nocatTime, totalInputEdgeCount, totalCandidateCount, os);
 }
 
-
-
-void
-GSCEdgeStatsData::
-report(std::ostream& os) const
+void GSCEdgeStatsData::report(std::ostream& os) const
 {
-    using namespace BOOST_TIMER_HELPER;
-    GSCEdgeGroupStats all(remoteEdges);
-    all.merge(selfEdges);
-    os << "SVGenTotalHours\t";
-    lifeTime.reportHr(os);
-    os << "\n";
-    CpuTimes nonEdge(lifeTime);
-    nonEdge.difference(all.totalTime);
-    os << "NonEdgeHours\t";
-    nonEdge.reportHr(os);
-    os << "\n";
-    os << "\n[AllEdges]\n";
-    all.report(os);
-    os << "\n[RemoteEdges]\n";
-    remoteEdges.report(os);
-    os << "\n[SelfEdges]\n";
-    selfEdges.report(os);
+  using namespace BOOST_TIMER_HELPER;
+  GSCEdgeGroupStats all(remoteEdges);
+  all.merge(selfEdges);
+  os << "SVGenTotalHours\t";
+  lifeTime.reportHr(os);
+  os << "\n";
+  CpuTimes nonEdge(lifeTime);
+  nonEdge.difference(all.totalTime);
+  os << "NonEdgeHours\t";
+  nonEdge.reportHr(os);
+  os << "\n";
+  os << "\n[AllEdges]\n";
+  all.report(os);
+  os << "\n[RemoteEdges]\n";
+  remoteEdges.report(os);
+  os << "\n[SelfEdges]\n";
+  selfEdges.report(os);
 }
 
-
-
-void
-GSCEdgeStats::
-load(const char* filename)
+void GSCEdgeStats::load(const char* filename)
 {
-    assert(nullptr != filename);
-    std::ifstream ifs(filename);
-    boost::archive::xml_iarchive ia(ifs);
-    ia >> BOOST_SERIALIZATION_NVP(edgeData);
+  assert(nullptr != filename);
+  std::ifstream                ifs(filename);
+  boost::archive::xml_iarchive ia(ifs);
+  ia >> BOOST_SERIALIZATION_NVP(edgeData);
 }
 
-
-
-void
-GSCEdgeStats::
-save(std::ostream& os) const
+void GSCEdgeStats::save(std::ostream& os) const
 {
-    boost::archive::xml_oarchive oa(os);
-    oa << BOOST_SERIALIZATION_NVP(edgeData);
+  boost::archive::xml_oarchive oa(os);
+  oa << BOOST_SERIALIZATION_NVP(edgeData);
 }
 
-
-
-void
-GSCEdgeStats::
-save(const char* filename) const
+void GSCEdgeStats::save(const char* filename) const
 {
-    assert(nullptr != filename);
-    std::ofstream ofs(filename);
-    save(ofs);
+  assert(nullptr != filename);
+  std::ofstream ofs(filename);
+  save(ofs);
 }
 
-
-
-void
-GSCEdgeStats::
-report(const char* filename) const
+void GSCEdgeStats::report(const char* filename) const
 {
-    assert(nullptr != filename);
-    std::ofstream ofs(filename);
-    ofs << "EdgeStatsReport\n";
-    edgeData.report(ofs);
+  assert(nullptr != filename);
+  std::ofstream ofs(filename);
+  ofs << "EdgeStatsReport\n";
+  edgeData.report(ofs);
 }

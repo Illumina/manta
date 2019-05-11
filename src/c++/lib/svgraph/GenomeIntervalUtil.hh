@@ -26,19 +26,13 @@
 
 struct bam_header_info;
 
-
 /// given a collection of genome intervals, reduce down to the minimum non-overlapping set:
 ///
 /// \returns a vector with size equal to the input vector, containing a mapping of the input
 ///         interval index to the output interval index
 ///
-std::vector<unsigned>
-intervalCompressor(
-    std::vector<GenomeInterval>& intervals);
-
+std::vector<unsigned> intervalCompressor(std::vector<GenomeInterval>& intervals);
 
 /// \brief Build a new GenomeInterval from a samtools-style region string
-GenomeInterval
-convertSamtoolsRegionToGenomeInterval(
-    const bam_header_info& bamHeader,
-    const std::string& region);
+GenomeInterval convertSamtoolsRegionToGenomeInterval(
+    const bam_header_info& bamHeader, const std::string& region);

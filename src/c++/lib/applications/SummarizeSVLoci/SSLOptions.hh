@@ -26,17 +26,10 @@
 #include <string>
 #include "../../common/Program.hh"
 
-
-struct SSLOptions
-{
-    std::string graphFilename;
-    bool isGlobalStats = false;
-    std::string outputFilename;
+struct SSLOptions {
+  std::string graphFilename;
+  bool        isGlobalStats = false;
+  std::string outputFilename;
 };
 
-
-void
-parseSSLOptions(
-    const illumina::Program& prog,
-    int argc, char* argv[],
-    SSLOptions& opt);
+void parseSSLOptions(const illumina::Program& prog, int argc, char* argv[], SSLOptions& opt);

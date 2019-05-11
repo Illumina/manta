@@ -21,29 +21,29 @@
 
 #include "EdgeOptions.hh"
 
-BOOST_AUTO_TEST_SUITE( EdgeOptionsTest_test_suite )
+BOOST_AUTO_TEST_SUITE(EdgeOptionsTest_test_suite)
 
 // Test the defalut locus edge Options for SVLocusGraph
 // edge iteration and noise edge filtration
-BOOST_AUTO_TEST_CASE( test_LocusEdgeOptions )
+BOOST_AUTO_TEST_CASE(test_LocusEdgeOptions)
 {
-    struct LocusEdgeOptions lo;
-    BOOST_REQUIRE_EQUAL(lo.isNodeIndex1, false);
-    BOOST_REQUIRE_EQUAL(lo.isNodeIndex2, false);
-    BOOST_REQUIRE_EQUAL(lo.locusIndex, 0);
-    BOOST_REQUIRE_EQUAL(lo.nodeIndex1, 0);
-    BOOST_REQUIRE_EQUAL(lo.nodeIndex2, 0);
+  struct LocusEdgeOptions lo;
+  BOOST_REQUIRE_EQUAL(lo.isNodeIndex1, false);
+  BOOST_REQUIRE_EQUAL(lo.isNodeIndex2, false);
+  BOOST_REQUIRE_EQUAL(lo.locusIndex, 0);
+  BOOST_REQUIRE_EQUAL(lo.nodeIndex1, 0);
+  BOOST_REQUIRE_EQUAL(lo.nodeIndex2, 0);
 }
 
 // Test the default edge options for SVLocusGraph edge
 // iteration and noise edge filtration
-BOOST_AUTO_TEST_CASE( test_EdgeOptions )
+BOOST_AUTO_TEST_CASE(test_EdgeOptions)
 {
-    struct EdgeOptions eo;
-    BOOST_REQUIRE_EQUAL(eo.isLocusIndex, false);
-    BOOST_REQUIRE_EQUAL(eo.binCount, 1);
-    BOOST_REQUIRE_EQUAL(eo.binIndex, 0);
-    BOOST_REQUIRE_EQUAL(eo.graphNodeMaxEdgeCount, 10);
+  struct EdgeOptions eo;
+  BOOST_REQUIRE_EQUAL(eo.isLocusIndex, false);
+  BOOST_REQUIRE_EQUAL(eo.binCount, 1);
+  BOOST_REQUIRE_EQUAL(eo.binIndex, 0);
+  BOOST_REQUIRE_EQUAL(eo.graphNodeMaxEdgeCount, 10);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -24,73 +24,62 @@
 
 #include "boost/test/unit_test.hpp"
 
+BOOST_AUTO_TEST_SUITE(bam_streamer_test_suite)
 
-
-BOOST_AUTO_TEST_SUITE( bam_streamer_test_suite )
-
-
-static
-void
-checkStream(
-    bam_streamer& stream,
-    const unsigned expectedCount)
+static void checkStream(bam_streamer& stream, const unsigned expectedCount)
 {
-    unsigned count(0);
-    while (stream.next())
-    {
-        const bam_record& read(*(stream.get_record_ptr()));
-        if (! read.is_unmapped()) count++;
-    }
-    BOOST_REQUIRE_EQUAL(count, expectedCount);
+  unsigned count(0);
+  while (stream.next()) {
+    const bam_record& read(*(stream.get_record_ptr()));
+    if (!read.is_unmapped()) count++;
+  }
+  BOOST_REQUIRE_EQUAL(count, expectedCount);
 }
 
-
-BOOST_AUTO_TEST_CASE( test_bam_streamer_bam_read )
+BOOST_AUTO_TEST_CASE(test_bam_streamer_bam_read)
 {
-    const std::string testBamPath(std::string(TEST_DATA_PATH) + "/alignment_test.bam");
+  const std::string testBamPath(std::string(TEST_DATA_PATH) + "/alignment_test.bam");
 
-    // Assert that reference pointer is optional for BAM
-    bam_streamer stream(testBamPath.c_str(), nullptr);
+  // Assert that reference pointer is optional for BAM
+  bam_streamer stream(testBamPath.c_str(), nullptr);
 
-    // iterate through entire file:
-    checkStream(stream, 4u);
+  // iterate through entire file:
+  checkStream(stream, 4u);
 
-    // iterate through region:
+  // iterate through region:
+  stream.resetRegion("chrA");
+  checkStream(stream, 2u);
+}
+
+BOOST_AUTO_TEST_CASE(test_bam_streamer_cram_read)
+{
+  const std::string testCramPath(std::string(TEST_DATA_PATH) + "/alignment_test.cram");
+  const std::string testRefPath(std::string(TEST_DATA_PATH) + "/alignment_test.fasta");
+
+  bam_streamer stream(testCramPath.c_str(), testRefPath.c_str());
+
+  // iterate through entire file:
+  checkStream(stream, 4u);
+
+  // iterate through region:
+  stream.resetRegion("chrA");
+  checkStream(stream, 2u);
+}
+
+BOOST_AUTO_TEST_CASE(test_bam_streamer_cram_read_fail)
+{
+  const std::string testCramPath(std::string(TEST_DATA_PATH) + "/alignment_test.cram");
+
+  {
+    bam_streamer stream(testCramPath.c_str(), nullptr);
+    BOOST_REQUIRE_THROW(stream.next(), blt_exception);
+  }
+
+  {
+    bam_streamer stream(testCramPath.c_str(), nullptr);
     stream.resetRegion("chrA");
-    checkStream(stream, 2u);
+    BOOST_REQUIRE_THROW(stream.next(), blt_exception);
+  }
 }
-
-
-BOOST_AUTO_TEST_CASE( test_bam_streamer_cram_read )
-{
-    const std::string testCramPath(std::string(TEST_DATA_PATH) + "/alignment_test.cram");
-    const std::string testRefPath(std::string(TEST_DATA_PATH) + "/alignment_test.fasta");
-
-    bam_streamer stream(testCramPath.c_str(), testRefPath.c_str());
-
-    // iterate through entire file:
-    checkStream(stream, 4u);
-
-    // iterate through region:
-    stream.resetRegion("chrA");
-    checkStream(stream, 2u);
-}
-
-BOOST_AUTO_TEST_CASE( test_bam_streamer_cram_read_fail )
-{
-    const std::string testCramPath(std::string(TEST_DATA_PATH) + "/alignment_test.cram");
-
-    {
-        bam_streamer stream(testCramPath.c_str(), nullptr);
-        BOOST_REQUIRE_THROW(stream.next(), blt_exception);
-    }
-
-    {
-        bam_streamer stream(testCramPath.c_str(), nullptr);
-        stream.resetRegion("chrA");
-        BOOST_REQUIRE_THROW(stream.next(), blt_exception);
-    }
-}
-
 
 BOOST_AUTO_TEST_SUITE_END()

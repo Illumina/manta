@@ -30,74 +30,71 @@
 #include "test/testAlignmentDataUtil.hh"
 #include "test/testSVLocusUtil.hh"
 
-
-static
-std::shared_ptr<SVLocusSet>
-getTestSVLocusSet()
+static std::shared_ptr<SVLocusSet> getTestSVLocusSet()
 {
-    bam_header_info bamHeaderInfo(buildTestBamHeader());
+  bam_header_info bamHeaderInfo(buildTestBamHeader());
 
-    auto set1Ptr(std::make_shared<SVLocusSet>(SVLocusSetOptions(), bamHeaderInfo));
-    // build up dummy graph content for set1:
-    SVLocus locus1;
-    locusAddPair(locus1, 0, 70, 80, 0, 90, 100);
+  auto set1Ptr(std::make_shared<SVLocusSet>(SVLocusSetOptions(), bamHeaderInfo));
+  // build up dummy graph content for set1:
+  SVLocus locus1;
+  locusAddPair(locus1, 0, 70, 80, 0, 90, 100);
 
-    SVLocus locus2;
-    locusAddPair(locus2, 0, 1100, 1110, 0, 1120, 1130);
+  SVLocus locus2;
+  locusAddPair(locus2, 0, 1100, 1110, 0, 1120, 1130);
 
-    SVLocus locus3;
-    locusAddPair(locus3, 0, 2100, 2110, 0, 2120, 2130, false, 5);
+  SVLocus locus3;
+  locusAddPair(locus3, 0, 2100, 2110, 0, 2120, 2130, false, 5);
 
-    set1Ptr->merge(locus1);
-    set1Ptr->merge(locus2);
-    set1Ptr->merge(locus3);
+  set1Ptr->merge(locus1);
+  set1Ptr->merge(locus2);
+  set1Ptr->merge(locus3);
 
-    return set1Ptr;
+  return set1Ptr;
 }
 
+BOOST_AUTO_TEST_SUITE(SVLocusSetFinderActiveRegionManager_test_suite)
 
-BOOST_AUTO_TEST_SUITE( SVLocusSetFinderActiveRegionManager_test_suite )
-
-BOOST_AUTO_TEST_CASE( test_SVLocusSetFinderActiveRegionManager )
+BOOST_AUTO_TEST_CASE(test_SVLocusSetFinderActiveRegionManager)
 {
-    // Test that SVLocusSetFinder's denoiser removes nodes
-    GenomeInterval region(0, 0, 10000);
-    auto set1Ptr(getTestSVLocusSet());
+  // Test that SVLocusSetFinder's denoiser removes nodes
+  GenomeInterval region(0, 0, 10000);
+  auto           set1Ptr(getTestSVLocusSet());
 
-    static const unsigned denoiseRegionProtectedBorderSize(100);
-    SVLocusSetFinderActiveRegionManager regionManager(region, set1Ptr, std::make_shared<depth_buffer_compressible>(), denoiseRegionProtectedBorderSize);
+  static const unsigned               denoiseRegionProtectedBorderSize(100);
+  SVLocusSetFinderActiveRegionManager regionManager(
+      region, set1Ptr, std::make_shared<depth_buffer_compressible>(), denoiseRegionProtectedBorderSize);
 
-    // before
-    BOOST_REQUIRE_EQUAL(set1Ptr->totalNodeCount(), 6);
+  // before
+  BOOST_REQUIRE_EQUAL(set1Ptr->totalNodeCount(), 6);
 
-    // Base case, nothing removed
-    regionManager.handle_new_pos_value(1);
-    BOOST_REQUIRE_EQUAL(set1Ptr->totalNodeCount(), 6);
+  // Base case, nothing removed
+  regionManager.handle_new_pos_value(1);
+  BOOST_REQUIRE_EQUAL(set1Ptr->totalNodeCount(), 6);
 
-    // Just before denoieing is triggered
-    regionManager.handle_new_pos_value(1098);
-    BOOST_REQUIRE_EQUAL(set1Ptr->totalNodeCount(), 6);
+  // Just before denoieing is triggered
+  regionManager.handle_new_pos_value(1098);
+  BOOST_REQUIRE_EQUAL(set1Ptr->totalNodeCount(), 6);
 
-    // First case where denoising can trigger on locus1, it is triggered here because of 1000 base minimum denoiseing
-    // region size PLUS 100 base border size (using zero-indexed pos values).
-    regionManager.handle_new_pos_value(1099);
-    BOOST_REQUIRE_EQUAL(set1Ptr->totalNodeCount(), 4);
+  // First case where denoising can trigger on locus1, it is triggered here because of 1000 base minimum
+  // denoiseing region size PLUS 100 base border size (using zero-indexed pos values).
+  regionManager.handle_new_pos_value(1099);
+  BOOST_REQUIRE_EQUAL(set1Ptr->totalNodeCount(), 4);
 
-    // 1000 base chunk size not met, so no cleaning triggered
-    regionManager.handle_new_pos_value(2098);
-    BOOST_REQUIRE_EQUAL(set1Ptr->totalNodeCount(), 4);
+  // 1000 base chunk size not met, so no cleaning triggered
+  regionManager.handle_new_pos_value(2098);
+  BOOST_REQUIRE_EQUAL(set1Ptr->totalNodeCount(), 4);
 
-    // 1000 base chunk size met, so locus2 is cleaned
-    regionManager.handle_new_pos_value(2099);
-    BOOST_REQUIRE_EQUAL(set1Ptr->totalNodeCount(), 2);
+  // 1000 base chunk size met, so locus2 is cleaned
+  regionManager.handle_new_pos_value(2099);
+  BOOST_REQUIRE_EQUAL(set1Ptr->totalNodeCount(), 2);
 
-    // locus3 not dropped because it is supported by more evidence
-    regionManager.handle_new_pos_value(3000);
-    BOOST_REQUIRE_EQUAL(set1Ptr->totalNodeCount(), 2);
+  // locus3 not dropped because it is supported by more evidence
+  regionManager.handle_new_pos_value(3000);
+  BOOST_REQUIRE_EQUAL(set1Ptr->totalNodeCount(), 2);
 
-    // Verification of final state
-    regionManager.flush();
-    BOOST_REQUIRE_EQUAL(set1Ptr->totalNodeCount(), 2);
+  // Verification of final state
+  regionManager.flush();
+  BOOST_REQUIRE_EQUAL(set1Ptr->totalNodeCount(), 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

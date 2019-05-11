@@ -17,11 +17,9 @@
 //
 //
 
-
 #pragma once
 
 #include "SingleRefAlignerShared.hh"
-
 
 /// \brief Implementation of global alignment with affine gap costs
 ///
@@ -35,89 +33,78 @@
 ///
 /// derived from ELAND implementation by Tony Cox
 template <typename ScoreType>
-struct GlobalAligner : public SingleRefAlignerBase<ScoreType>
-{
-    GlobalAligner(
-        const AlignmentScores<ScoreType>& scores) :
-        SingleRefAlignerBase<ScoreType>(scores)
-    {}
+struct GlobalAligner : public SingleRefAlignerBase<ScoreType> {
+  GlobalAligner(const AlignmentScores<ScoreType>& scores) : SingleRefAlignerBase<ScoreType>(scores) {}
 
-    /// returns alignment path of query to reference
-    template <typename SymIter>
-    void
-    align(
-        const SymIter queryBegin, const SymIter queryEnd,
-        const SymIter refBegin, const SymIter refEnd,
-        AlignmentResult<ScoreType>& result) const;
+  /// returns alignment path of query to reference
+  template <typename SymIter>
+  void align(
+      const SymIter               queryBegin,
+      const SymIter               queryEnd,
+      const SymIter               refBegin,
+      const SymIter               refEnd,
+      AlignmentResult<ScoreType>& result) const;
 
 private:
-
-    // insert and delete are for query wrt reference
-    struct ScoreVal
+  // insert and delete are for query wrt reference
+  struct ScoreVal {
+    ScoreType getScore(const AlignState::index_t i) const
     {
-        ScoreType
-        getScore(const AlignState::index_t i) const
-        {
-            switch (i)
-            {
-            case AlignState::MATCH:
-                return match;
-            case AlignState::DELETE:
-                return del;
-            case AlignState::INSERT:
-                return ins;
-            default:
-                assert(false && "Unexpected Index Value");
-                return 0;
-            }
-        }
+      switch (i) {
+      case AlignState::MATCH:
+        return match;
+      case AlignState::DELETE:
+        return del;
+      case AlignState::INSERT:
+        return ins;
+      default:
+        assert(false && "Unexpected Index Value");
+        return 0;
+      }
+    }
 
-        ScoreType match;
-        ScoreType del;
-        ScoreType ins;
-    };
+    ScoreType match;
+    ScoreType del;
+    ScoreType ins;
+  };
 
-    struct PtrVal
+  struct PtrVal {
+    typedef uint8_t code_t;
+
+    /// for state i, return the highest scoring previous state
+    /// to use during the backtrace?
+    AlignState::index_t getStatePtr(const AlignState::index_t i) const
     {
-        typedef uint8_t code_t;
+      return static_cast<AlignState::index_t>(getStateCode(i));
+    }
 
-        /// for state i, return the highest scoring previous state
-        /// to use during the backtrace?
-        AlignState::index_t
-        getStatePtr(const AlignState::index_t i) const
-        {
-            return static_cast<AlignState::index_t>(getStateCode(i));
-        }
-    private:
-        code_t
-        getStateCode(const AlignState::index_t i) const
-        {
-            switch (i)
-            {
-            case AlignState::MATCH:
-                return match;
-            case AlignState::DELETE:
-                return del;
-            case AlignState::INSERT:
-                return ins;
-            default:
-                assert(false && "Unexpected Index Value");
-                return 0;
-            }
-        }
+  private:
+    code_t getStateCode(const AlignState::index_t i) const
+    {
+      switch (i) {
+      case AlignState::MATCH:
+        return match;
+      case AlignState::DELETE:
+        return del;
+      case AlignState::INSERT:
+        return ins;
+      default:
+        assert(false && "Unexpected Index Value");
+        return 0;
+      }
+    }
 
-    public:
-        code_t match : 2;
-        code_t del : 2;
-        code_t ins : 2;
-    };
+  public:
+    code_t match : 2;
+    code_t del : 2;
+    code_t ins : 2;
+  };
 
-    // add the matrices here to reduce allocations over many alignment calls:
-    typedef std::vector<ScoreVal> ScoreVec;
-    mutable ScoreVec _score1;
-    mutable ScoreVec _score2;
-    mutable basic_matrix<PtrVal> _ptrMat;
+  // add the matrices here to reduce allocations over many alignment calls:
+  typedef std::vector<ScoreVal> ScoreVec;
+  mutable ScoreVec              _score1;
+  mutable ScoreVec              _score2;
+  mutable basic_matrix<PtrVal>  _ptrMat;
 };
-
 
 #include "alignment/GlobalAlignerImpl.hh"

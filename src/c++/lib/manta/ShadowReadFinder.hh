@@ -27,7 +27,6 @@
 
 #include <string>
 
-
 /// encapsulates the logic of checking for shadow reads assuming that they've been placed
 /// consecutively after their mapped mate read
 ///
@@ -39,89 +38,63 @@
 ///         checker.check(bam_record)
 ///     checker.reset()
 ///
-struct ShadowReadFinder
-{
-    ShadowReadFinder(
-        const unsigned minMapq,
-        const bool isSearchForLeftOpen = true,
-        const bool isSearchForRightOpen = true) :
-        _minMapq(minMapq),
-        _isLeftDefault(isSearchForLeftOpen),
-        _isRightDefault(isSearchForRightOpen),
-        _isLastSet(false),
-        _lastMapq(0)
-    {}
+struct ShadowReadFinder {
+  ShadowReadFinder(
+      const unsigned minMapq, const bool isSearchForLeftOpen = true, const bool isSearchForRightOpen = true)
+    : _minMapq(minMapq),
+      _isLeftDefault(isSearchForLeftOpen),
+      _isRightDefault(isSearchForRightOpen),
+      _isLastSet(false),
+      _lastMapq(0)
+  {
+  }
 
-    /// reset mate tracking info
-    void
-    reset()
-    {
-        _isLastSet=false;
-    }
+  /// reset mate tracking info
+  void reset() { _isLastSet = false; }
 
-    /// all in one single method interface to shadow finder
-    ///
-    /// if this is called only once for each read it will return
-    /// true for any unmapped shadow read, assuming the common convention
-    /// that unmapped shadows follow their anchor.
-    ///
-    bool
-    check(const bam_record& bamRead)
-    {
-        if (isShadow(bamRead)) return true;
-        if (isShadowAnchor(bamRead)) setAnchor(bamRead);
-        return false;
-    }
+  /// all in one single method interface to shadow finder
+  ///
+  /// if this is called only once for each read it will return
+  /// true for any unmapped shadow read, assuming the common convention
+  /// that unmapped shadows follow their anchor.
+  ///
+  bool check(const bam_record& bamRead)
+  {
+    if (isShadow(bamRead)) return true;
+    if (isShadowAnchor(bamRead)) setAnchor(bamRead);
+    return false;
+  }
 
-    /// only valid after check() is true
-    unsigned
-    getMateMapq() const
-    {
-        return _lastMapq;
-    }
+  /// only valid after check() is true
+  unsigned getMateMapq() const { return _lastMapq; }
 
-    bool
-    isShadowMate() const
-    {
-        return _isLastSet;
-    }
+  bool isShadowMate() const { return _isLastSet; }
 
-    /// the following methods are subcomponents of the check() system above --
-    /// you probably only want to use one or the other
+  /// the following methods are subcomponents of the check() system above --
+  /// you probably only want to use one or the other
 
-    /// check for shadow anchor status
-    ///
-    /// uses default left-open, right-open values
-    bool
-    isShadowAnchor(
-        const bam_record& bamRead) const
-    {
-        return isShadowAnchor(bamRead,_isLeftDefault,_isRightDefault);
-    }
+  /// check for shadow anchor status
+  ///
+  /// uses default left-open, right-open values
+  bool isShadowAnchor(const bam_record& bamRead) const
+  {
+    return isShadowAnchor(bamRead, _isLeftDefault, _isRightDefault);
+  }
 
-    /// check for shadow anchor status
-    ///
-    bool
-    isShadowAnchor(
-        const bam_record& bamRead,
-        const bool isSearchForLeftOpen,
-        const bool isSearchForRightOpen) const;
+  /// check for shadow anchor status
+  ///
+  bool isShadowAnchor(
+      const bam_record& bamRead, const bool isSearchForLeftOpen, const bool isSearchForRightOpen) const;
 
-    void
-    setAnchor(
-        const bam_record& bamRead);
+  void setAnchor(const bam_record& bamRead);
 
-    bool
-    isShadow(
-        const bam_record& bamRead);
-
+  bool isShadow(const bam_record& bamRead);
 
 private:
-
-    const unsigned _minMapq;
-    const bool _isLeftDefault;
-    const bool _isRightDefault;
-    bool _isLastSet;
-    uint8_t _lastMapq;
-    std::string _lastQname;
+  const unsigned _minMapq;
+  const bool     _isLeftDefault;
+  const bool     _isRightDefault;
+  bool           _isLastSet;
+  uint8_t        _lastMapq;
+  std::string    _lastQname;
 };

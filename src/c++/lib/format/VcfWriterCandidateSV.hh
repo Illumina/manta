@@ -25,39 +25,30 @@
 
 #include "format/VcfWriterSV.hh"
 
+struct VcfWriterCandidateSV : public VcfWriterSV {
+  VcfWriterCandidateSV(
+      const std::string&     referenceFilename,
+      const bam_header_info& bamHeaderInfo,
+      const std::string&     outputFilename,
+      const bool&            isOutputContig)
+    : VcfWriterSV(referenceFilename, bamHeaderInfo, outputFilename, isOutputContig)
+  {
+  }
 
-struct VcfWriterCandidateSV : public VcfWriterSV
-{
-    VcfWriterCandidateSV(
-        const std::string& referenceFilename,
-        const bam_header_info& bamHeaderInfo,
-        const std::string& outputFilename,
-        const bool& isOutputContig) :
-        VcfWriterSV(referenceFilename, bamHeaderInfo, outputFilename, isOutputContig)
-    {}
+  void addHeaderInfo(std::ostream& os) const override;
 
-    void
-    addHeaderInfo(std::ostream& os) const override;
+  void modifyTranslocInfo(
+      const SVCandidate&             sv,
+      const SVScoreInfo*             baseScoringInfoPtr,
+      const bool                     isFirstOfPair,
+      const SVCandidateAssemblyData& assemblyData,
+      InfoTag_t&                     infoTags) const override;
 
-    void
-    modifyTranslocInfo(
-        const SVCandidate& sv,
-        const SVScoreInfo* baseScoringInfoPtr,
-        const bool isFirstOfPair,
-        const SVCandidateAssemblyData& assemblyData,
-        InfoTag_t& infoTags) const override;
+  void modifyInvdelInfo(const SVCandidate& sv, const bool isBp1First, InfoTag_t& infoTags) const override;
 
-    void
-    modifyInvdelInfo(
-        const SVCandidate& sv,
-        const bool isBp1First,
-        InfoTag_t& infoTags) const override;
-
-    void
-    writeSV(
-        const SVCandidateSetData& svData,
-        const SVCandidateAssemblyData& adata,
-        const SVCandidate& sv,
-        const SVId& svId) const;
+  void writeSV(
+      const SVCandidateSetData&      svData,
+      const SVCandidateAssemblyData& adata,
+      const SVCandidate&             sv,
+      const SVId&                    svId) const;
 };
-

@@ -30,7 +30,6 @@
 
 #include <sstream>
 
-
 /// standard debug output for this file:
 //#define DEBUG_PAIR
 
@@ -41,71 +40,65 @@
 #include "blt_util/log.hh"
 #endif
 
-
-
-void
-SVScorePairRefProcessor::
-processClearedRecord(
-    const SVId& /*svId*/,
-    const bam_record& bamRead,
-    SVEvidenceWriterSampleData& /*svSupportFrags*/)
+void SVScorePairRefProcessor::processClearedRecord(
+    const SVId& /*svId*/, const bam_record& bamRead, SVEvidenceWriterSampleData& /*svSupportFrags*/)
 {
-    using namespace illumina::common;
+  using namespace illumina::common;
 
-    assert(bamParams.isSet);
+  assert(bamParams.isSet);
 
-    const pos_t refPos(bamRead.pos()-1);
-    if (! bamParams.interval.range.is_pos_intersect(refPos)) return;
+  const pos_t refPos(bamRead.pos() - 1);
+  if (!bamParams.interval.range.is_pos_intersect(refPos)) return;
 
-    const bool isLargeInsert(isLargeInsertSV(sv));
+  const bool isLargeInsert(isLargeInsertSV(sv));
 
 #ifdef DEBUG_MEGAPAIR
-    log_os << __FUNCTION__ << ": read: " << bamRead << "\n";
+  log_os << __FUNCTION__ << ": read: " << bamRead << "\n";
 #endif
 
-    /// check if fragment is too big or too small:
-    const int templateSize(std::abs(bamRead.template_size()));
+  /// check if fragment is too big or too small:
+  const int templateSize(std::abs(bamRead.template_size()));
 
-    if (!pairOpt.useProperPairFlag)
-    {
-        if (templateSize < bamParams.minFrag) return;
-        if (templateSize > bamParams.maxFrag) return;
-    }
-    else if (!bamRead.is_proper_pair()) return;
+  if (!pairOpt.useProperPairFlag) {
+    if (templateSize < bamParams.minFrag) return;
+    if (templateSize > bamParams.maxFrag) return;
+  } else if (!bamRead.is_proper_pair())
+    return;
 
-    // count only from the down stream reads
-    const bool isFirstBamRead(isFirstRead(bamRead));
+  // count only from the down stream reads
+  const bool isFirstBamRead(isFirstRead(bamRead));
 
-    // get fragment range:
-    pos_t fragBeginRefPos(refPos);
-    if (! isFirstBamRead)
-    {
-        fragBeginRefPos=bamRead.mate_pos()-1;
-    }
+  // get fragment range:
+  pos_t fragBeginRefPos(refPos);
+  if (!isFirstBamRead) {
+    fragBeginRefPos = bamRead.mate_pos() - 1;
+  }
 
-    const pos_t fragEndRefPos(fragBeginRefPos+templateSize);
+  const pos_t fragEndRefPos(fragBeginRefPos + templateSize);
 
-    if (fragBeginRefPos > fragEndRefPos)
-    {
-        std::ostringstream oss;
-        oss << "Failed to parse fragment range from bam record. Frag begin,end: " << fragBeginRefPos << " " << fragEndRefPos << " bamRecord: " << bamRead;
-        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
-    }
+  if (fragBeginRefPos > fragEndRefPos) {
+    std::ostringstream oss;
+    oss << "Failed to parse fragment range from bam record. Frag begin,end: " << fragBeginRefPos << " "
+        << fragEndRefPos << " bamRecord: " << bamRead;
+    BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
+  }
 
-    {
-        const pos_t fragOverlap(std::min((1+svParams.centerPos-fragBeginRefPos), (fragEndRefPos-svParams.centerPos)));
+  {
+    const pos_t fragOverlap(
+        std::min((1 + svParams.centerPos - fragBeginRefPos), (fragEndRefPos - svParams.centerPos)));
 #ifdef DEBUG_MEGAPAIR
-        log_os << __FUNCTION__ << ": frag begin/end/overlap: " << fragBeginRefPos << " " << fragEndRefPos << " " << fragOverlap << "\n";
+    log_os << __FUNCTION__ << ": frag begin/end/overlap: " << fragBeginRefPos << " " << fragEndRefPos << " "
+           << fragOverlap << "\n";
 #endif
-        if (fragOverlap < pairOpt.minFragSupport) return;
-    }
+    if (fragOverlap < pairOpt.minFragSupport) return;
+  }
 
-    SVFragmentEvidence& fragment(evidence.getSampleEvidence(bamParams.bamIndex)[bamRead.qname()]);
+  SVFragmentEvidence& fragment(evidence.getSampleEvidence(bamParams.bamIndex)[bamRead.qname()]);
 
-    static const bool isShadow(false);
+  static const bool isShadow(false);
 
-    SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
-    setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, bamRead, isShadow, evRead);
+  SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
+  setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, bamRead, isShadow, evRead);
 
-    setAlleleFrag(*bamParams.fragDistroPtr, templateSize, fragment.ref.getBp(isBp1),isLargeInsert);
+  setAlleleFrag(*bamParams.fragDistroPtr, templateSize, fragment.ref.getBp(isBp1), isLargeInsert);
 }

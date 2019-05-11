@@ -29,39 +29,30 @@
 
 #include <iostream>
 
-
-
-static
-void
-runAlignmentStats(const AlignmentStatsOptions& opt)
+static void runAlignmentStats(const AlignmentStatsOptions& opt)
 {
-    // calculate fragment size statistics for all read groups in all bams
+  // calculate fragment size statistics for all read groups in all bams
 
-    // instantiate early to test for filename/permissions problems
-    if (opt.alignFileOpt.alignmentFilenames.empty())
-    {
-        log_os << "ERROR: No input files specified.\n";
-        exit(EXIT_FAILURE);
-    }
+  // instantiate early to test for filename/permissions problems
+  if (opt.alignFileOpt.alignmentFilenames.empty()) {
+    log_os << "ERROR: No input files specified.\n";
+    exit(EXIT_FAILURE);
+  }
 
-    ReadGroupStatsSet rstats;
+  ReadGroupStatsSet rstats;
 
-    for (const std::string& alignmentFilename : opt.alignFileOpt.alignmentFilenames)
-    {
-        extractReadGroupStatsFromAlignmentFile(opt.referenceFilename, alignmentFilename, opt.defaultStatsFilename, rstats);
-    }
+  for (const std::string& alignmentFilename : opt.alignFileOpt.alignmentFilenames) {
+    extractReadGroupStatsFromAlignmentFile(
+        opt.referenceFilename, alignmentFilename, opt.defaultStatsFilename, rstats);
+  }
 
-    rstats.save(opt.outputFilename.c_str());
+  rstats.save(opt.outputFilename.c_str());
 }
 
-
-
-void
-GetAlignmentStats::
-runInternal(int argc, char* argv[]) const
+void GetAlignmentStats::runInternal(int argc, char* argv[]) const
 {
-    AlignmentStatsOptions opt;
+  AlignmentStatsOptions opt;
 
-    parseAlignmentStatsOptions(*this,argc,argv,opt);
-    runAlignmentStats(opt);
+  parseAlignmentStatsOptions(*this, argc, argv, opt);
+  runAlignmentStats(opt);
 }

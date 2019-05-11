@@ -22,8 +22,8 @@
 ///
 
 #include "Program.hh"
-#include "ProgramConfig.hh"
 #include "Exceptions.hh"
+#include "ProgramConfig.hh"
 
 #include "blt_util/blt_exception.hh"
 #include "blt_util/log.hh"
@@ -33,121 +33,78 @@
 
 #include <iostream>
 
-
-
-static
-void
-dump_cl(int argc,
-        char* argv[],
-        std::ostream& os)
+static void dump_cl(int argc, char* argv[], std::ostream& os)
 {
-    os << "cmdline:\t";
-    for (int i(0); i<argc; ++i)
-    {
-        if (i>0) os << ' ';
-        os << argv[i];
-    }
-    os << "\n";
+  os << "cmdline:\t";
+  for (int i(0); i < argc; ++i) {
+    if (i > 0) os << ' ';
+    os << argv[i];
+  }
+  os << "\n";
 }
 
+namespace illumina {
 
-namespace illumina
+const char* Program::version() const
 {
-
-
-const char*
-Program::
-version() const
-{
-    return getVersion();
+  return getVersion();
 }
 
-const char*
-Program::
-compiler() const
+const char* Program::compiler() const
 {
-    static const std::string _str(
-        cxxCompilerName() +
-        std::string("-") +
-        compilerVersion());
-    return _str.c_str();
-
+  static const std::string _str(cxxCompilerName() + std::string("-") + compilerVersion());
+  return _str.c_str();
 }
 
-const char*
-Program::
-buildTime() const
+const char* Program::buildTime() const
 {
-    return getBuildTime();
+  return getBuildTime();
 }
 
-
-void
-Program::
-post_catch(
-    int argc,
-    char* argv[],
-    std::ostream& os) const
+void Program::post_catch(int argc, char* argv[], std::ostream& os) const
 {
-    dump_cl(argc,argv,log_os);
-    os << "version:\t" << version() << "\n";
-    os << "buildTime:\t" << buildTime() << "\n";
-    os << "compiler:\t" << compiler() << "\n";
-    os << std::flush;
-    exit(EXIT_FAILURE);
+  dump_cl(argc, argv, log_os);
+  os << "version:\t" << version() << "\n";
+  os << "buildTime:\t" << buildTime() << "\n";
+  os << "compiler:\t" << compiler() << "\n";
+  os << std::flush;
+  exit(EXIT_FAILURE);
 }
 
-
-int
-Program::
-run(int argc, char* argv[]) const
+int Program::run(int argc, char* argv[]) const
 {
-    try
-    {
-        std::ios_base::sync_with_stdio(false);
+  try {
+    std::ios_base::sync_with_stdio(false);
 
-        std::string cmdline;
-        for (int i(0); i<argc; ++i)
-        {
-            if (i>0) cmdline += ' ';
-            cmdline += argv[i];
-        }
+    std::string cmdline;
+    for (int i(0); i < argc; ++i) {
+      if (i > 0) cmdline += ' ';
+      cmdline += argv[i];
+    }
 
-        initialize_blt_signals(name(),cmdline.c_str());
+    initialize_blt_signals(name(), cmdline.c_str());
 
-        runInternal(argc,argv);
-    }
-    catch (const blt_exception& e)
-    {
-        log_os << "FATAL_ERROR: " << e.what() << "\n";
-        post_catch(argc,argv,log_os);
-    }
-    catch (const illumina::common::ExceptionData& e)
-    {
-        // Note that ExceptionData.getContext() already calls std::exception::what(), so additionally calling
-        // e.Message() would only write the exception message twice.
-        /// TODO Redesign the above exception class so that the correct usage is obvious
-        log_os << "FATAL_ERROR: "
-               << e.getContext() << "\n";
-        post_catch(argc,argv,log_os);
-    }
-    catch (const boost::exception& e)
-    {
-        log_os << "FATAL_ERROR: "
-               << boost::diagnostic_information(e) << "\n";
-        post_catch(argc,argv,log_os);
-    }
-    catch (const std::exception& e)
-    {
-        log_os << "FATAL_ERROR: " << e.what() << "\n";
-        post_catch(argc,argv,log_os);
-    }
-    catch (...)
-    {
-        log_os << "FATAL_ERROR: UNKNOWN EXCEPTION\n";
-        post_catch(argc,argv,log_os);
-    }
-    return EXIT_SUCCESS;
+    runInternal(argc, argv);
+  } catch (const blt_exception& e) {
+    log_os << "FATAL_ERROR: " << e.what() << "\n";
+    post_catch(argc, argv, log_os);
+  } catch (const illumina::common::ExceptionData& e) {
+    // Note that ExceptionData.getContext() already calls std::exception::what(), so additionally calling
+    // e.Message() would only write the exception message twice.
+    /// TODO Redesign the above exception class so that the correct usage is obvious
+    log_os << "FATAL_ERROR: " << e.getContext() << "\n";
+    post_catch(argc, argv, log_os);
+  } catch (const boost::exception& e) {
+    log_os << "FATAL_ERROR: " << boost::diagnostic_information(e) << "\n";
+    post_catch(argc, argv, log_os);
+  } catch (const std::exception& e) {
+    log_os << "FATAL_ERROR: " << e.what() << "\n";
+    post_catch(argc, argv, log_os);
+  } catch (...) {
+    log_os << "FATAL_ERROR: UNKNOWN EXCEPTION\n";
+    post_catch(argc, argv, log_os);
+  }
+  return EXIT_SUCCESS;
 }
 
-}
+}  // namespace illumina

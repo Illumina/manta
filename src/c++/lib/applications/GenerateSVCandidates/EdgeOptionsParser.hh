@@ -29,18 +29,10 @@
 
 #include <string>
 
-
-boost::program_options::options_description
-getOptionsDescription(
-    EdgeOptions& opt);
-
+boost::program_options::options_description getOptionsDescription(EdgeOptions& opt);
 
 /// additional parsing beyond default boost::program_options behaviors,
 /// and arg validation
 ///
 /// \return is valid
-bool
-parseOptions(
-    const boost::program_options::variables_map& vm,
-    EdgeOptions& opt,
-    std::string& errorMsg);
+bool parseOptions(const boost::program_options::variables_map& vm, EdgeOptions& opt, std::string& errorMsg);

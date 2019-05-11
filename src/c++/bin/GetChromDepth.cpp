@@ -19,9 +19,7 @@
 
 #include "applications/GetChromDepth/GetChromDepth.hh"
 
-
-int
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    return GetChromDepth().run(argc,argv);
+  return GetChromDepth().run(argc, argv);
 }

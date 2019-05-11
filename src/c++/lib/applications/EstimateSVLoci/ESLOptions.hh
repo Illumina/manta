@@ -31,29 +31,23 @@
 
 #include <vector>
 
+struct ESLOptions {
+  ESLOptions() : graphOpt(SVObservationWeights::observation)  // initialize noise edge filtration parameters
+  {
+  }
 
-struct ESLOptions
-{
-    ESLOptions() :
-        graphOpt(SVObservationWeights::observation)  // initialize noise edge filtration parameters
-    {}
+  AlignmentFileOptions alignFileOpt;
+  ReadScannerOptions   scanOpt;
+  SVLocusSetOptions    graphOpt;
 
-    AlignmentFileOptions alignFileOpt;
-    ReadScannerOptions scanOpt;
-    SVLocusSetOptions graphOpt;
+  std::string              referenceFilename;
+  std::string              outputFilename;
+  std::vector<std::string> regions;
+  std::string              statsFilename;
+  std::string              chromDepthFilename;
 
-    std::string referenceFilename;
-    std::string outputFilename;
-    std::vector<std::string> regions;
-    std::string statsFilename;
-    std::string chromDepthFilename;
-
-    /// TODO remove the need for this bool by having a single overlap pair handler
-    bool isRNA = false;
+  /// TODO remove the need for this bool by having a single overlap pair handler
+  bool isRNA = false;
 };
 
-
-void
-parseESLOptions(const illumina::Program& prog,
-                int argc, char* argv[],
-                ESLOptions& opt);
+void parseESLOptions(const illumina::Program& prog, int argc, char* argv[], ESLOptions& opt);

@@ -29,35 +29,24 @@
 
 #include <iostream>
 
-
-
-static
-void
-runSSL(const SSLOptions& opt)
+static void runSSL(const SSLOptions& opt)
 {
-    const SVLocusSet set(opt.graphFilename.c_str());
+  const SVLocusSet set(opt.graphFilename.c_str());
 
-    OutStream outs(opt.outputFilename);
-    std::ostream& os(outs.getStream());
+  OutStream     outs(opt.outputFilename);
+  std::ostream& os(outs.getStream());
 
-    if (opt.isGlobalStats)
-    {
-        set.dumpStats(os);
-    }
-    else
-    {
-        set.dumpLocusStats(os);
-    }
+  if (opt.isGlobalStats) {
+    set.dumpStats(os);
+  } else {
+    set.dumpLocusStats(os);
+  }
 }
 
-
-
-void
-SummarizeSVLoci::
-runInternal(int argc, char* argv[]) const
+void SummarizeSVLoci::runInternal(int argc, char* argv[]) const
 {
-    SSLOptions opt;
+  SSLOptions opt;
 
-    parseSSLOptions(*this,argc,argv,opt);
-    runSSL(opt);
+  parseSSLOptions(*this, argc, argv, opt);
+  runSSL(opt);
 }

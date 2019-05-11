@@ -19,42 +19,36 @@
 
 #include "options/ReadScannerOptionsParser.hh"
 
-
-boost::program_options::options_description
-getOptionsDescription(ReadScannerOptions& opt)
+boost::program_options::options_description getOptionsDescription(ReadScannerOptions& opt)
 {
-    namespace po = boost::program_options;
-    po::options_description desc("read-scanner");
-    desc.add_options()
-    ("min-candidate-sv-size", po::value(&opt.minCandidateVariantSize)->default_value(opt.minCandidateVariantSize),
-     "Indels below this size will not be discovered or reported as candidates")
-    ("min-mapq", po::value(&opt.minMapq)->default_value(opt.minMapq),
-     "Reads with MAPQ less than this value will be ignored")
-    ("edge-prob", po::value(&opt.breakendEdgeQuantileProb)->default_value(opt.breakendEdgeQuantileProb),
-     "Breakend range associated with each read will trimmed to expected fragment quantile range [p,(1-p)], p: edge-prob")
-    ("use-overlapping-pair", po::value(&opt.useOverlapPairEvidence)->zero_tokens(),
-     "Consider an overlapping read pair as evidence")
-    ("ignore-anom-proper-pair", po::value(&opt.isIgnoreAnomProperPair)->zero_tokens(),
-     "Disregard anomalous fragment sizes if the BAM record has the proper pair bit set. "
-     "This flag is typically set for RNA-SEQ analysis where the proper-pair bit is used to indicate an intron-spanning read pair.")
-    ;
+  namespace po = boost::program_options;
+  po::options_description desc("read-scanner");
+  // clang-format off
+  desc.add_options()
+  ("min-candidate-sv-size", po::value(&opt.minCandidateVariantSize)->default_value(opt.minCandidateVariantSize),
+   "Indels below this size will not be discovered or reported as candidates")
+  ("min-mapq", po::value(&opt.minMapq)->default_value(opt.minMapq),
+   "Reads with MAPQ less than this value will be ignored")
+  ("edge-prob", po::value(&opt.breakendEdgeQuantileProb)->default_value(opt.breakendEdgeQuantileProb),
+   "Breakend range associated with each read will trimmed to expected fragment quantile range [p,(1-p)], p: edge-prob")
+  ("use-overlapping-pair", po::value(&opt.useOverlapPairEvidence)->zero_tokens(),
+   "Consider an overlapping read pair as evidence")
+  ("ignore-anom-proper-pair", po::value(&opt.isIgnoreAnomProperPair)->zero_tokens(),
+   "Disregard anomalous fragment sizes if the BAM record has the proper pair bit set. "
+   "This flag is typically set for RNA-SEQ analysis where the proper-pair bit is used to indicate an intron-spanning read pair.")
+  ;
+  // clang-format on
 
-    return desc;
+  return desc;
 }
 
-
-
-bool
-parseOptions(
-    const boost::program_options::variables_map& /*vm*/,
-    ReadScannerOptions& opt,
-    std::string& errorMsg)
+bool parseOptions(
+    const boost::program_options::variables_map& /*vm*/, ReadScannerOptions& opt, std::string& errorMsg)
 {
-    errorMsg.clear();
-    if ((opt.breakendEdgeQuantileProb <= 0) || (opt.breakendEdgeQuantileProb >= 1.0))
-    {
-        errorMsg="edge-prob argument is restricted to (0,1)";
-    }
+  errorMsg.clear();
+  if ((opt.breakendEdgeQuantileProb <= 0) || (opt.breakendEdgeQuantileProb >= 1.0)) {
+    errorMsg = "edge-prob argument is restricted to (0,1)";
+  }
 
-    return (! errorMsg.empty());
+  return (!errorMsg.empty());
 }

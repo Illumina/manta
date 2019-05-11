@@ -19,9 +19,7 @@
 
 #include "applications/CheckSVLoci/CheckSVLoci.hh"
 
-
-int
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    return CheckSVLoci().run(argc,argv);
+  return CheckSVLoci().run(argc, argv);
 }

@@ -26,24 +26,15 @@
 
 #include <iostream>
 
-
-
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const FatSVCandidate& svc)
+std::ostream& operator<<(std::ostream& os, const FatSVCandidate& svc)
 {
-    os << static_cast<SVCandidate>(svc);
-    for (unsigned eIndex(0); eIndex<SVEvidenceType::SIZE; ++eIndex)
-    {
-        os << "Index count for Etype: " << SVEvidenceType::label(eIndex);
-        for (unsigned bamIndex(0); bamIndex<svc.bp1EvidenceIndex[eIndex].size(); ++bamIndex)
-        {
-            os << "Bam index: " << bamIndex
-               << " bp1: " << svc.bp1EvidenceIndex[eIndex][bamIndex].size()
-               << " bp2: " << svc.bp2EvidenceIndex[eIndex][bamIndex].size()
-               << "\n";
-        }
+  os << static_cast<SVCandidate>(svc);
+  for (unsigned eIndex(0); eIndex < SVEvidenceType::SIZE; ++eIndex) {
+    os << "Index count for Etype: " << SVEvidenceType::label(eIndex);
+    for (unsigned bamIndex(0); bamIndex < svc.bp1EvidenceIndex[eIndex].size(); ++bamIndex) {
+      os << "Bam index: " << bamIndex << " bp1: " << svc.bp1EvidenceIndex[eIndex][bamIndex].size()
+         << " bp2: " << svc.bp2EvidenceIndex[eIndex][bamIndex].size() << "\n";
     }
-    return os;
+  }
+  return os;
 }

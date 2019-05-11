@@ -19,15 +19,13 @@
 
 #pragma once
 
-
 /// options shared by multiple scoring schemes:
 ///
 /// Note that in theory these could be offered once for each scoring scheme, but
 /// it would be difficult to do this efficiently because these options have an impact
 /// on early scoring likelihoods.
 ///
-struct CallOptionsShared
-{
-    /// This influences alignments to the ref allele when comparing ref vs alt align quality
-    float snpPrior = 1e-3f;
+struct CallOptionsShared {
+  /// This influences alignments to the ref allele when comparing ref vs alt align quality
+  float snpPrior = 1e-3f;
 };

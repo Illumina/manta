@@ -19,10 +19,7 @@
 
 #include "applications/MergeSVLoci/MergeSVLoci.hh"
 
-
-int
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    return MergeSVLoci().run(argc,argv);
+  return MergeSVLoci().run(argc, argv);
 }
-

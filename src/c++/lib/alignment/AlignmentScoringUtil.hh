@@ -26,30 +26,27 @@
 #include "alignment/AlignmentScores.hh"
 #include "blt_util/align_path.hh"
 
-
 /// Get the alignment score for a given set of alignment scoring weights and alignment path
 ///
 /// This requires SEQ_MATCH style alignment path which indicates match vs. mismatch positions
 ///
 template <typename ScoreType>
-ScoreType
-getPathScore(
+ScoreType getPathScore(
     const AlignmentScores<ScoreType>& scores,
-    const ALIGNPATH::path_t& apath,
-    const bool isScoreOffEdge = false);
+    const ALIGNPATH::path_t&          apath,
+    const bool                        isScoreOffEdge = false);
 
-/// Get the maximum partial path alignment score for a given set of alignment scoring weights and alignment path
+/// Get the maximum partial path alignment score for a given set of alignment scoring weights and alignment
+/// path
 ///
 /// This requires SEQ_MATCH style alignment path which indicates match vs. mismatch positions
 ///
 template <typename ScoreType>
-ScoreType
-getMaxPathScore(
+ScoreType getMaxPathScore(
     const AlignmentScores<ScoreType>& scores,
-    const ALIGNPATH::path_t& apath,
-    unsigned& maxReadOffset,
-    unsigned& maxRefOffset,
-    const bool isScoreOffEdge = true);
-
+    const ALIGNPATH::path_t&          apath,
+    unsigned&                         maxReadOffset,
+    unsigned&                         maxRefOffset,
+    const bool                        isScoreOffEdge = true);
 
 #include "alignment/AlignmentScoringUtilImpl.hh"

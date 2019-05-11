@@ -21,40 +21,24 @@
 
 #include <iostream>
 
-
-
-static
-std::string
-getChromName(
-    const bam_header_info& bamHeader,
-    const int tid)
+static std::string getChromName(const bam_header_info& bamHeader, const int tid)
 {
-    if (tid >= 0)
-    {
-        assert(tid < static_cast<int>(bamHeader.chrom_data.size()));
-        return bamHeader.chrom_data[tid].label;
-    }
-    else
-    {
-        return "UNKNOWN";
-    }
+  if (tid >= 0) {
+    assert(tid < static_cast<int>(bamHeader.chrom_data.size()));
+    return bamHeader.chrom_data[tid].label;
+  } else {
+    return "UNKNOWN";
+  }
 }
 
-
-
-void
-summarizeGenomeInterval(
-    const bam_header_info& bamHeader,
-    const GenomeInterval& gi,
-    std::ostream& os)
+void summarizeGenomeInterval(const bam_header_info& bamHeader, const GenomeInterval& gi, std::ostream& os)
 {
-    os << "EndUserGenomeInterval: " << getChromName(bamHeader, gi.tid) << ":" << gi.range.begin_pos()+1 << "-" << gi.range.end_pos();
+  os << "EndUserGenomeInterval: " << getChromName(bamHeader, gi.tid) << ":" << gi.range.begin_pos() + 1 << "-"
+     << gi.range.end_pos();
 }
 
-
-std::ostream&
-operator<<(std::ostream& os, const GenomeInterval& gi)
+std::ostream& operator<<(std::ostream& os, const GenomeInterval& gi)
 {
-    os << "GenomeInterval: " << gi.tid << ":" << gi.range;
-    return os;
+  os << "GenomeInterval: " << gi.tid << ":" << gi.range;
+  return os;
 }

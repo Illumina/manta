@@ -25,13 +25,8 @@
 
 #include <iostream>
 
-
-
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const ReadGroupLabel& rgl)
+std::ostream& operator<<(std::ostream& os, const ReadGroupLabel& rgl)
 {
-    os << "read group '" << rgl.rgLabel << "' in bam file '" << rgl.bamLabel;
-    return os;
+  os << "read group '" << rgl.rgLabel << "' in bam file '" << rgl.bamLabel;
+  return os;
 }

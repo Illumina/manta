@@ -21,15 +21,8 @@
 
 #include "common/Program.hh"
 
+struct CheckSVLoci : public illumina::Program {
+  const char* name() const { return "CheckSVLoci"; }
 
-struct CheckSVLoci : public illumina::Program
-{
-    const char*
-    name() const
-    {
-        return "CheckSVLoci";
-    }
-
-    void
-    runInternal(int argc, char* argv[]) const;
+  void runInternal(int argc, char* argv[]) const;
 };

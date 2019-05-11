@@ -21,27 +21,23 @@
 
 #include "boost/test/unit_test.hpp"
 
+BOOST_AUTO_TEST_SUITE(test_bam_header_util)
 
-
-BOOST_AUTO_TEST_SUITE( test_bam_header_util )
-
-BOOST_AUTO_TEST_CASE( test_parse_bam_region )
+BOOST_AUTO_TEST_CASE(test_parse_bam_region)
 {
-    std::string chrom;
-    int32_t begin,end;
-    parse_bam_region("HLA-A*01:01:01:02N:1-3291",chrom,begin,end);
+  std::string chrom;
+  int32_t     begin, end;
+  parse_bam_region("HLA-A*01:01:01:02N:1-3291", chrom, begin, end);
 
-    BOOST_REQUIRE_EQUAL(chrom, "HLA-A*01:01:01:02N");
-    BOOST_REQUIRE_EQUAL(begin, 0);
-    BOOST_REQUIRE_EQUAL(end, 3291);
+  BOOST_REQUIRE_EQUAL(chrom, "HLA-A*01:01:01:02N");
+  BOOST_REQUIRE_EQUAL(begin, 0);
+  BOOST_REQUIRE_EQUAL(end, 3291);
 
-    parse_bam_region("HLA-A*01:01:01:02N",chrom,begin,end);
+  parse_bam_region("HLA-A*01:01:01:02N", chrom, begin, end);
 
-    BOOST_REQUIRE_EQUAL(chrom, "HLA-A*01:01:01:02N");
-    BOOST_REQUIRE_EQUAL(begin, 0);
-    BOOST_REQUIRE(end > 1000000000);
+  BOOST_REQUIRE_EQUAL(chrom, "HLA-A*01:01:01:02N");
+  BOOST_REQUIRE_EQUAL(begin, 0);
+  BOOST_REQUIRE(end > 1000000000);
 }
 
-
 BOOST_AUTO_TEST_SUITE_END()
-

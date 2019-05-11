@@ -23,17 +23,15 @@
 
 #pragma once
 
-#include "manta/SVMultiJunctionCandidate.hh"
 #include "manta/SVCandidateUtil.hh"
+#include "manta/SVMultiJunctionCandidate.hh"
 
 /// complex in this case means that we have no specific hypothesis for the SV --
 /// it is just a single genomic region for which we schedule local assembly
 ///
-inline
-bool
-isComplexSV(const SVMultiJunctionCandidate& mjSV)
+inline bool isComplexSV(const SVMultiJunctionCandidate& mjSV)
 {
-    if (mjSV.junction.size() != 1) return false;
+  if (mjSV.junction.size() != 1) return false;
 
-    return isComplexSV(mjSV.junction[0]);
+  return isComplexSV(mjSV.junction[0]);
 }

@@ -21,25 +21,22 @@
 
 #include "CircularCounter.hh"
 
+BOOST_AUTO_TEST_SUITE(test_CircularCounter)
 
-BOOST_AUTO_TEST_SUITE( test_CircularCounter )
-
-
-BOOST_AUTO_TEST_CASE( test_CircularCounter1 )
+BOOST_AUTO_TEST_CASE(test_CircularCounter1)
 {
-    CircularCounter cc(3);
+  CircularCounter cc(3);
 
-    BOOST_CHECK_EQUAL(cc.count(),0);
+  BOOST_CHECK_EQUAL(cc.count(), 0);
 
-    cc.push(true);
-    BOOST_CHECK_EQUAL(cc.count(),1);
+  cc.push(true);
+  BOOST_CHECK_EQUAL(cc.count(), 1);
 
-    cc.push(false);
-    cc.push(false);
-    BOOST_CHECK_EQUAL(cc.count(),1);
-    cc.push(false);
-    BOOST_CHECK_EQUAL(cc.count(),0);
+  cc.push(false);
+  cc.push(false);
+  BOOST_CHECK_EQUAL(cc.count(), 1);
+  cc.push(false);
+  BOOST_CHECK_EQUAL(cc.count(), 0);
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()

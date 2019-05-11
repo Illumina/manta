@@ -19,9 +19,7 @@
 
 #include "applications/SummarizeSVLoci/SummarizeSVLoci.hh"
 
-
-int
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    return SummarizeSVLoci().run(argc,argv);
+  return SummarizeSVLoci().run(argc, argv);
 }

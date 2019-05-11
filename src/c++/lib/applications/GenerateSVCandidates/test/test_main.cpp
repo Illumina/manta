@@ -19,4 +19,3 @@
 
 #define BOOST_TEST_MODULE libapplications
 #include "boost/test/unit_test.hpp"
-
