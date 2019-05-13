@@ -23,6 +23,9 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include "EdgeOptions.hpp"
 #include "common/Program.hpp"
 #include "options/AlignmentFileOptions.hpp"
@@ -32,9 +35,6 @@
 #include "options/CallOptionsTumor.hpp"
 #include "options/ReadScannerOptions.hpp"
 #include "options/SVRefinerOptions.hpp"
-
-#include <string>
-#include <vector>
 
 struct GSCOptions {
   bool isSomatic() const { return (!somaticOutputFilename.empty()); }

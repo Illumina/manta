@@ -19,18 +19,17 @@
 
 #pragma once
 
-#include "blt_util/input_stream_handler.hpp"
-#include "htsapi/bam_streamer.hpp"
-
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "blt_util/input_stream_handler.hpp"
+#include "htsapi/bam_streamer.hpp"
+
 /// \brief Open all bam files as bam_streamer objects, with no genomic region set
 ///
 /// \param[out] bamStreams Vector of bam_streamers corresponding to the input \p bamFilenames. Existing
-/// content will be
-///                        cleared on input.
+/// content will be cleared on input.
 void openBamStreams(
     const std::string&                          referenceFilename,
     const std::vector<std::string>&             bamFilenames,

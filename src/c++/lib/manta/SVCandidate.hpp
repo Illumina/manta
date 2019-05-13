@@ -23,13 +23,12 @@
 
 #pragma once
 
-#include "blt_util/align_path.hpp"
-#include "manta/SVBreakend.hpp"
-
 #include <cstdlib>
-
 #include <iosfwd>
 #include <string>
+
+#include "blt_util/align_path.hpp"
+#include "manta/SVBreakend.hpp"
 
 struct SVCandidate {
 #if 0

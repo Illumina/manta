@@ -22,13 +22,16 @@
 ///
 
 #include "GenerateSVCandidates.hpp"
+
+#include <iostream>
+#include <string>
+
 #include "EdgeRetrieverBin.hpp"
 #include "EdgeRetrieverLocus.hpp"
 #include "GSCOptions.hpp"
 #include "SVCandidateProcessor.hpp"
 #include "SVEvidenceWriter.hpp"
 #include "SVFinder.hpp"
-
 #include "blt_util/log.hpp"
 #include "common/Exceptions.hpp"
 #include "manta/BamStreamerUtils.hpp"
@@ -40,9 +43,6 @@
 // To avoid this error under the assumption that there is a problem with boost CTPL, switch to
 // the STL version of CTPL instead:
 #include "ctpl_stl.h"
-
-#include <iostream>
-#include <string>
 
 //#define DEBUG_GSV
 

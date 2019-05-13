@@ -23,6 +23,11 @@
 
 #pragma once
 
+#include <algorithm>
+#include <iosfwd>
+#include <string>
+#include <vector>
+
 #include "blt_util/RegionSum.hpp"
 #include "blt_util/time_util.hpp"
 #include "htsapi/bam_header_info.hpp"
@@ -30,11 +35,6 @@
 #include "options/SVLocusSetOptions.hpp"
 #include "svgraph/SVLocus.hpp"
 #include "svgraph/SVLocusSampleCounts.hpp"
-
-#include <algorithm>
-#include <iosfwd>
-#include <string>
-#include <vector>
 
 #ifdef DEBUG_SVL
 #include <iostream>
@@ -60,12 +60,11 @@
 ///
 /// cleanRegion()/clean()/finalize() - 'cleaning' is an operation to remove noise edges. For the merge
 /// operation to work without information loss, this cannot be done until all sequences from a region have
-/// been observed and merged in,
-/// after which any noise edge connecting two nodes which both lie in the observed region can be removed. cleanRegion()
-/// does this for a specific region (executed as information is scanned in for the purpose of memory
-/// management), while clean() removes all noise edges from the entire graph. finalize() is used to declare
-/// intent to stop merging information into the graph and begin variant calling, its primary role is to run
-/// clean().
+/// been observed and merged in, after which any noise edge connecting two nodes which both lie in the
+/// observed region can be removed. cleanRegion() does this for a specific region (executed as information is
+/// scanned in for the purpose of memory management), while clean() removes all noise edges from the entire
+/// graph. finalize() is used to declare intent to stop merging information into the graph and begin variant
+/// calling, its primary role is to run clean().
 ///
 /// save()/load() - write/read the graph
 ///

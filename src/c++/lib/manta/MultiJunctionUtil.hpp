@@ -23,10 +23,10 @@
 
 #pragma once
 
+#include <vector>
+
 #include "manta/SVCandidate.hpp"
 #include "manta/SVMultiJunctionCandidate.hpp"
-
-#include <vector>
 
 /// \brief Convert independent SV candidates into multi-junction event candidates
 ///

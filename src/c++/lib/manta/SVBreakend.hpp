@@ -23,12 +23,11 @@
 
 #pragma once
 
-#include "svgraph/GenomeInterval.hpp"
-
-#include <cassert>
-
 #include <array>
+#include <cassert>
 #include <iosfwd>
+
+#include "svgraph/GenomeInterval.hpp"
 
 /// \brief Categorize the nature of the evidence used to infer an SV candidate
 ///        (anomalous read pair, CIGAR string, etc...)
@@ -296,11 +295,11 @@ public:
   // various probability distributions to back this interval, but these must be accessed via
   // SVCandidate:
   //
-  // csaunders 07-2015: observation of what's here rather than a policy description (where is the design discussion for this?)
-  // if isPrecise(), the the left end of the pos is the leftmost *mapped* base when the variant is fully
-  // left-shifted wrt this breakend. this means that the left most position concept is different for the right
-  // open and left-open cases. for right-open, this is the base before the breakend, for left-open this is the
-  // base after.
+  // csaunders 07-2015: observation of what's here rather than a policy description (where is the design
+  // discussion for this?) if isPrecise(), the the left end of the pos is the leftmost *mapped* base when the
+  // variant is fully left-shifted wrt this breakend. this means that the left most position concept is
+  // different for the right open and left-open cases. for right-open, this is the base before the breakend,
+  // for left-open this is the base after.
   //
   GenomeInterval           interval;
   SVBreakendState::index_t state;

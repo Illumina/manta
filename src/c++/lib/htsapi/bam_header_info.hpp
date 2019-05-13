@@ -19,7 +19,10 @@
 
 #pragma once
 
-#include "bam_util.hpp"
+#include <iosfwd>
+#include <map>
+#include <string>
+#include <vector>
 
 #include "blt_util/thirdparty_push.h"
 
@@ -29,10 +32,7 @@
 
 #include "blt_util/thirdparty_pop.h"
 
-#include <iosfwd>
-#include <map>
-#include <string>
-#include <vector>
+#include "bam_util.hpp"
 
 /// \brief Subset of information from a BAM file header
 ///

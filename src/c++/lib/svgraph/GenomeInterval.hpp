@@ -19,10 +19,10 @@
 
 #pragma once
 
+#include <iosfwd>
+
 #include "blt_util/known_pos_range2.hpp"
 #include "htsapi/bam_header_info.hpp"
-
-#include <iosfwd>
 
 ///
 /// \author Chris Saunders

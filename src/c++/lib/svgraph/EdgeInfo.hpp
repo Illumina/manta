@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include "svgraph/SVLocus.hpp"
-
 #include <iosfwd>
+
+#include "svgraph/SVLocus.hpp"
 
 struct EdgeInfo {
   /// minimal ascii representation:

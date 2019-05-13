@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include "EdgeRuntimeTracker.hpp"
 #include "FatSVCandidate.hpp"
 #include "GSCEdgeStatsManager.hpp"
@@ -35,8 +37,6 @@
 #include "manta/SVLocusScanner.hpp"
 #include "svgraph/EdgeInfo.hpp"
 #include "svgraph/SVLocusSet.hpp"
-
-#include <vector>
 
 struct SVFinder {
   SVFinder(
