@@ -102,7 +102,12 @@ def main() :
     if len(sys.argv) != 2 :
         usage()
 
-    srcRoot=sys.argv[1]
+    scriptDir=os.path.dirname(sys.argv[0])
+
+    srcRoot=os.path.abspath(sys.argv[1])
+
+    # Update cwd so that custom cfg files will be found:
+    os.chdir(scriptDir)
 
     cppcheck_path = which("cppcheck")
     if cppcheck_path is None :
@@ -129,11 +134,19 @@ def main() :
     # manipulate the warning messages so that they look like gcc errors -- this enables IDE parsing of error location:
     checkCmd.append("--template={file}:{line}:1: error: {severity}:{message}")
 
+
     # passedByValue has been added to allow more use of c++11 shared_ptrs:
     suppressList=["unusedFunction", "unmatchedSuppression", "missingInclude", "purgedConfiguration", "passedByValue"]
 
     # cppcheck gives FP unitialized member errors when using delegating ctors
     suppressList.append("uninitMemberVar")
+
+    # new items appearing on or around 1.87:
+    suppressList.append("useStlAlgorithm")
+    suppressList.append("assertWithSideEffect")
+    suppressList.append("redundantAssignment")
+    suppressList.append("variableScope")
+    suppressList.append("constArgument")
 
     # In cppcheck versions 1.69 and lower (TODO how low?), there is a bug parsing the use of the '%' character
     # in boost::format as a regular mod operator. For these versions, an extra suppression is required.
@@ -144,7 +157,14 @@ def main() :
         if isBoostFormatBugVersion :
             suppressList.append("zerodivcond")
 
-    # cppcheck v1.72 the will identify lots of FP unused private method errors
+    # Version prior to 1.70 don't support current config format
+    if True :
+        minConfigVersion = "1.70"
+        isMinConfigVersion = (compareVersions(cppcheckVersion, minConfigVersion) >= 0)
+        if isMinConfigVersion :
+            checkCmd.append("--library=boost_macros")
+
+    # cppcheck v1.72 will identify lots of FP unused private method errors
     #
     # cppcheck 1.71 and 1.73 are known to not have this issue
     if True :
@@ -167,8 +187,9 @@ def main() :
     for stype in suppressList :
         checkCmd.append("--suppress="+stype)
 
+
     # xml output is usful for getting a warnings id field, which is what you need to suppress it:
-    # checkCmd.append("--xml")
+    #checkCmd.append("--xml")
 
     # this is more aggressive  and includes more FPs
     #checkCmd.append("--inconclusive")
