@@ -105,7 +105,9 @@ void parseGSCOptions(const illumina::Program& prog, int argc, char* argv[], GSCO
   ("evidence-bam-stub", po::value(&opt.evidenceBamStub)->default_value(opt.evidenceBamStub),
    "Directory and prefix of bams storing the supporting reads of SVs")
   ("output-contigs", po::value(&opt.isOutputContig)->zero_tokens(),
-   "Output assembled contig sequences in VCF files")
+   "Output assembled contig sequences in VCF files.")
+  ("skip-evidence-signal-filter", po::value(&opt.skipEvidenceSignalFilter)->zero_tokens(),
+   "Turn off the filter on candidates of insignificant evidence signal.")
   ;
   // clang-format on
 

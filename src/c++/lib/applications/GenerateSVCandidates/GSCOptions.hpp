@@ -93,8 +93,11 @@ struct GSCOptions {
   /// Min size for scoring and scored output following candidate generation
   unsigned minScoredVariantSize = 50;
 
-  /// If true, an assembled contig is written in VCF
+  /// if true, an assembled contig is written in VCF
   bool isOutputContig = false;
+
+  /// if true, turn off the filter of insignificant evidence signal
+  bool skipEvidenceSignalFilter = false;
 };
 
 void parseGSCOptions(const illumina::Program& prog, int argc, char* argv[], GSCOptions& opt);

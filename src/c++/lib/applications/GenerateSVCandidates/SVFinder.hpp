@@ -136,6 +136,7 @@ private:
 
   const std::string _referenceFilename;
 
+  const bool _skipEvidenceSignalFilter;
   const bool _isRNA;
   const bool _isVerbose;
   bool       _isSomatic;

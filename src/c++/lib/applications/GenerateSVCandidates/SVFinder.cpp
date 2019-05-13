@@ -78,6 +78,7 @@ SVFinder::SVFinder(
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
     _readScanner(readScanner),
     _referenceFilename(opt.referenceFilename),
+    _skipEvidenceSignalFilter(opt.skipEvidenceSignalFilter),
     _isRNA(opt.isRNA),
     _isVerbose(opt.isVerbose),
     _isSomatic(false),
