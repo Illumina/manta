@@ -430,7 +430,8 @@ void SVScorer::processExistingAltPairInfo(
       // sanity check of read pairs
       if (!fragment.checkReadPair()) continue;
 
-      // is this read pair associated with this candidateIndex? (each read fragment can be associated with multiple candidates)
+      // is this read pair associated with this candidateIndex? (each read fragment can be associated with
+      // multiple candidates)
       unsigned linkIndex(0);
       {
         bool isIndexFound(false);

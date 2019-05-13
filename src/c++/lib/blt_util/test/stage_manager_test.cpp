@@ -98,7 +98,7 @@ struct test_pos_processor : public pos_processor_base {
   // pos_processor wouldn't normally need this info, but we use
   // it to test expected stage position relationships
   //
-  //test_pos_processor(const stage_data& sd, const pos_range& pr)
+  // test_pos_processor(const stage_data& sd, const pos_range& pr)
   //
 
   void process_pos(const int stage_no, const pos_t pos)

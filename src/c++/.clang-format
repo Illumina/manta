@@ -18,7 +18,9 @@ BreakStringLiterals: false
 # 1. a line comment (ie. a second one inside of the first comment)
 # 2. preprocessor directive
 # 3. various common code line endings
-CommentPragmas: '(//|^\s*#|(;|:|"|{|}|\(|\)|\[|\]|<|>)\s*$)'
+#   - Note that lines ending in ':' and ')' are excluded because these are also common endings for
+#     natural language comments
+CommentPragmas: '(//|^\s*#|(;|"|{|}|\(|\[|\]|<|>)\s*$)'
 
 # Indent before the ':'
 ConstructorInitializerIndentWidth: 2
@@ -29,7 +31,7 @@ IndentCaseLabels: false
 # Set the indent for public/protected/private in classes:
 AccessModifierOffset: -2
 
-# Only allow empty functions and inline methods in class headers to go on a single line:
+# Only allow empty funcitons and inline methods in class headers to go on a single line:
 AllowShortFunctionsOnASingleLine: Inline
 
 # Use one pointer alignment everywhere:

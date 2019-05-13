@@ -83,9 +83,9 @@ static bool isLarge(const index_t i)
 ///
 /// \param[in] candidateChromosomeIndex Index of the chromosome on which the SV candidate occurs
 /// \param[in] svEvidenceSource The type of SV evidence (anomalous read pair, CIGAR string, etc)
-/// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
-/// \param[in] isComplex If true, create a 'complex' candidate indicating a non-specific local assembly task
-/// to search
+/// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2,
+/// etc..) \param[in] isComplex If true, create a 'complex' candidate indicating a non-specific local assembly
+/// task to search
 ///                      for indels in a single region.
 static SVObservation getSplitSVCandidate(
     const ReadScannerDerivOptions&                  dopt,

@@ -51,7 +51,8 @@
 
 /// process assembly/align info into simple reference coordinates that can be reported in the output vcf:
 ///
-/// \param[in] isAlign1 if true, this breakend was aligned first by the jump aligner, and therefore left-aligned (if fwd)
+/// \param[in] isAlign1 if true, this breakend was aligned first by the jump aligner, and therefore
+/// left-aligned (if fwd)
 ///                     or right-aligned (if rev)
 /// \param[in] jumpRange homologous range across the breakend
 ///

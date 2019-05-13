@@ -451,10 +451,12 @@ BOOST_AUTO_TEST_CASE(test_IsAnyComplexCandidateSignalSignificant)
 // cutoff
 // (including MAPQ0)
 // 2. SPANNING_LOW_SIGNAL - Candidates support spanning SV, but none of them is significant
-// spanning candidate(Significant spanning SV candidate has been described in test_IsAnySpanningCandidateSignalSignificant)
+// spanning candidate(Significant spanning SV candidate has been described in
+// test_IsAnySpanningCandidateSignalSignificant)
 // 3. COMPLEX_LOW_COUNT - When a complex SV doesn't satisfy minimum candidate count criteria
 // 4. COMPLEX_LOW_SIGNAL - Candidates support complex SV, but none of them is significant
-// complex candidate(Significant complex SV candidate has been described in test_IsAnyComplexCandidateSignalSignificant)
+// complex candidate(Significant complex SV candidate has been described in
+// test_IsAnyComplexCandidateSignalSignificant)
 // 5. None - None of the above filtration state
 BOOST_AUTO_TEST_CASE(test_IsFilterSingleJunctionCandidate)
 {

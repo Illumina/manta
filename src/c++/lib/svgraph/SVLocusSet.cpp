@@ -765,8 +765,9 @@ void SVLocusSet::getMergeableIntersectingNodeAddresses(
       _mergeRegions.clear();
     }
 
-    // Store total evidence count for the outgoing and incoming edge as part of the default (ie. non-RegionCheck)
-    // process to determine if the intersection set contains sufficient evidence to initiate a merge
+    // Store total evidence count for the outgoing and incoming edge as part of the default (ie.
+    // non-RegionCheck) process to determine if the intersection set contains sufficient evidence to initiate
+    // a merge
     //
     // Note: Outgoing/incoming orientation are defined relative to the target node.
     //

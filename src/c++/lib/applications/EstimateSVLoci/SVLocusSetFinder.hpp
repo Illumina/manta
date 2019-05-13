@@ -128,7 +128,8 @@ private:
   /// Track estimated depth per position for the purpose of filtering high-depth regions
   std::shared_ptr<depth_buffer_compressible> _positionReadDepthEstimatePtr;
 
-  /// Region manager handles all region-dependent data triggers (denoising, cleaning unused depth positions, etc..)
+  /// Region manager handles all region-dependent data triggers (denoising, cleaning unused depth positions,
+  /// etc..)
   SVLocusSetFinderActiveRegionManager _regionManager;
 
   SVLocusScanner _readScanner;

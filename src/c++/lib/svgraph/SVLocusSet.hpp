@@ -470,8 +470,8 @@ private:
 
   /// \brief Add \p inputLocus to this SVLocusSet
   ///
-  /// Copies the inputLocus into this object without attempting to do any merging. This is an intermediate (private)
-  /// step in the process of merging the \p inputLocus into this graph.
+  /// Copies the inputLocus into this object without attempting to do any merging. This is an intermediate
+  /// (private) step in the process of merging the \p inputLocus into this graph.
   ///
   /// \return The locus index assigned to the copy of inputLocus inserted into this object
   LocusIndexType insertLocus(const SVLocus& inputLocus);

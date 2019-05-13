@@ -37,8 +37,8 @@
 /// the contents of the bins are designed to be distributed evenly over the sequence of edges
 ///
 struct EdgeRetrieverJumpBin : public EdgeRetriever {
-  /// \param[in] graphNodeMaxEdgeCount filtration parameter for skipping edges from highly connected nodes (set to zero to disable)
-  /// \param[in] binCount total number of parallel bins, must be 1 or greater
+  /// \param[in] graphNodeMaxEdgeCount filtration parameter for skipping edges from highly connected nodes
+  /// (set to zero to disable) \param[in] binCount total number of parallel bins, must be 1 or greater
   /// \param[in] binIndex parallel bin id, must be less than binCount
   EdgeRetrieverJumpBin(
       const SVLocusSet& set,

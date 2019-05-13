@@ -48,8 +48,8 @@ struct JumpAlignmentResult {
 
   ScoreType score;
   unsigned  jumpInsertSize;
-  unsigned
-            jumpRange;  ///< length of sequence over which jump would have the same score (left-most on align1 is reported)
+  unsigned  jumpRange;  ///< length of sequence over which jump would have the same score (left-most on align1
+                        ///< is reported)
   Alignment align1;
   Alignment align2;
 };

@@ -249,7 +249,8 @@ struct SVObservation : public SVCandidate {
     return (dnaFragmentSVEvidenceSource == READ1);
   }
 
-  /// \brief The type of SV evidence (eg. anomalous read pair, large indel in CIGAR string of one read, etc....)
+  /// \brief The type of SV evidence (eg. anomalous read pair, large indel in CIGAR string of one read,
+  /// etc....)
   SVEvidenceType::index_t svEvidenceType;
   /// \brief Ths source of the SV evidence within a single DNA fragment (eg. read1, read2, of both)
   SourceOfSVEvidenceInDNAFragment::index_t dnaFragmentSVEvidenceSource;

@@ -51,7 +51,7 @@ static bool hasAlignedSuffix(const Alignment& al)
 // FIXME: not used, need to think what makes an alignment consistent
 // (how about : total number of matches shouldn't exceed sequence length?)
 // bool
-//isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned /*minAlignContext = 0*/)
+// isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned /*minAlignContext = 0*/)
 //{
 //    // not consistent if both unaligned
 //    if (! (res.align1.isAligned() && res.align2.isAligned()) ) return false;
