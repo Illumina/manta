@@ -29,8 +29,8 @@
 
 #include "svgraph/GenomeInterval.hpp"
 
-/// \brief Categorize the nature of the evidence used to infer an SV candidate
-///        (anomalous read pair, CIGAR string, etc...)
+/// \brief Categorize the nature of the evidence used to infer an SV candidate (anomalous read pair, CIGAR
+/// string, etc...)
 namespace SVEvidenceType {
 enum index_t {
   PAIR,         ///< An anomalous read pair observation based on both of the read pair's alignment records
@@ -148,8 +148,8 @@ enum index_t {
   UNKNOWN,     ///< Everything else not covered below
   RIGHT_OPEN,  ///< 5'/left side of breakend is mapped, 3'/right side of the breakend is mapped elsewhere
   LEFT_OPEN,   ///< 3'/right side of breakend is mapped, 5'/left side of the breakend is mapped elsewhere
-  COMPLEX      ///< A typical small scale assembly locus -- something is happening in a small region,
-               ///  the event might be local to that region but we don't know
+  COMPLEX  ///< A typical small scale assembly locus -- something is happening in a small region, the event
+           ///< might be local to that region but we don't know
 };
 
 inline const char* label(const index_t idx)

@@ -800,9 +800,9 @@ static bool isCandidateCountSufficient(const SVCandidate& sv)
 /// relative to a background noise rate
 ///
 /// \param signalReadInfo Vector which has a size equal to the supporting read count, for each supporting
-/// read, the vector
-///                    contains a relative index for the supporting read among all qualifying (mapped) reads
-///                    from the same input BAM file. This relative index is used to estimate signal density.
+/// read, the vector contains a relative index for the supporting read among all qualifying (mapped) reads
+/// from the same input BAM file. This relative index is used to estimate signal density.
+///
 /// \return true if we reject the null hypothesis that breakpoint signal is noise
 static bool isBreakPointSignificant(
     const double alpha, const double noiseRate, std::vector<double>& signalReadInfo)
@@ -939,7 +939,7 @@ static bool isAnyComplexCandidateSignalSignificant(
 /// requiring multi-junction analysis)
 ///
 static SINGLE_JUNCTION_FILTER::index_t isFilterSingleJunctionCandidate(
-    const bool                 isRNA,
+    const bool                 skipEvidenceSignalFilter,
     const std::vector<double>& spanningNoiseRate,
     const std::vector<double>& assemblyNoiseRate,
     const FatSVCandidate&      sv,
@@ -953,8 +953,7 @@ static SINGLE_JUNCTION_FILTER::index_t isFilterSingleJunctionCandidate(
 
   // candidates must have a minimum amount of evidence:
   if (isSpanningSV(sv)) {
-    // TODO make sensitivity adjustments for RNA here:
-    if (!isRNA) {
+    if (!skipEvidenceSignalFilter) {
       if (!isAnySpanningCandidateSignalSignificant(bamCount, sv, spanningNoiseRate))
         return SPANNING_LOW_SIGNAL;
     }
@@ -974,7 +973,7 @@ static SINGLE_JUNCTION_FILTER::index_t isFilterSingleJunctionCandidate(
 /// filtration cases require the SV to be marked now and evaluated for filtration once more information is
 /// available
 static void filterCandidates(
-    const bool                   isRNA,
+    const bool                   skipEvidenceSignalFilter,
     const std::vector<double>&   spanningNoiseRate,
     const std::vector<double>&   assemblyNoiseRate,
     std::vector<FatSVCandidate>& svs,
@@ -985,8 +984,8 @@ static void filterCandidates(
   unsigned index(0);
   while (index < svCount) {
     using namespace SINGLE_JUNCTION_FILTER;
-    const index_t filt(
-        isFilterSingleJunctionCandidate(isRNA, spanningNoiseRate, assemblyNoiseRate, svs[index], bamCount));
+    const index_t filt(isFilterSingleJunctionCandidate(
+        skipEvidenceSignalFilter, spanningNoiseRate, assemblyNoiseRate, svs[index], bamCount));
 
     bool isFilter(false);
     switch (filt) {
@@ -1095,7 +1094,7 @@ void SVFinder::getCandidatesFromData(
     assert((_assemblyNoiseRate[bamIndex] >= 0.) && (_assemblyNoiseRate[bamIndex] <= 1.));
   }
 
-  filterCandidates(_isRNA, _spanningNoiseRate, _assemblyNoiseRate, svs, stats, bamCount);
+  filterCandidates(_skipEvidenceSignalFilter, _spanningNoiseRate, _assemblyNoiseRate, svs, stats, bamCount);
 
   std::copy(svs.begin(), svs.end(), std::back_inserter(output_svs));
 }

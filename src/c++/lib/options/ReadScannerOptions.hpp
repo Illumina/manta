@@ -23,25 +23,23 @@ struct ReadScannerOptions {
   ReadScannerOptions() {}
 
   /// \brief Reads with MAPQ below this value are filtered out during SV locus generation and many subsequent
-  ///        candidate creation and scoring steps
+  /// candidate creation and scoring steps
   ///
   unsigned minMapq = 15;
 
   /// \brief Reads with MAPQ below this value may be considered in the normal sample as part of the 'tier2'
-  /// evidence
-  ///        to help disprove a somatic candidate via the existence of weak candidate evidence in the normal
+  /// evidence to help disprove a somatic candidate via the existence of weak candidate evidence in the normal
   unsigned minTier2Mapq = 5;
 
   /// \brief Probability used to create fragment size quantile range for reported breakend regions
   float breakendEdgeQuantileProb = 0.25f;
 
   /// \brief Probability used to create fragment size quantile range for reported breakend regions, this
-  /// version is
-  ///        reserved for large-scale SV candidates
+  /// version is reserved for large-scale SV candidates
   float largeScaleEventBreakendEdgeQuantileProb = 0.1f;
 
   /// \brief Probability used to create fragment size quantile range for anomalous read pair detection during
-  ///        SV discovery
+  /// SV discovery
   ///
   /// Treat a paired read as non-anomalous (ie. "proper") during SV discovery if orientation is non-anomalous
   /// and implied fragment size is within the [x, 1-x], x=properPairQuantileProb quantile range of the
@@ -49,7 +47,7 @@ struct ReadScannerOptions {
   float properPairQuantileProb = 0.01f;
 
   /// \brief Probability used to create fragment size quantile range for supporting read pair evidence during
-  ///        SV scoring
+  /// SV scoring
   ///
   /// Add a read pair to an SV's pool of evidence to evaluate for paired-read support during the scoring phase
   /// if the orientation is non-anomalous and the implied fragment size is within the [x, 1-x],

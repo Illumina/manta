@@ -125,8 +125,7 @@ public:
   }
 
   /// \brief Test if the read is supplemental, using a more liberal community criteria to define
-  /// 'supplemental'
-  ///        compared to that from the BAM spec.
+  /// 'supplemental' compared to that from the BAM spec.
   ///
   /// Reads are considered supplemental if either:
   /// 1. The 'supplemental' bit is set in the bam record.

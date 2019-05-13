@@ -41,13 +41,14 @@ bool isRefRegionValid(const bam_header_info& header, const GenomeInterval& inter
 /// to the interval and return the reference sequence corresponding
 /// to this interval
 ///
-/// \param[in] extraRefEdgeSize add this value to the ends of each
-///             interval prior to chromosome length clipping and reference
-///             retrieval
-/// \param[out] leadingTrim indicates how much was cut from the
-///              front of the requested interval (with edge buffer)
-/// \param[out] trailingTrim indicates how much was cut from the
-///              end of the requested interval (with edge buffer)
+/// \param[in] extraRefEdgeSize add this value to the ends of each interval prior to chromosome length
+/// clipping and reference retrieval
+///
+/// \param[out] leadingTrim indicates how much was cut from the front of the requested interval (with edge
+/// buffer)
+///
+/// \param[out] trailingTrim indicates how much was cut from the end of the requested interval (with edge
+/// buffer)
 ///
 void getIntervalReferenceSegment(
     const std::string&        referenceFilename,

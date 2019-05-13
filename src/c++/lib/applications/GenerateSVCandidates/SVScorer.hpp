@@ -130,8 +130,9 @@ struct SVScorer {
   /// 2. somatic quality score
   ///
   /// \param mjModelScoreInfo standard (junction-independent) scoring information for each junction
-  /// \param mjJointModelScoreInfo  joint junction scoring information used for cases where a
-  ///   multi-junction event is detected
+  ///
+  /// \param mjJointModelScoreInfo  joint junction scoring information used for cases where a multi-junction
+  /// event is detected
   void scoreSV(
       const SVCandidateSetData&                   svData,
       const std::vector<SVCandidateAssemblyData>& mjAssemblyData,

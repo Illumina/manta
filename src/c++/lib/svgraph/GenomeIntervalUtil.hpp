@@ -28,8 +28,8 @@ struct bam_header_info;
 
 /// given a collection of genome intervals, reduce down to the minimum non-overlapping set:
 ///
-/// \returns a vector with size equal to the input vector, containing a mapping of the input
-///         interval index to the output interval index
+/// \returns a vector with size equal to the input vector, containing a mapping of the input interval index to
+/// the output interval index
 ///
 std::vector<unsigned> intervalCompressor(std::vector<GenomeInterval>& intervals);
 

@@ -67,7 +67,8 @@ void buildTestBamFile(
     const std::string&             bamFilename);
 
 /// \brief Build a bam_record based on the input parameters.
-///        A default bam_record is a proper paired reference sequence.
+///
+/// A default bam_record is a proper paired reference sequence.
 void buildTestBamRecord(
     bam_record& bamRead,
     int         targetID     = 0,

@@ -138,9 +138,9 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage> {
   /// Find the indices of all nodes connected to the \p startIndex node
   ///
   /// \param[in] startIndex Index of node to start connected node search from
+  ///
   /// \param[out] connectedNodeIndexSet Container of indices for all nodes connected to \p startIndex node,
-  /// including
-  ///                                   \p startIndex itself
+  /// including \p startIndex itself
   void findAllConnectedNodes(
       const NodeIndexType startIndex, std::set<NodeIndexType>& connectedNodeIndexSet) const;
 
@@ -320,8 +320,8 @@ private:
   /// numbers used have to be offset such that they are all higher than the node index numbers
   /// already in use by this locus object.
   ///
-  /// \param obs Observer object is required to notify the parent SVLocusSet of all node changes
-  ///            so that its 'search for nodes by genome interval' logic works correctly.
+  /// \param obs Observer object is required to notify the parent SVLocusSet of all node changes so that its
+  /// 'search for nodes by genome interval' logic works correctly.
   void copyLocus(const SVLocus& fromLocus, flyweight_observer_t* obs)
   {
     assert(&fromLocus != this);

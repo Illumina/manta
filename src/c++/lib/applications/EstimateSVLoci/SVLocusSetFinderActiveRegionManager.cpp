@@ -58,10 +58,12 @@ static stage_data getStageData(const unsigned denoiseRegionProtectedBorderSize)
 /// the evidence from both segments has been merged.
 ///
 /// \param scanRegion The region of the genome scanned by this process for SV locus evidence.
+///
 /// \param bamHeader Bam header information. Used to extract chromosome length here.
+///
 /// \param denoiseRegionProtectedBorderSize Length of the protected region where denoising is skipped at
-/// adjacent
-///                                         process boundaries.
+/// adjacent process boundaries.
+///
 /// \return Region where denoising is allowed in this process
 static GenomeInterval computeDenoiseRegion(
     const GenomeInterval&  scanRegion,

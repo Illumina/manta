@@ -155,10 +155,14 @@ struct SVCandidateSetSequenceFragmentSampleGroup {
   /// Add a new bam record to the set
   ///
   /// \param[in] bamHeader Bam header information is (only) used to improve the detail of exception messages.
+  ///
   /// \param[in] bamRead New bam record to add to the sample group set
+  ///
   /// \param[in[ isExpectRepeat If false, raise an exception for a repeated BAM QNAME, otherwise skip all but
-  ///             the first repeated QNAME instance.
+  /// the first repeated QNAME instance.
+  ///
   /// \param[in] isSourcedFromGraphEdgeNode1 True if \p bamRead was discovered from SV locus graph edge node1
+  ///
   /// \param[in] isSubMapped True if read is below default mapping quality threshold
   void add(
       const bam_header_info& bamHeader,

@@ -61,9 +61,8 @@ struct RangeMap {
 
   static const unsigned defaultMinChunk = 1024;
 
-  /// \param minChunk the storage buffer operates in units of minChunk, this
-  ///                 setting could impact performance in some specialized
-  ///                 cases but in general shouldn't need to be set
+  /// \param minChunk the storage buffer operates in units of minChunk, this setting could impact performance
+  /// in some specialized cases but in general shouldn't need to be set
   explicit RangeMap(const unsigned minChunk = defaultMinChunk)
     : _minChunk(minChunk), _isEmpty(true), _minKeyIndex(0), _data(_minChunk), _occup(_minChunk)
   {

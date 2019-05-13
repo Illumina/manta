@@ -46,11 +46,11 @@
 #endif
 
 /// \brief Utilities pertaining to classifying anomolous fragments based on size so that they can be
-///        treated/weighted differently.
+/// treated/weighted differently.
 ///
 namespace FragmentSizeType {
 /// \brief Fragments within this factor of the minimum size cutoff are treated as 'close' pairs and receive a
-///        modified evidence count.
+/// modified evidence count.
 static const float closePairFactor(4);
 
 static const float minLargeEventRegionFactor(10);
@@ -79,14 +79,17 @@ static bool isLarge(const index_t i)
 }  // namespace FragmentSizeType
 
 /// \brief Convert input details into an SVObservation indicating an SV candidate which occurs on a single
-///        chromosome from \p leftPos to \p rightPos.
+/// chromosome from \p leftPos to \p rightPos.
 ///
 /// \param[in] candidateChromosomeIndex Index of the chromosome on which the SV candidate occurs
+///
 /// \param[in] svEvidenceSource The type of SV evidence (anomalous read pair, CIGAR string, etc)
+///
 /// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2,
-/// etc..) \param[in] isComplex If true, create a 'complex' candidate indicating a non-specific local assembly
-/// task to search
-///                      for indels in a single region.
+/// etc..)
+///
+/// \param[in] isComplex If true, create a 'complex' candidate indicating a non-specific local assembly task
+/// to search for indels in a single region.
 static SVObservation getSplitSVCandidate(
     const ReadScannerDerivOptions&                  dopt,
     const int32_t                                   candidateChromosomeIndex,
@@ -304,8 +307,7 @@ static void parseSACandidatesFromRead(
 }
 
 /// \brief Find all 'SA' formatted split read sub-alignments in a single read alignment record, and convert
-/// these
-///        into SVObservation objects.
+/// these into SVObservation objects.
 ///
 /// Convert each BAM "SA" sub-alignment record in a read into an SVObservation object. The method currently
 /// only returns an SVObservation object if the read contains exactly one "SA" sub-alignment record, but the
@@ -313,9 +315,10 @@ static void parseSACandidatesFromRead(
 /// in the future.
 ///
 /// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2,
-/// etc..) \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the
-/// vector are preserved
-///                        but not read.
+/// etc..)
+///
+/// \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the vector
+/// are preserved but not read.
 static void getSACandidatesFromRead(
     const ReadScannerOptions&                      opt,
     const ReadScannerDerivOptions&                 dopt,
@@ -349,8 +352,7 @@ static void getSACandidatesFromRead(
 ///
 /// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2,
 /// etc..) \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the
-/// vector are preserved
-///                        but not read.
+/// vector are preserved but not read.
 static void getSVCandidatesFromReadIndels(
     const ReadScannerOptions&                      opt,
     const ReadScannerDerivOptions&                 dopt,
@@ -458,8 +460,7 @@ static void getSVCandidatesFromReadIndels(
 }
 
 /// \brief Detect if \p bamRead is semi-aligned (has one or two poorly-aligned ends), if so convert each
-/// poorly aligned
-///       read end to an SVObservation object.
+/// poorly aligned read end to an SVObservation object.
 ///
 /// Reads with poorly aligned ends are referred to as semi-aligned because part of the read is confidently
 /// aligned and part of the read (one or both edges) is poorly aligned. The basis for an SV hypothesis is that
@@ -467,9 +468,10 @@ static void getSVCandidatesFromReadIndels(
 /// not reflected in the current read alignment.
 ///
 /// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2,
-/// etc..) \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the
-/// vector are preserved
-///                        but not read.
+/// etc..)
+///
+/// \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the vector
+/// are preserved but not read.
 static void getSVCandidatesFromSemiAligned(
     const ReadScannerOptions&                      opt,
     const ReadScannerDerivOptions&                 dopt,
@@ -557,10 +559,12 @@ struct AlignmentPairAnalyzer {
   /// This method must be called before any other methods.
   ///
   /// \param[in] localAlignment Alignment of the local read from a read pair
+  ///
   /// \param[in] remoteAlignment Alignment of the remote read from a read pair
+  ///
   /// \param[in] isRemoteAlignmentInferred True if remote read alignment was inferred from the local read
-  /// alignment
-  ///                                      instead of directly observed from the remote read alignment record
+  /// alignment instead of directly observed from the remote read alignment record
+  ///
   /// \param[in] isForwardStrand True if the local read is 1st in read pair (this value is used in stranded
   /// RNA mode)
   void reset(
@@ -685,7 +689,7 @@ struct AlignmentPairAnalyzer {
   }
 
   /// \brief Test if the 'inside' end of either read in a read pair touches or goes past either edge of the
-  ///        chromosome it has been mapped to
+  /// chromosome it has been mapped to
   ///
   /// Given chromosome and read pairs:
   ///         |----------chrom---------------|
@@ -843,8 +847,7 @@ private:
   double _breakendRegionScale = 0.;
 
   /// \brief The total length of local and remote reads, excluding any unaligned read segments on the inside
-  /// of the
-  ///        read pair
+  /// of the read pair
   unsigned _totalNonInsertSize = 0;
 
   /// \brief The zero-indexed reference position one base after the local read's last aligned base
@@ -857,18 +860,19 @@ private:
 }  // namespace
 
 /// \brief Detect if \p localRead is part of an anomalous read pair, and if so, convert the read pair
-/// information into
-///        an SVObservation, and append it to \p candidates
+/// information into an SVObservation, and append it to \p candidates
 ///
 /// \param[in] rstats Statistics computed from the fragment length distribution associated with \p localRead
+///
 /// \param[in] localRead The read which is the subject of testing/conversion to an SV candidate
+///
 /// \param[in] localAlign Pre-computed alignment data generated from \p localRead as a caching optimization
+///
 /// \param[in] remoteReadPtr Pointer to the bam record of \p localRead's mate. If nullptr, then properties of
-/// the mate
-///                          alignment are inferred from the local alignment record.
+/// the mate alignment are inferred from the local alignment record.
+///
 /// \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the vector
-/// are preserved
-///                          but not read.
+/// are preserved but not read.
 static void getSVCandidatesFromPair(
     const ReadScannerOptions&                   opt,
     const ReadScannerDerivOptions&              dopt,
@@ -1255,8 +1259,8 @@ static void getSVLociImpl(
   }
 }
 
-/// \brief Given a size distribution and probability \p prob, set \p range to span
-///        quantile(prob) to quantile(1-prob)
+/// \brief Given a size distribution and probability \p prob, set \p range to span quantile(prob) to
+/// quantile(1-prob)
 ///
 /// \param[in] prob Probability used to determine quantile range drawn from the \p sizeDistribution
 /// \param[out] range Computed quantile range over size

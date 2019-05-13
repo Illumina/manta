@@ -89,13 +89,11 @@ static bool isAnyFalse(const std::vector<bool>& vb)
 ///
 /// The junction filtration rules are:
 /// 1. If the junction is part of an sv candidate where all junctions have a spanning evidence count less than
-///    minCandidateSpanningCount, then all junctions in the sv candidate will be filtered.
+/// minCandidateSpanningCount, then all junctions in the sv candidate will be filtered.
 /// 2. Any individual junction with a spanning evidence count less than minJunctionCandidateSpanningCount will
-/// be
-///    filtered.
+/// be filtered.
 /// 3. Complex candidate regions which did not produce a successful contig alignment will be filtered (the
-/// candidate
-///    is not spanning so there is no imprecise hypothesis to pursue if contig alignment fails).
+/// candidate is not spanning so there is no imprecise hypothesis to pursue if contig alignment fails).
 /// 4. Candidates will be filtered if their size is smaller than minCandidateVariantSize
 ///
 static void checkJunctionsToFilter(

@@ -33,8 +33,7 @@
 #endif
 
 /// \brief When \p totalCount is subdivided into \p binCount approximately even bins, return the 0-indexed
-/// count
-///        which starts the zero-indexed \p binIndex bin.
+/// count which starts the zero-indexed \p binIndex bin.
 ///
 static unsigned long getBoundaryCount(const double binCount, const double binIndex, const double totalCount)
 {

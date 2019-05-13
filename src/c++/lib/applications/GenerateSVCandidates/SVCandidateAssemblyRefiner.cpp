@@ -52,8 +52,8 @@
 /// process assembly/align info into simple reference coordinates that can be reported in the output vcf:
 ///
 /// \param[in] isAlign1 if true, this breakend was aligned first by the jump aligner, and therefore
-/// left-aligned (if fwd)
-///                     or right-aligned (if rev)
+/// left-aligned (if fwd) or right-aligned (if rev)
+///
 /// \param[in] jumpRange homologous range across the breakend
 ///
 static void adjustAssembledBreakend(
@@ -165,10 +165,11 @@ static bool isLowQualitySpanningSVAlignment(
 /// Identify indels larger than \p minSize in the input alignment path (\p apath)
 ///
 /// \param[in] apath Input alignment which will be searched for large indels
+///
 /// \param[in] minSize Minimum qualifying indel size
+///
 /// \param[out] segments Return the indices in apath for each qualifying indel. Each qualifying indel has a
-/// (start,end)
-///                      index pair to account for combined insetion/deletion (ie. 'complex') events.
+/// (start,end) index pair to account for combined insetion/deletion (ie. 'complex') events.
 static void getLargeIndelSegments(
     const ALIGNPATH::path_t&                    apath,
     const unsigned                              minSize,
@@ -1280,7 +1281,8 @@ static bool isJumpAlignmentQCFail(const JumpAlignmentResult<int>& jumpAlignment)
 /// TODO change iterative refspan to a single consistent alignment criteria
 ///
 /// \param[in] alignmentScores Scores used for the purpose of assessing the quality of the jump aligner's two
-///                            subalignments on each side of the breakend
+/// subalignments on each side of the breakend
+///
 /// \return True if the jump alignment result is low quality and should be filtered out
 static bool isLowQualityJumpAlignment(
     const JumpAlignmentResult<int>& alignment, const AlignmentScores<int>& alignmentScores, const bool isRNA)
@@ -1411,8 +1413,9 @@ struct AlignData {
 /// Assemble candidate contigs for large SV candidates
 ///
 /// \param[in] alignData Initialized auxilary alignment info for sequence trimming
-/// \param[in] assemblyData Assembly data for a SV candidate that will be updated
-///                         to include contigs assembled and reference sequences
+///
+/// \param[in] assemblyData Assembly data for a SV candidate that will be updated to include contigs assembled
+/// and reference sequences
 ///
 /// \Return true if the reference region is valid and the assembly procedure is completed
 ///
@@ -1515,8 +1518,8 @@ bool static assembleJumpContigs(
 
 /// Align contigs of large SV candidates to reference
 ///
-/// \param alignData Auxilary alignment info for sequence trimming initialized in contig assembly
-///                  that will be updated during contig alignment
+/// \param alignData Auxilary alignment info for sequence trimming initialized in contig assembly that will be
+/// updated during contig alignment
 ///
 void static alignJumpContigs(
     const GSCOptions&                   opt,

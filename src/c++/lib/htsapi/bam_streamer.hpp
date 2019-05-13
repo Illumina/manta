@@ -52,11 +52,13 @@ struct stream_state_reporter {
 //
 struct bam_streamer : public stream_state_reporter, public boost::noncopyable {
   /// \param filename CRAM/BAM input file
+  ///
   /// \param referenceFilename Corresponding reference file. nullptr can be given here to indicate that the
-  ///            the reference is not being provided, but many CRAM files cannot be read in this case.
+  /// reference is not being provided, but many CRAM files cannot be read in this case.
+  ///
   /// \param region Restrict the stream to iterate through a specific region. The BAM/CRAM input file must be
-  ///            indexed for this option to work. If 'region' is not provided, the stream is configured to
-  ///            iterate through the entire alignment file.
+  /// indexed for this option to work. If 'region' is not provided, the stream is configured to iterate
+  /// through the entire alignment file.
   bam_streamer(const char* filename, const char* referenceFilename, const char* region = nullptr);
 
   ~bam_streamer() override;

@@ -370,15 +370,21 @@ private:
   }
 
   /// \brief Get addresses of all nodes in the graph which intersect with the query node. (A more general
-  ///        version of getNodeIntersect)
+  /// version of getNodeIntersect)
   ///
   /// \param[in] queryLocusIndex First part of query node address.
+  ///
   /// \param[in] queryNodeIndex Second part of query node address.
+  ///
   /// \param[in] searchNodes The set of nodes which will be searched for intersections with the query node.
+  ///
   /// \param[in] filterLocusIndex Intersections to nodes in this locus will be filtered out of the results.
+  ///
   /// \param[out] intersectingNodeAddresses Set of all intersecting node addresses. Any set contents are
   /// erased on input.
+  ///
   /// \param[in] isTestUsability If true, check whether a node intersection exceeds computability limits.
+  ///
   /// \return True if the query node is usable. This can only be false when isTestUsability is true.
   bool getIntersectingNodeAddressesCore(
       const LocusIndexType       queryLocusIndex,
@@ -391,10 +397,14 @@ private:
   /// \brief Get addresses of all nodes in the graph which intersect with the query node.
   ///
   /// \param[in] queryLocusIndex First part of query node address.
+  ///
   /// \param[in] queryNodeIndex Second part of query node address.
+  ///
   /// \param[out] intersectingNodeAddresses Set of all intersecting node addresses. Any set contents are
-  //  erased on input.
+  /// erased on input.
+  ///
   /// \param[in] isTestUsability If true, check whether a node intersection exceeds computability limits.
+  ///
   /// \return True if the query node is usable. This can only be false when isTestUsability is true.
   bool getIntersectingNodeAddresses(
       const LocusIndexType       queryLocusIndex,

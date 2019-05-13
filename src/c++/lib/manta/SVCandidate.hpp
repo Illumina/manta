@@ -61,8 +61,7 @@ struct SVCandidate {
   }
 
   /// \param[in] isExpandRegion If true, allow the breakpoint regions of this SVCandidate to expand to the
-  /// union of
-  ///    this and \p rhs.
+  /// union of this and \p rhs.
   ///
   /// \return False if the SVCandidates can't be merged because they do not intersect.
   bool merge(const SVCandidate& rhs, const bool isExpandRegion = true)
@@ -221,8 +220,7 @@ inline const char* label(const index_t i)
 }  // namespace SourceOfSVEvidenceInDNAFragment
 
 /// \brief A specialized SVCandidate which represents an SV hypothesis generated from a single piece of
-/// evidence, ie.
-///        a single SV 'observation'.
+/// evidence, ie. a single SV 'observation'.
 ///
 /// It is helpful to represent this case as a distinct specialization of SVCandidate because this allows
 /// additional detail on the nature of the SV evidence to be added onto the object, (eg. "This SV candidate is
@@ -236,8 +234,7 @@ struct SVObservation : public SVCandidate {
   }
 
   /// \return True if the evidence for this SV observation relies on only a single read (eg. CIGAR read
-  /// alignment) or
-  ///         relies on both reads of a paired end observation (eg. anomalous read pair)
+  /// alignment) or relies on both reads of a paired end observation (eg. anomalous read pair)
   bool isSingleReadSource() const
   {
     using namespace SourceOfSVEvidenceInDNAFragment;

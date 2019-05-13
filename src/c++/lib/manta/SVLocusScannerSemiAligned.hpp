@@ -47,9 +47,8 @@
 /// 5. Cases where the entire read is poorly aligned are filtered out.
 /// 6. For overlapping read pairs, any poorly aligned edges on the "interior" of the DNA fragment are filtered
 /// out. (see elaboration on this point below)
-/// 7. Poorly aligned edges are filtered out if they do not have high basecall quality, at least
-///    \p minHighBasecallQualityFraction of the edge basecalls must have basecall quality >= \p
-///    minBasecallQuality.
+/// 7. Poorly aligned edges are filtered out if they do not have high basecall quality, at least \p
+/// minHighBasecallQualityFraction of the edge basecalls must have basecall quality >= \p minBasecallQuality.
 ///
 /// The logic behind step (6) above is as follows. Consider an overlapping read pair represented schematically
 /// as:
@@ -72,22 +71,31 @@
 /// this case, step 6 would filter out the evidence from read1, but keep the evidence from read2.
 ///
 /// \param[in] bamRead The input read being evaluated.
+///
 /// \param[in] bamAlign A simplified representation of the bamRead's alignment. This information can be
-/// derived from
-///                     bamRead but is provided as a (presumed) cache optimization.
+/// derived from bamRead but is provided as a (presumed) cache optimization.
+///
 /// \param[in] refSeq Local reference sequence
+///
 /// \param[in] useOverlapPairEvidence When false, filter out read pairs which overlap.
+///
 /// \param[in] isAggressiveAdaptorCheck When true, filter out read pairs that might run into adapters based on
 /// an aggressive check
+///
 /// \param[out] leadingEdgePoorAlignmentLength Length of possible breakend-associated poor alignment on the
 /// read's leading edge.
+///
 /// \param[out] leadingEdgeRefPos The reference position of the first aligned base after the leading poorly
 /// aligned segment.
+///
 /// \param[out] trailingEdgePoorAlignmentLength Length of possible breakend-associated poor alignment on the
 /// read's trailing edge.
+///
 /// \param[out] trailingEdgeRefPos The reference position of the last aligned base before the trailing poorly
 /// aligned segment.
+///
 /// \param[in] minBasecallQuality See \p minHighBasecallQualityFraction
+///
 /// \param[in] minHighBasecallQualityFraction Poorly aligned edge must have \p minHighBasecallQualityFraction
 /// fraction of edge basecalls with basecall quality of \p minBasecallQuality or greater, otherwise the edge
 /// is filtered out.

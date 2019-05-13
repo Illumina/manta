@@ -36,13 +36,11 @@ bool is_mapped_pair(const bam_record& bam_read);
 ///
 bool is_mapped_chrom_pair(const bam_record& bam_read);
 
-/// \brief Test if this read part of mapped pair with "innie" orientation.
+/// \brief Test if this read is part of mapped pair with "innie" orientation.
 ///
-/// This does not test MAPQ or fragment size, but could
-/// be used as the core of a 'proper-pair' predicate.
+/// This does not test MAPQ or fragment size, but could be used as the core of a 'proper-pair' predicate.
 ///
-/// This is designed to return true for the common case
-/// of pos == mate_pos occurring for short FFPE fragments.
+/// This is designed to return true for the common case f pos == mate_pos occurring for short FFPE fragments.
 bool is_innie_pair(const bam_record& bam_read);
 
 /// Based on pair alignment information (MC tag) if available, detect cases where a read extends

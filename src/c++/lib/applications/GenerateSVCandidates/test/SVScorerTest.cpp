@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(test_addConservativeSplitReadSupport)
   // Here, altLnLhood > refLnLhood. So normalized probability(based on test_lnToProb)
   // of altLnLhood  = 1/exp(refLnLhood - altLnLhood)
   //                = 0.999909 which is greater than 0.999f
-  // // So it is a confident split read evidence for alt allele.
+  // So it is a confident split read evidence for alt allele.
   addConservativeSplitReadSupport(fragmentEvidence, true, sampleInfo1);
   BOOST_REQUIRE_EQUAL(sampleInfo1.alt.confidentSplitReadCount, 1);
 
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(test_addConservativeSplitReadSupport)
   // Here, refLnLhood > altLnLhood. So normalized probability(based on test_lnToProb)
   // of refLnLhood  = 1/exp(altLnLhood - refLnLhood)
   //                = 0.999909 which is greater than 0.999f
-  // // So it is a confident split read evidence for ref allele.
+  // So it is a confident split read evidence for ref allele.
   addConservativeSplitReadSupport(fragmentEvidence, true, sampleInfo4);
   BOOST_REQUIRE_EQUAL(sampleInfo4.ref.confidentSplitReadCount, 1);
   // Designed the case-4 where ref allele supports split evidence on BP2.

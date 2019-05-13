@@ -55,8 +55,7 @@ enum index_t {
 }  // namespace FragmentSizeType
 
 /// \brief This object centralizes the weights applied to different sources of SV evidence to indicate
-/// relative
-///        confidence in the accuracy of each observation.
+/// relative confidence in the accuracy of each observation.
 ///
 /// The evidence weights used in the SVLocus Graph represent an abstract strength of evidence supporting each
 /// edge. The evidence weights are reduced to small counts so that the weights can be used as part of a
@@ -119,19 +118,17 @@ struct SVLocusScanner {
   unsigned getMinTier2MapQ() const { return _opt.minTier2Mapq; }
 
   /// \brief Test \p bamRead to determine if it is from a paired-read DNA fragment with an anomalous
-  /// orientation or
-  ///        inferred fragment size
+  /// orientation or inferred fragment size
   ///
   /// Note that in the general case, Manta disregards the bam spec's 'proper pair' flag on input alignments
   /// and instead directly determines anomalous state.
   bool isAnomalousReadPair(const bam_record& bamRead, const unsigned defaultReadGroupIndex) const;
 
   /// \breif Test \p bamRead to determine if it is from a paired-end DNA fragment with anomalous orientation
-  /// or size,
-  ///        excluding the case of an anomalously short standard orientation read pair
+  /// or size, excluding the case of an anomalously short standard orientation read pair
   ///
-  /// According to this method only mapped read pairs can be anomalous. All single read
-  /// anomalies (SA tags, CIGAR, semi-aligned) are detected elsewhere.
+  /// According to this method only mapped read pairs can be anomalous. All single read anomalies (SA tags,
+  /// CIGAR, semi-aligned) are detected elsewhere.
   bool isNonCompressedAnomalousReadPair(
       const bam_record& bamRead, const unsigned defaultReadGroupIndex) const;
 
@@ -163,8 +160,8 @@ struct SVLocusScanner {
   /// \brief A fast test to eliminate reads which are very unlikely to contribute any SV or indel evidence
   ///
   /// \param[in,out] incountsPtr If not nullptr, the pointed object is appended with statistics on the SV
-  /// evidence
-  ///                           type associated with \p bamRead
+  /// evidence type associated with \p bamRead
+  ///
   /// \return True if it is probable that \p bamRead provides evidence for an SV or indel
   bool isSVEvidence(
       const bam_record&               bamRead,
@@ -196,8 +193,7 @@ struct SVLocusScanner {
   /// placed in candidate.bp2
   ///
   /// \param[out] candidates Report all candidates found in the input read pair to this structure. This vector
-  /// is
-  ///    cleared on input.
+  /// is cleared on input.
   void getBreakendPair(
       const bam_record&               localRead,
       const bam_record*               remoteReadPtr,
@@ -251,23 +247,22 @@ struct SVLocusScanner {
     Range largeScaleEventBreakendRegion;
 
     /// \brief Fragment size range used to determine if a fragment is considered non-anomalous (ie. "proper")
-    ///        during SV discovery.
+    /// during SV discovery.
     Range properPair;
 
     /// \brief Fragment size range used to determine if a fragment will be evaluated as paired-read support
-    ///        during SV scoring.
+    /// during SV scoring.
     Range evidencePair;
 
     /// \brief Fragment size range over the [0.05,0.95] quantiles of the fragment size distribution.
     Range fifthPerc;
 
     /// \brief Shadow read support for a breakend is searched for from the breakend location to this distance
-    ///        upstream.
+    /// upstream.
     int shadowSearchDistance = 0;
 
     /// \brief Beyond the properPair anomalous threshold, this threshold is used to distinguish 'close' and
-    /// 'far'
-    ///        pairs for the purpose of setting the anomalous pair evidence weight
+    /// 'far' pairs for the purpose of setting the anomalous pair evidence weight
     int minDistantFragmentSize = 0;
 
     /// \brief Used to set expanded breakend sizes for large events \TODO more detail?
