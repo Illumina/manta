@@ -26,6 +26,7 @@
 #include "SVEvidence.hpp"
 #include "htsapi/bam_record_util.hpp"
 
+/// Convenience function to initialize an SVFragmentEvidenceRead
 void setReadEvidence(
     const unsigned          minMapQ,
     const unsigned          minTier2MapQ,

@@ -25,11 +25,11 @@
 
 #include "blt_util/qscore_cache.hpp"
 
-/// this object provides a variation on regular qscores by incorporating SNP probability
+/// Provides a variation on regular qscores by incorporating SNP probability
 ///
-/// SNV probability limits the error if we have to explain the difference
-/// between a read and the reference, however it should not be used in cases where the
-/// biological variation has already been accounted for in the comparison.
+/// SNP probability limits the error if we have to explain the difference between a read and the reference,
+/// however it should not be used in cases where the biological variation has already been accounted for in
+/// the comparison.
 ///
 struct qscore_snp {
   qscore_snp(const double snp_prob);

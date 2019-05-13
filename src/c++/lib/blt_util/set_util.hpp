@@ -29,15 +29,14 @@
 template <typename T>
 void inplaceSetSubtract(const std::set<T>& A, std::set<T>& B)
 {
-  typedef typename std::set<T>::const_iterator scit;
-  scit                                         ait(A.begin()), ait_end(A.end());
-  scit                                         bit(B.begin()), bit_end(B.end());
+  auto ait(A.cbegin()), ait_end(A.cend());
+  auto bit(B.cbegin()), bit_end(B.cend());
   while ((bit != bit_end) && (ait != ait_end)) {
     if (*ait < *bit) {
       ++ait;
     } else {
       if (*ait == *bit) {
-        const scit blast(bit);
+        const auto blast(bit);
         ++bit;
         B.erase(blast);
       } else {

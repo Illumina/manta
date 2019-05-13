@@ -160,10 +160,10 @@ void SVLocusSet::merge(const SVLocus& inputLocus)
   // An improved procedure would identify only the high complexity nodes, and edit startLocus to remove them
   // (as well as any orphan nodes resulting from the complex node removal).
   //
-  // Given the improved procedure would be difficult to implement, a stopgap measure is used below to approximate this:
-  // the overwhelming majority of merge input are simple 2 node loci. If the complexity check continues to
-  // check and filter these simple cases while skipping filtration of more complex loci, there is no risk of
-  // throwing out a good edge by transitive association with a complex node.
+  // Given the improved procedure would be difficult to implement, a stopgap measure is used below to
+  // approximate this: the overwhelming majority of merge input are simple 2 node loci. If the complexity
+  // check continues to check and filter these simple cases while skipping filtration of more complex loci,
+  // there is no risk of throwing out a good edge by transitive association with a complex node.
   //
   const bool isTestUsability(inputLocus.size() <= 2);
   for (const nodeMap_t::value_type& startLocusNodeVal : startLocusNodeMap) {
@@ -235,12 +235,12 @@ void SVLocusSet::merge(const SVLocus& inputLocus)
         isStartLocusDuplicatedInAnotherGraphLocus = (headLocusIndex != startLocusIndex);
 
       // Rerun the search for nodes intersecting the start node:
-      // (1) This is a lazy/safe way to update the intersecting nodes with their new addresses resulting from
-      // the
-      //     above locus consolidation step.
-      // (2) It appears to be possible for this search to reveal new mergeable nodes, for which additional
-      // rounds
-      //     of locus consolidation are required. \TODO Document an example where this could occur
+      // 1. This is a lazy/safe way to update the intersecting nodes with their new addresses resulting from
+      // the above locus consolidation step.
+      // 2. It appears to be possible for this search to reveal new mergeable nodes, for which additional
+      // rounds of locus consolidation are required.
+      //
+      // \TODO Document an example where this could occur
       getMergeableIntersectingNodeAddresses(
           startLocusIndex,
           startLocusNodeIndex,
@@ -548,12 +548,12 @@ void SVLocusSet::getMergeableIntersectingNodeAddresses(
   //
   // There are two ways sets of mergeable nodes can occur:
   //
-  // (1) There is a set of nodes which overlap with both query node and one
+  // 1. There is a set of nodes which overlap with both query node and one
   // of the remote nodes that the query has an edge connecting to (ie they have a shared edge).
   // When totaled, the evidence count of these edges plus the query node edge
   // is at least minMergeEdgeCount. See schematic below.
   //
-  // (2) The query node either contains an edge which is at least minMergeEdgeCount
+  // 2. The query node either contains an edge which is at least minMergeEdgeCount
   // or will contain such an edge due to (1), in this case the query node can be merged
   // with a locally overlapping node which also contains an edge which is greater than
   // minMergeEdgeCount. Note that in case (2) remote node intersection is not required.

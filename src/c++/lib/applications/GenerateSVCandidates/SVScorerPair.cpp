@@ -403,7 +403,8 @@ static void getFragProb(
 #endif
 }
 
-/// count the read pairs supporting the alternate allele in each sample, using data we already produced during candidate generation:
+/// count the read pairs supporting the alternate allele in each sample, using data we already produced during
+/// candidate generation:
 ///
 void SVScorer::processExistingAltPairInfo(
     const PairOptions&        pairOpt,

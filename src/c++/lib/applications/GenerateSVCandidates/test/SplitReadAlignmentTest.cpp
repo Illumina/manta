@@ -22,7 +22,9 @@
 ///
 
 #include <iostream>
+
 #include "boost/test/unit_test.hpp"
+
 #include "options/CallOptionsShared.hpp"
 #include "test/testAlignmentDataUtil.hpp"
 

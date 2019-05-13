@@ -151,7 +151,8 @@ static void updateSABreakend(
 {
   // Need to use the match descriptors to determine if the split is upstream (i.e. 5' assuming fwd strand)
   // of the current alignment (i.e. we are clipped on the left side) or downstream
-  // Below is the logic to convert these  to breakend candidates (everything is relative to the forward strand):
+  // Below is the logic to convert these  to breakend candidates (everything is relative to the forward
+  // strand):
   //
   // DownStream => RIGHT_OPEN
   // Upstream => LEFT_OPEN

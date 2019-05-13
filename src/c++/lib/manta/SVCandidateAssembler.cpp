@@ -342,7 +342,8 @@ void SVCandidateAssembler::getBreakendReads(
 
   bool isMaxLocalDepthForRemoteReadRetrievalTriggered(false);
 #ifdef FWDREV_CHECK
-  /// sanity check that remote and shadow reads suggest an insertion pattern before doing an expensive remote recovery:
+  /// sanity check that remote and shadow reads suggest an insertion pattern before doing an expensive remote
+  /// recovery:
   std::vector<int> fwdSemiReadPos;
   std::vector<int> revSemiReadPos;
 #endif

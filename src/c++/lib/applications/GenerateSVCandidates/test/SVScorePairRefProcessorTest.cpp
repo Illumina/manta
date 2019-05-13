@@ -26,7 +26,8 @@
 
 BOOST_AUTO_TEST_SUITE(SVScorePairRefProcessor_test_suite)
 
-// Test whether a fragment will support a breakpoint for the ref allele if the following conditions are satisfied:
+// Test whether a fragment will support a breakpoint for the ref allele if the following conditions are
+// satisfied:
 // 1. Start of bam read should overlap with the search range
 // 2. Fragment length should be greater than or equal to min fragment length of the sample
 // 3. Fragment length should be less than or equal to max fragment length of the sample

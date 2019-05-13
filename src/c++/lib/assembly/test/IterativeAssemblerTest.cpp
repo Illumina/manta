@@ -72,11 +72,11 @@ BOOST_AUTO_TEST_CASE(test_BasicAssembler)
   AssemblyReadInput reads;
 
   // clang-format off
-    reads.emplace_back("ACGTGTATTACC");
-    reads.emplace_back(  "GTGTATTACCTA");
-    reads.emplace_back(      "ATTACCTAGTAC");
-    reads.emplace_back(        "TACCTAGTACTC");
-    reads.emplace_back("123456789123");
+  reads.emplace_back("ACGTGTATTACC");
+  reads.emplace_back(  "GTGTATTACCTA");
+  reads.emplace_back(      "ATTACCTAGTAC");
+  reads.emplace_back(        "TACCTAGTACTC");
+  reads.emplace_back("123456789123");
   // clang-format on
 
   AssemblyReadOutput readInfo;
@@ -106,9 +106,9 @@ BOOST_AUTO_TEST_CASE(test_IterativeKmer)
   AssemblyReadInput reads;
 
   // clang-format off
-    reads.emplace_back("ACACACACGATG");
-    reads.emplace_back(        "GATGTCTCTCTC");
-    reads.emplace_back("123456789123");
+  reads.emplace_back("ACACACACGATG");
+  reads.emplace_back(        "GATGTCTCTCTC");
+  reads.emplace_back("123456789123");
   // clang-format on
 
   AssemblyReadOutput readInfo;
@@ -139,9 +139,9 @@ BOOST_AUTO_TEST_CASE(test_branching_basic)
   AssemblyReadInput reads;
 
   // clang-format off
-    reads.emplace_back("ATATAGACGATG");
-    reads.emplace_back(      "ACGATGTCTATCTT");
-    reads.emplace_back(      "ACGATGTTGGCCTT");
+  reads.emplace_back("ATATAGACGATG");
+  reads.emplace_back(      "ACGATGTCTATCTT");
+  reads.emplace_back(      "ACGATGTTGGCCTT");
   // clang-format on
 
   AssemblyReadOutput readInfo;
@@ -179,9 +179,9 @@ BOOST_AUTO_TEST_CASE(test_branching_iterative)
   AssemblyReadInput reads;
 
   // clang-format off
-    reads.emplace_back("ACACACACGATG");
-    reads.emplace_back(        "GATGGCCCCCCC");
-    reads.emplace_back(        "GATGTCTCTCTC");
+  reads.emplace_back("ACACACACGATG");
+  reads.emplace_back(        "GATGGCCCCCCC");
+  reads.emplace_back(        "GATGTCTCTCTC");
   // clang-format on
 
   AssemblyReadOutput readInfo;

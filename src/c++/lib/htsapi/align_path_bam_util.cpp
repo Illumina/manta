@@ -62,6 +62,6 @@ void edit_bam_cigar(const path_t& apath, bam1_t& br)
     bc.n_cigar = new_n_cigar;
   }
 
-  //update content of cigar array:
+  // update content of cigar array:
   apath_to_bam_cigar(apath, bam_get_cigar(&br));
 }

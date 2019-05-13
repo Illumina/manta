@@ -26,7 +26,8 @@
 SVScorePairInitParams::SVScorePairInitParams(
     const SVLocusScanner& readScanner, const SVCandidate& sv, const bool isBp1)
 {
-  /// In case of breakend homology approximate the breakend as a point event at the center of the possible range:
+  /// In case of breakend homology approximate the breakend as a point event at the center of the possible
+  /// range:
   pos_t centerPos1 = (sv.bp1.interval.range.center_pos());
   pos_t centerPos2 = (sv.bp2.interval.range.center_pos());
 

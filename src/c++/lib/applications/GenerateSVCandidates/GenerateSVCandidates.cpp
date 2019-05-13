@@ -36,9 +36,9 @@
 #include "manta/SVCandidateUtil.hpp"
 
 // A bus error on PPC64 (DRAGEN-1789) seems to be occurring in the boost lockfree queue logic
-// of the boost version of CTPL, although this was not traced down to a specific error mechanism. 
+// of the boost version of CTPL, although this was not traced down to a specific error mechanism.
 // To avoid this error under the assumption that there is a problem with boost CTPL, switch to
-// the STL version of CTPL instead: 
+// the STL version of CTPL instead:
 #include "ctpl_stl.h"
 
 #include <iostream>
@@ -265,7 +265,8 @@ static void runGSC(const GSCOptions& opt, const char* progName, const char* prog
 
   // This is sufficient to rethrow any worker thread exceptions.
   //
-  // Note that we don't catch them here, just throw down to the bottom- level handler for GenerateSVCandidates:
+  // Note that we don't catch them here, just throw down to the bottom- level handler for
+  // GenerateSVCandidates:
   for (auto& edgeReturnValue : edgeReturnValues) {
     edgeReturnValue.get();
   }

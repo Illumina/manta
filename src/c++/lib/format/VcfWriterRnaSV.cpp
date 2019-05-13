@@ -70,7 +70,7 @@ void VcfWriterRnaSV::modifyTranslocInfo(
       str(boost::format("MATE_BND_DEPTH=%i") %
           (isFirstOfPair ? baseScoringInfo.bp2MaxDepth : baseScoringInfo.bp1MaxDepth)));
   {
-    ///TODO better multisample handler here:
+    /// TODO better multisample handler here:
     const unsigned sampleIndex(0);
 
     const SVSampleAlleleInfo& refinfo(baseScoringInfo.samples[sampleIndex].ref);

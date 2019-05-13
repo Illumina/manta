@@ -34,12 +34,12 @@
 /// \brief classes required to build the SVEvidence object
 ///
 /// Note that the SVEvidence object is a kind of mini-database, accumulating all information about the
-/// relationship of each fragment with a specific SV-candidate. This allows us to tie together:
+/// relationship of each fragment with a specific SV candidate. This allows us to tie together:
 ///
-/// (1) spanning read information from the full fragment
-/// (2) split read information from read1
-/// (3) split read information from read2
-/// (4) fragment mapping properties from read1 & read2
+/// 1. spanning read information from the full fragment
+/// 2. split read information from read1
+/// 3. split read information from read2
+/// 4. fragment mapping properties from read1 & read2
 ///
 /// ...for each fragment. The object stores this per-fragment information for all fragments impacting
 /// all alleles at a given locus (But note at present we limit the alternate alleles to one).
@@ -62,7 +62,7 @@ struct SVFragmentEvidenceAlleleBreakendPerRead {
 
 std::ostream& operator<<(std::ostream& os, const SVFragmentEvidenceAlleleBreakendPerRead& svbpr);
 
-/// track all support data from an individual fragment specific to an individual breakend of a single allele
+/// Track all support data from an individual fragment specific to an individual breakend of a single allele
 ///
 struct SVFragmentEvidenceAlleleBreakend {
   SVFragmentEvidenceAlleleBreakendPerRead& getRead(const bool isRead1) { return (isRead1 ? read1 : read2); }
@@ -88,7 +88,7 @@ struct SVFragmentEvidenceAlleleBreakend {
 
 std::ostream& operator<<(std::ostream& os, const SVFragmentEvidenceAlleleBreakend& svbp);
 
-/// track all support data from an individual fragment specific to a single allele of an SV candidate
+/// Track all support data from an individual fragment specific to a single allele of an SV candidate
 ///
 struct SVFragmentEvidenceAllele {
   SVFragmentEvidenceAlleleBreakend& getBp(const bool isBp1) { return (isBp1 ? bp1 : bp2); }
@@ -115,7 +115,7 @@ struct SVFragmentEvidenceAllele {
 
 std::ostream& operator<<(std::ostream& os, const SVFragmentEvidenceAllele& sval);
 
-/// store properties of the reads in a fragment which are not tightly coupled to any one allele/bp, etc....
+/// Store properties of the reads in a fragment which are not tightly coupled to any one allele/bp, etc....
 ///
 struct SVFragmentEvidenceRead {
   /// TODO set anchor policy wrt shadow state!!!
@@ -144,9 +144,9 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const SVFragmentEvidenceRead& svr);
 
-/// track all support data from an individual fragment specific to an SV hypothesis
+/// Track all support data from an individual fragment specific to an SV hypothesis
 ///
-/// this is both to prevent double-counting of evidence and to consolidate different
+/// This is both to prevent double-counting of evidence and to consolidate different
 /// sources of information (paired-split, etc).
 ///
 struct SVFragmentEvidence {
@@ -220,7 +220,7 @@ struct SVFragmentEvidence {
 
 std::ostream& operator<<(std::ostream& os, const SVFragmentEvidence& sve);
 
-/// track all support data for an SV hypothesis
+/// Track all support data for an SV hypothesis
 ///
 /// Note how this object is different than SVScoreInfoSomatic -- it is highly detailed and meant to be
 /// processed to create summary statistics and scores later. Those scores and summary statistics should go

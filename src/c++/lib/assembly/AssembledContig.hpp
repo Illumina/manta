@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include "blt_util/known_pos_range2.hpp"
-
 #include <iosfwd>
 #include <set>
 #include <string>
 #include <vector>
+
+#include "blt_util/known_pos_range2.hpp"
 
 /// \brief data pertaining to a de-novo assembly contig
 ///

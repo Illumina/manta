@@ -48,7 +48,7 @@ struct reference_contig_segment {
   void get_substring(const pos_t pos, const pos_t length, std::string& substr) const
   {
     if (pos < _offset || (pos + length) > end()) {
-      //slow path (minority of calls):
+      // slow path (minority of calls):
       substr.clear();
       for (int i(0); i < length; ++i) {
         substr.push_back(get_base(pos + i));

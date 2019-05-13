@@ -43,8 +43,7 @@ struct Program {
 
   const char* buildTime() const;
 
-  //protected:
-public:
+protected:
   virtual void runInternal(int argc, char* argv[]) const = 0;
 
 private:

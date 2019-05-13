@@ -357,6 +357,7 @@ static void getSVSupportSummary(const SVEvidence& evidence, SVScoreInfo& baseInf
   }
 }
 
+/// Check for and fix conflicts in pair and split read support for one sample
 static void resolvePairSplitConflictsSample(
     const bool isFindAltPairConflict, SVEvidence::evidenceTrack_t& sampleEvidence)
 {
@@ -366,7 +367,7 @@ static void resolvePairSplitConflictsSample(
 #endif
     SVFragmentEvidence& fragev(val.second);
 
-    /// filtration scheme only works if there's pair and split support for the same fragment:
+    // This filtration scheme is only relevant if there's pair and split support for the same fragment:
     if (!fragev.isAnySpanningPairSupport()) continue;
     //    if (! (fragev.isAnySplitReadSupport(true) || fragev.isAnySplitReadSupport(false))) continue;
 
@@ -389,8 +390,13 @@ static void resolvePairSplitConflictsSample(
 
 #ifdef DEBUG_SCORE
     log_os << __FUNCTION__ << ": fragev " << fragev << "\n";
-    log_os << __FUNCTION__ << ": r1/r2 " << isRead1Split << " " << isRead2Split << "\n";
+    log_os << __FUNCTION__ << ": ref/alt pair " << refPairLhood << " " << altPairLhood << "\n";
+    log_os << __FUNCTION__ << ": r1 issplit/refLhood/altLhood " << isRead1Split << " " << refSplitLnLhoodRead1
+           << " " << altSplitLnLhoodRead1 << "\n";
+    log_os << __FUNCTION__ << ": r2 issplit/refLhood/altLhood " << isRead2Split << " " << refSplitLnLhoodRead2
+           << " " << altSplitLnLhoodRead2 << "\n";
 #endif
+
     const bool isRefPair(refPairLhood > altPairLhood);
     const bool isAltPair(altPairLhood > refPairLhood);
 
@@ -438,7 +444,9 @@ static void resolvePairSplitConflictsSample(
   }
 }
 
-/// check for cases where pair support was added in error, the fragment does span the breakpoint, but the
+/// Check for and fix conflicts in pair and split read support in all samples
+///
+/// Check for cases where pair support was added in error, the fragment does span the breakpoint, but the
 /// alignment past the breakpoint is poor, and is better in the alt allele.
 ///
 /// note this might be done more naturally during the pair computation, but all the info we need is added
@@ -447,6 +455,7 @@ static void resolvePairSplitConflicts(const SVCandidate& sv, SVEvidence& evidenc
 {
   if (sv.isImprecise()) return;
 
+  // Only find conflicts in pairs supporting the ALT allele for SVs below this size:
   static const pos_t maxAltPairConflictSearch(1000);
   const bool         isFindAltPairConflict(sv.centerSize() <= maxAltPairConflictSearch);
 
@@ -1343,11 +1352,11 @@ static void scoreSomaticSV(
   assert(!junctionData.empty());
   const bool isMJEvent(junctionData.size() > 1);
 
-  // somatic score is computed at a high stringency date tier (1) and low stringency tier (2), the min value
-  // is
-  // kept as the final reported quality:
+  // somatic score is computed at a high stringency tier (1) and low stringency tier (2), the min value is
+  // kept as the final reported quality
   static const unsigned tierCount(2);
-  int                   tierScore[tierCount] = {0, 0};
+
+  int tierScore[tierCount] = {0, 0};
 
   // hard code 1 tumor - 1 normal for now, should be able to support multiple tumors in future:
   assert(sampleCount == 2);

@@ -37,11 +37,11 @@ BOOST_AUTO_TEST_CASE(test_SmallAssembler1)
   AssemblyReadInput reads;
 
   // clang-format off
-    reads.emplace_back("ACGTGTATTACC");
-    reads.emplace_back(  "GTGTATTACCTA");
-    reads.emplace_back(      "ATTACCTAGTAC");
-    reads.emplace_back(        "TACCTAGTACTC");
-    reads.emplace_back("123456789123");
+  reads.emplace_back("ACGTGTATTACC");
+  reads.emplace_back(  "GTGTATTACCTA");
+  reads.emplace_back(      "ATTACCTAGTAC");
+  reads.emplace_back(        "TACCTAGTACTC");
+  reads.emplace_back("123456789123");
   // clang-format on
 
   AssemblyReadOutput readInfo;
@@ -72,11 +72,11 @@ BOOST_AUTO_TEST_CASE(test_PoisonRead)
   AssemblyReadInput reads;
 
   // clang-format off
-    reads.emplace_back("ACGTGTATTACC");
-    reads.emplace_back(  "GTGTATTACCTA");
-    reads.emplace_back(      "ATTACCTAGTAC");
-    reads.emplace_back(        "TACCTAGTACTC");
-    reads.emplace_back("AAAAAAAAAAAAAAAAAAAA");
+  reads.emplace_back("ACGTGTATTACC");
+  reads.emplace_back(  "GTGTATTACCTA");
+  reads.emplace_back(      "ATTACCTAGTAC");
+  reads.emplace_back(        "TACCTAGTACTC");
+  reads.emplace_back("AAAAAAAAAAAAAAAAAAAA");
   // clang-format on
 
   AssemblyReadOutput readInfo;
@@ -108,12 +108,12 @@ BOOST_AUTO_TEST_CASE(test_supportingReadConsistency)
   AssemblyReadInput reads;
 
   // clang-format off
-    reads.emplace_back(        "AAACGTGTATTA");
-    reads.emplace_back(          "ACGTGTATTACC");
-    reads.emplace_back(           "CGTGTATTACCT");
-    reads.emplace_back(            "GTGTATTACCTA");
-    reads.emplace_back(                "ATTACCTAGTAC");
-    reads.emplace_back(                  "TACCTAGTACTC");
+  reads.emplace_back(        "AAACGTGTATTA");
+  reads.emplace_back(          "ACGTGTATTACC");
+  reads.emplace_back(           "CGTGTATTACCT");
+  reads.emplace_back(            "GTGTATTACCTA");
+  reads.emplace_back(                "ATTACCTAGTAC");
+  reads.emplace_back(                  "TACCTAGTACTC");
   // clang-format on
 
   // the above reads build a contig ACGTG TATTACC TAGTAC
@@ -123,11 +123,11 @@ BOOST_AUTO_TEST_CASE(test_supportingReadConsistency)
   // Instead, the reads below build a contig CTTA GCTA ACGTG GCC
 
   // clang-format off
-    reads.emplace_back("CCCTTAGCTAAC");
-    reads.emplace_back(  "CTTAGCTAACGT");
-    reads.emplace_back(    "TAGCTAACGTGG");
-    reads.emplace_back(      "GCTAACGTGGCC");
-    reads.emplace_back(         "AACGTGGCCTAG");
+  reads.emplace_back("CCCTTAGCTAAC");
+  reads.emplace_back(  "CTTAGCTAACGT");
+  reads.emplace_back(    "TAGCTAACGTGG");
+  reads.emplace_back(      "GCTAACGTGGCC");
+  reads.emplace_back(         "AACGTGGCCTAG");
   // clang-format on
 
   AssemblyReadOutput readInfo;

@@ -23,16 +23,16 @@
 ///
 
 #include "SplitReadAlignment.hpp"
+
+#include <cassert>
+#include <cmath>
+#include <iostream>
+
 #include "blt_util/blt_types.hpp"
 #include "blt_util/log.hpp"
 #include "blt_util/seq_printer.hpp"
 #include "common/Exceptions.hpp"
 #include "htsapi/SimpleAlignment_bam_util.hpp"
-
-#include <cassert>
-#include <cmath>
-
-#include <iostream>
 
 //#define DEBUG_SRA
 
@@ -46,7 +46,7 @@ std::ostream& operator<<(std::ostream& os, const SRAlignmentInfo& info)
   return os;
 }
 
-/// \param[out] return the LnLhood expected from a perfect match to the reference
+/// \return Log likelihood expected from a perfect match to the reference
 static float getLnLhood(
     const std::string&      querySeq,
     const qscore_snp&       qualConvert,
@@ -84,6 +84,7 @@ static float getLnLhood(
       lnLhood += qualConvert.qphred_to_ln_comp_error_prob(baseQual);
     }
 
+    // Break early if we already know the score is less than the best score so far:
     if (isBest && (lnLhood < bestLnLhood)) break;
   }
 
@@ -270,7 +271,8 @@ void splitReadAligner(
     BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
   }
 
-  // do one high-speed pass to find the optimal alignment (in terms of lhood), then compute all the goodies later:
+  // do one high-speed pass to find the optimal alignment (in terms of lhood), then compute all the goodies
+  // later:
   float    bestLnLhood(0);
   unsigned bestPos(0);
   {

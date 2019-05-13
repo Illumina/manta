@@ -528,7 +528,7 @@ void SVScorePairAltProcessor::processClearedRecord(
   setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, mapq, readSize, isRealignedTemplate, evRead);
 
   if (isRepeatChimeraAlignment) {
-    //enter the mate read:
+    // enter the mate read:
     SVFragmentEvidenceRead& evMateRead(fragment.getRead(!bamRead.is_first()));
     setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, mapq, readSize, isRealignedTemplate, evMateRead);
   }

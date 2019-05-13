@@ -24,20 +24,19 @@
 
 #pragma once
 
-#include "blt_util/pos_processor_base.hpp"
-#include "blt_util/stage_manager.hpp"
-#include "svgraph/GenomeIntervalUtil.hpp"
+#include <memory>
 
 #include "boost/noncopyable.hpp"
 
-#include <memory>
+#include "blt_util/pos_processor_base.hpp"
+#include "blt_util/stage_manager.hpp"
+#include "svgraph/GenomeIntervalUtil.hpp"
 
 struct depth_buffer_compressible;
 struct SVLocusSet;
 
 /// \brief This objects helps SVLocusSetFinder manage data which needs to be updated as a funciton of the
-/// current
-///        genome scanning location.
+/// current genome scanning location.
 ///
 /// SVLocusSetFinder is designed to be used by scanning regions of the genome left ot right. Certain data
 /// structures in SVLocusSetFinder need to be updated as a function of where that scan process currently is
@@ -46,22 +45,23 @@ struct SVLocusSet;
 ///
 /// pos_processor_base:
 ///
-/// This inherits from pos_processor_base to facilitate a "rolling" execution of
-/// functions at a defined positional offset less than the position of the most recent
-/// read alignment input. These offset functions will (1) trigger the inline graph denoising
-/// process (2) clean up buffered read depth data after it is no longer needed.
+/// This inherits from pos_processor_base to facilitate a "rolling" execution of functions at a defined
+/// positional offset less than the position of the most recent read alignment input. These offset functions
+/// will (1) trigger the inline graph denoising process (2) clean up buffered read depth data after it is no
+/// longer needed.
 ///
 struct SVLocusSetFinderActiveRegionManager : public pos_processor_base, private boost::noncopyable {
   /// \param[in] scanRegion The genomic region which the SVLocusSetFinder object will translate into an
-  /// SVLocusGraph \param[in] svLociPtr Pointer to the SV Locus graph requiring region-based management
+  /// SVLocusGraph
+  ///
+  /// \param[in] svLociPtr Pointer to the SV Locus graph requiring region-based management
   /// \param[in] positionReadDepthEstimatePtr Pointer to depth estimate tracker, which needs to be cleared as
-  /// a
-  ///                                         function of the current active region
+  /// a function of the current active region
+  ///
   /// \param[in] denoiseRegionProtectedBorderSize Length in bases of the region protected from denoising. This
-  /// region
-  ///              extends back from the highest value provided so far to handle_new_pos_value AND is applied
-  ///              on the beginning and the end of the scan range, unless the scan range is determined to
-  ///              intersect the edge of a chromosome
+  /// region extends back from the highest value provided so far to handle_new_pos_value AND is applied on the
+  /// beginning and the end of the scan range, unless the scan range is determined to intersect the edge of a
+  /// chromosome
   ///
   SVLocusSetFinderActiveRegionManager(
       const GenomeInterval&                      scanRegion,
@@ -90,6 +90,7 @@ private:
   /// For more general background see stage_manager and its associated tests.
   ///
   /// \param stage_no the stage id is used to determine what logic to execute on the given position
+  ///
   /// \param pos execute stage specific logic on this position number
   void process_pos(const int stage_no, const pos_t pos) override;
 

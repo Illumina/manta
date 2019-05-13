@@ -127,8 +127,8 @@ struct SVScorer {
   SVScorer(const GSCOptions& opt, const SVLocusScanner& readScanner, const bam_header_info& header);
 
   /// Gather supporting read evidence and generate:
-  /// 1) diploid quality score and genotype for SV candidate
-  /// 2) somatic quality score
+  /// 1. diploid quality score and genotype for SV candidate
+  /// 2. somatic quality score
   ///
   /// \param mjModelScoreInfo standard (junction-independent) scoring information for each junction
   /// \param mjJointModelScoreInfo  joint junction scoring information used for cases where a
@@ -177,8 +177,9 @@ private:
       SVEvidence&               evidence,
       SVEvidenceWriterData&     svSupports);
 
-  /// estimate pair support for an sv candidate
-  /// restricted to simple indel style svs
+  /// Estimate pair support for an sv candidate
+  ///
+  /// This is restricted to simple indel-style SVs
   void getSVAltPairSupport(
       const PairOptions&             pairOpt,
       const SVCandidateAssemblyData& assemblyData,
@@ -186,14 +187,14 @@ private:
       SVEvidence&                    evidence,
       std::vector<pairProcPtr>&      pairProcList);
 
-  /// find spanning read support for the reference allele for sv candidate
+  /// Find spanning read support for the reference allele for sv candidate
   void getSVRefPairSupport(
       const PairOptions&        pairOpt,
       const SVCandidate&        sv,
       SVEvidence&               evidence,
       std::vector<pairProcPtr>& pairProcList);
 
-  /// find paired read support for ref and alt alleles
+  /// Find paired read support for ref and alt alleles
   void getSVPairSupport(
       const SVCandidateSetData&      svData,
       const SVCandidateAssemblyData& assemblyData,
@@ -202,7 +203,21 @@ private:
       SVEvidence&                    evidence,
       SVEvidenceWriterData&          svSupports);
 
-  /// find split read support for ref and alt alleles
+  /// \brief Find split read support for ref and alt alleles
+  ///
+  /// \param assemblyData Assembly results for the given candidate SV
+  ///
+  /// \param sv Candidate SV for which split read support is being enumerated
+  ///
+  /// \param svId Structural variant ID tag used to annotate BAM output used for debugging
+  ///
+  /// \param ssInfo Model-agnostic summary information for the candidate SV
+  ///
+  /// \param evidence The structure used to return all split read information for the variant, used for
+  /// generating scores under specific variant models.
+  ///
+  /// \param svSupports Structure into which supporting evidence reads can be added for BAM output used in
+  /// debugging
   void getSVSplitReadSupport(
       const SVCandidateAssemblyData& assemblyData,
       const SVCandidate&             sv,
@@ -211,7 +226,7 @@ private:
       SVEvidence&                    evidence,
       SVEvidenceWriterData&          svSupports);
 
-  /// determine maximum depth and MQ0 frac in region around breakend of normal sample
+  /// Determine maximum depth and MQ0 frac in region around breakend of normal sample
   void getBreakendMaxMappedDepthAndMQ0(
       const bool        isTumorOnly,
       const bool        isMaxDepth,
@@ -220,18 +235,17 @@ private:
       unsigned&         maxDepth,
       float&            MQ0Frac);
 
-  /// apply all scoring models relevant to this event:
+  /// Apply all scoring models relevant to this event:
   ///
   /// \param junctionData one element describing each junction of an event, for normal (single-junction)
-  /// candidates,
-  ///                     the vector size should be one
+  /// candidates, the vector size should be one
   void computeAllScoreModels(
       const bool                           isSomatic,
       const bool                           isTumorOnly,
       const std::vector<JunctionCallInfo>& junctionData,
       SVModelScoreInfo&                    modelScoreInfo);
 
-  /// accumulate (model-agnostic) evidence for the SV alt/ref alleles
+  /// Accumulate (model-agnostic) evidence for the SV alt/ref alleles
   ///
   /// This step gathers information (such as counts and allele likelihoods) to be used downstream by more
   /// specific (germline, somatic, etc..) scoring models.

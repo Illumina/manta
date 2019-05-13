@@ -24,14 +24,13 @@
 
 #pragma once
 
+#include <cstdint>
+#include <iosfwd>
+#include <string>
+
 #include "blt_util/known_pos_range2.hpp"
 #include "blt_util/qscore_snp.hpp"
 #include "htsapi/bam_record.hpp"
-
-#include <cstdint>
-
-#include <iosfwd>
-#include <string>
 
 struct SRAlignmentInfo {
   unsigned alignPos        = 0;
@@ -51,6 +50,7 @@ struct SRAlignmentInfo {
 
 std::ostream& operator<<(std::ostream& os, const SRAlignmentInfo& info);
 
+/// Align \p querySeq to \p targetSeq and return alignment details in \p alignment
 ///
 /// \param[in] flankScoreSize the number of bases to score past the end of microhomology range
 ///

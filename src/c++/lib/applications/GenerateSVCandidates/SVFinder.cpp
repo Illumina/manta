@@ -153,7 +153,8 @@ static void addSVNodeRead(
   }
 
   //
-  // run an initial screen to make sure at least one candidate from this read matches the regions for this edge:
+  // run an initial screen to make sure at least one candidate from this read matches the regions for this
+  // edge:
   //
   typedef std::vector<SVLocus> loci_t;
   loci_t                       loci;

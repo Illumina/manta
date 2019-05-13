@@ -941,7 +941,8 @@ static void processLargeInsertion(
       return;
     }
 
-    // final prep step: check left and right partial insert sequences -- this is a last chance to QC for anomalies and get out:
+    // final prep step: check left and right partial insert sequences -- this is a last chance to QC for
+    // anomalies and get out:
     //
     const known_pos_range2 insertTrim(getInsertTrim(fakeAlignment.align.apath, fakeSegments[0]));
     {

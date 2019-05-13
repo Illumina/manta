@@ -151,8 +151,8 @@ BOOST_AUTO_TEST_CASE(test_isSkipRecord)
   BOOST_REQUIRE(processor2.isSkipRecord(bamRecord3));
 }
 
-// Test whether a fragment will support a breakpoint for the alt allele if the following conditions are satisfied:
-// For large insertion SV (insert sequence length >= 100):
+// Test whether a fragment will support a breakpoint for the alt allele if the following conditions are
+// satisfied: For large insertion SV (insert sequence length >= 100):
 // 1. If a bamrecord is mapped but it's mate is unmapped, it will not add any fragment support unless
 //    it is properly shadow aligned (assuming the next record of the mapped record is its unmapped mate)
 // 2. Check the position of a shadow read relative to the breakpoint.

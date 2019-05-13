@@ -543,7 +543,8 @@ static bool buildContigs(
   AssembledContig contig;
   std::string     maxWord;
   {
-    // consider multiple possible most frequent seeding k-mers to find the one associated with the longest contig:
+    // consider multiple possible most frequent seeding k-mers to find the one associated with the longest
+    // contig:
     //
     std::set<std::string> seenEdgeBefore;  // records k-mers already encountered during extension
 

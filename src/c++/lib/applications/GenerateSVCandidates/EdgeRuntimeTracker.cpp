@@ -43,7 +43,8 @@ void EdgeRuntimeTracker::stop(const EdgeInfo& edge)
 
   const double lastTime(_edgeTime.getWallSeconds());
 
-  /// the purpose of the log is to identify the most troublesome cases only, so cutoff the output at a minimum time:
+  /// the purpose of the log is to identify the most troublesome cases only, so cutoff the output at a minimum
+  /// time:
   static const double minLogTime(0.5);
   if (lastTime >= minLogTime) {
     std::ostringstream oss;

@@ -20,17 +20,20 @@
 /// \file
 /// \author Chris Saunders and Xiaoyu Chen
 ///
+/// This file contains a subset of the implementation for SVScorer.hpp focusing on split read handling
+///
 
 #include "SVScorer.hpp"
+
+#include <iostream>
+
+#include "boost/scoped_array.hpp"
+
 #include "blt_util/log.hpp"
 #include "blt_util/seq_util.hpp"
 #include "htsapi/SimpleAlignment_bam_util.hpp"
 #include "manta/ReadFilter.hpp"
 #include "manta/ShadowReadFinder.hpp"
-
-#include "boost/scoped_array.hpp"
-
-#include <iostream>
 
 //#define DEBUG_SVS
 
@@ -124,20 +127,21 @@ static void incrementSplitReadEvidence(
   }
 }
 
+/// Score a single split read for one breakend of a candidate SV in one sample
 static void getReadSplitScore(
-    const bam_record&               bamRead,
     const CallOptionsSharedDeriv&   dopt,
+    const unsigned                  flankScoreSize,
     const SVId&                     svId,
     const SVBreakend&               bp,
+    const SVAlignmentInfo&          svAlignInfo,
     const reference_contig_segment& bpRef,
     const bool                      isBP1,
-    const unsigned                  flankScoreSize,
-    const SVAlignmentInfo&          svAlignInfo,
     const unsigned                  minMapQ,
     const unsigned                  minTier2MapQ,
     const bool                      isRNA,
     const bool                      isShadow,
     const bool                      isReversedShadow,
+    const bam_record&               bamRead,
     SVEvidence::evidenceTrack_t&    sampleEvidence,
     SVSampleInfo&                   sample,
     SVEvidenceWriterSampleData&     svSupportFrags)
@@ -150,9 +154,10 @@ static void getReadSplitScore(
 
   const bool                               isRead1(bamRead.is_first());
   SVFragmentEvidenceAlleleBreakendPerRead& altBp1ReadSupport(fragment.alt.bp1.getRead(isRead1));
-  // in this function we evaluate the hypothesis of both breakends at the same time, the only difference bp1
-  // vs
-  // bp2 makes is where in the bam we look for reads, therefore if we see split evaluation for bp1 or bp2, we can skip this read:
+
+  // In this function we evaluate the hypothesis of both breakends at the same time, the only difference bp1
+  // vs bp2 makes is where in the bam we look for reads, therefore if we see split evaluation for bp1 or bp2,
+  // we can skip this read:
   if (altBp1ReadSupport.isSplitEvaluated) return;
 
   SVFragmentEvidenceAlleleBreakendPerRead& refBp1ReadSupport(fragment.ref.bp1.getRead(isRead1));
@@ -163,8 +168,10 @@ static void getReadSplitScore(
   altBp2ReadSupport.isSplitEvaluated = true;
   refBp2ReadSupport.isSplitEvaluated = true;
 
-  std::string                  readSeq = bamRead.get_bam_read().get_string();
-  const uint8_t*               qual(bamRead.qual());
+  std::string    readSeq = bamRead.get_bam_read().get_string();
+  const uint8_t* qual(bamRead.qual());
+
+  // Reverse read and qual sequence if this is a reversed shadow read:
   boost::scoped_array<uint8_t> qualcpy;
   if (isShadow && isReversedShadow) {
     reverseCompStr(readSeq);
@@ -259,6 +266,17 @@ static void getReadSplitScore(
   }
 }
 
+/// Score split reads for one breakend of a candidate SV in one sample
+///
+/// \param flankScoreSize Number of bases from the end of the microhomology range used for the split read
+/// score.
+///
+/// \param svId Structural variant ID tag used to annotate BAM output used for debugging
+///
+/// \param bp The breakend targeted for split read evaluation
+///
+/// \param svAlignInfo Details how the breakend maps to sv contig and reference
+///
 static void scoreSplitReads(
     const CallOptionsSharedDeriv&   dopt,
     const unsigned                  flankScoreSize,
@@ -277,11 +295,14 @@ static void scoreSplitReads(
     SVSampleInfo&                   sample,
     SVEvidenceWriterSampleData&     svSupportFrags)
 {
-  static const int extendedSearchRange(
-      200);  // Window to look for alignments that may (if unclipped) overlap the breakpoint
-  // extract reads overlapping the break point
+  // Window to look for alignments that may (if unclipped) overlap the breakpoint:
+  static const int extendedSearchRange(200);
+
+  // Extract reads overlapping the break point.
+  //
   // We are not looking for remote reads, (semialigned-) reads mapping near this breakpoint, but not across it
   // or any other kind of additional reads used for assembly.
+
   readStream.resetRegion(
       bp.interval.tid,
       std::max(0, bp.interval.range.begin_pos() - extendedSearchRange),
@@ -304,19 +325,19 @@ static void scoreSplitReads(
 
     try {
       getReadSplitScore(
-          bamRead,
           dopt,
+          flankScoreSize,
           svId,
           bp,
+          svAlignInfo,
           bpRef,
           isBP1,
-          flankScoreSize,
-          svAlignInfo,
           minMapQ,
           minTier2MapQ,
           isRNA,
           isShadow,
           isReversedShadow,
+          bamRead,
           sampleEvidence,
           sample,
           svSupportFrags);
@@ -364,19 +385,19 @@ static void scoreSplitReads(
 
       //const uint8_t mapq(shadow.getMateMapq());
       getReadSplitScore(
-          bamRead,
           dopt,
+          flankScoreSize,
           svId,
           bp,
+          svAlignInfo,
           bpRef,
           isBP1,
-          flankScoreSize,
-          svAlignInfo,
           minMapQ,
           minTier2MapQ,
           isRNA,
           isShadow,
           isReversedShadow,
+          bamRead,
           sampleEvidence,
           sample,
           svSupportFrags);
@@ -412,22 +433,23 @@ void SVScorer::getSVSplitReadSupport(
     SVEvidence&                    evidence,
     SVEvidenceWriterData&          svSupports)
 {
-  // apply the split-read scoring only when:
-  // 1) the SV is precise, i.e. has successfully aligned contigs;
-  // 2) the values of max depth are reasonable (otherwise, the read map may blow out). (filter is run externally)
-
+  // Apply the split-read scoring only when:
+  // 1. the SV is precise, i.e. has successfully aligned contigs;
+  // 2. the values of max depth are reasonable (otherwise, the read map may blow out). Note the max depth
+  // filter is run externally
   if (sv.isImprecise()) return;
 
-  // Get Data on standard read pairs crossing the two breakends,
+  // Get data on standard read pairs crossing the two breakends,
 
   // extract SV alignment info for split read evidence
   const SVAlignmentInfo SVAlignInfo(sv, assemblyData);
 
-  /// how many bases from the end of the microhomology range are part of the split read score?
+  // Number of bases from the end of the microhomology range used for the split read score:
   static const unsigned flankScoreSize(50);
 
   // only consider a split alignment with sufficient flanking sequence:
-  if (!SVAlignInfo.isMinBpEdge(100)) return;
+  static const unsigned minBreakpointDistanceFromEdge(100);
+  if (!SVAlignInfo.isMinBpEdge(minBreakpointDistanceFromEdge)) return;
 
 #ifdef DEBUG_SVS
   log_os << __FUNCTION__ << " sv: " << sv << '\n';

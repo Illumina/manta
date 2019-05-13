@@ -50,7 +50,8 @@
 ///    \p minHighBasecallQualityFraction of the edge basecalls must have basecall quality >= \p
 ///    minBasecallQuality.
 ///
-/// The logic behind step (6) above is as follows. Consider an overlapping read pair represented schematically as:
+/// The logic behind step (6) above is as follows. Consider an overlapping read pair represented schematically
+/// as:
 //
 /// read1 |--------------->
 /// read2         <--------------|

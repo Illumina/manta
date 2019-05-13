@@ -23,12 +23,15 @@
 
 #pragma once
 
-#include "manta/SVCandidate.hpp"
-#include "manta/SVCandidateAssemblyData.hpp"
-
 #include <iosfwd>
 #include <string>
 
+#include "manta/SVCandidate.hpp"
+#include "manta/SVCandidateAssemblyData.hpp"
+
+/// Computes mapping from candidate SV breakends to the assembled SV contig and reference sequence while
+/// accounting for microhomology, and stores the mapping information.
+///
 struct SVAlignmentInfo {
   SVAlignmentInfo(const SVCandidate& sv, const SVCandidateAssemblyData& assemblyData);
 
@@ -42,8 +45,12 @@ struct SVAlignmentInfo {
 
   bool isSpanning() const { return _isSpanning; }
 
-  /// do we have a enough room on either side of the breakend for
-  /// both the ref and contig to make a fair split read evaluation?
+  /// If true, this indicates that there is enough room on either side of the breakend for both the ref and
+  /// contig to make a fair split read evaluation.
+  ///
+  /// \param minEdge The minimum distance of each breakpoint from either edge of the sv contig or reference
+  /// sequence.
+  ///
   bool isMinBpEdge(const unsigned minEdge) const;
 
   friend std::ostream& operator<<(std::ostream& os, const SVAlignmentInfo& ai);
@@ -58,9 +65,12 @@ private:
   const bool  _bp2ContigReversed;
 
 public:
-  /// all offset range 'begin' values correspond to the zero-indexed base immediately before the breakend on
-  /// the fwd-strand, and 'end' values correspond to the zero-indexed base immediately before the breakend on
-  /// the forward strand+microhomology range In the absence of microhomology, begin and end should be equal.
+  // All offset range 'begin' values correspond to the zero-indexed base immediately before the
+  // breakend on the fwd-strand, and 'end' values correspond to the zero-indexed base immediately
+  // before the breakend on the forward strand+microhomology range.
+  //
+  // In the absence of microhomology, begin and end should be equal.
+
   known_pos_range2 bp1ContigOffset;
   known_pos_range2 bp2ContigOffset;
   known_pos_range2 bp1RefOffset;
@@ -84,24 +94,32 @@ struct SVSampleAlleleInfo {
     confidentSplitReadAndPairCountRefBp2 = 0;
   }
 
-  // allele pair support
-  unsigned spanningPairCount          = 0;  ///< all mapped pairs compatible with the allele
-  unsigned confidentSpanningPairCount = 0;  ///< pairs where both reads are mapped and we've successfully
-                                            ///< looked up a fragment prob of 0.01 or more
-  unsigned confidentSemiMappedSpanningPairCount =
-      0;  ///< pairs where at least one read is mapped and we've successfully looked up a fragment prob of
-          ///< 0.01 or more
+  // allele read pair support
 
-  // allele split support
+  /// all mapped pairs compatible with the allele
+  unsigned spanningPairCount = 0;
+
+  /// Read pairs where both reads are mapped and we've successfully looked up a fragment prob of 0.01 or more
+  unsigned confidentSpanningPairCount = 0;
+
+  /// Read pairs where at least one read is mapped and we've successfully looked up a fragment prob of 0.01
+  /// or more
+  unsigned confidentSemiMappedSpanningPairCount = 0;
+
+  // allele split read support
+
   unsigned splitReadCount    = 0;
   float    splitReadEvidence = 0;
   float    splitReadMapQ     = 0;
 
-  unsigned confidentSplitReadCount = 0;  ///< count by comparing alignment quality vs the other allele
+  /// count by comparing alignment quality vs the other allele
+  unsigned confidentSplitReadCount = 0;
 
-  unsigned confidentSplitReadAndPairCountRefBp1 =
-      0;  ///< For 'ref' alleles, the support by split reads and spanning pairs at bp1
-  unsigned confidentSplitReadAndPairCountRefBp2 = 0;  ///< For 'ref' alleles, the support at bp2
+  /// For 'ref' alleles, the support by split reads and spanning pairs at bp1:
+  unsigned confidentSplitReadAndPairCountRefBp1 = 0;
+
+  /// For 'ref' alleles, the support by split reads and spanning pairs at bp2:
+  unsigned confidentSplitReadAndPairCountRefBp2 = 0;
 };
 
 std::ostream& operator<<(std::ostream& os, const SVSampleAlleleInfo& si);

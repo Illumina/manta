@@ -23,15 +23,16 @@
 ///
 
 #include "assembly/IterativeAssembler.hpp"
-#include "blt_util/set_util.hpp"
+
+#include <algorithm>
+#include <cassert>
+#include <set>
+#include <unordered_map>
+#include <vector>
 
 #include "boost/foreach.hpp"
 
-#include <cassert>
-
-#include <algorithm>
-#include <unordered_map>
-#include <vector>
+#include "blt_util/set_util.hpp"
 
 // compile with this macro to get verbose output:
 //#define DEBUG_ASBL

@@ -25,6 +25,9 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include "blt_util/LinearScaler.hpp"
 #include "htsapi/align_path_bam_util.hpp"
 #include "htsapi/bam_header_info.hpp"
@@ -37,9 +40,6 @@
 #include "options/ReadScannerOptions.hpp"
 #include "svgraph/SVLocus.hpp"
 #include "svgraph/SVLocusSampleCounts.hpp"
-
-#include <string>
-#include <vector>
 
 namespace FragmentSizeType {
 /// \brief Discrete categories used to label DNA fragment length relative to the expected fragment size
@@ -207,7 +207,7 @@ struct SVLocusScanner {
       const reference_contig_segment* remoteRefSeqPtr,
       std::vector<SVObservation>&     candidates) const;
 
-  /// \brief Get the distance upstream of a breakend in which shadow reads support will be searched for
+  /// \brief Get the distance upstream of a breakend in which shadow read support will be searched for
   ///
   /// \TODO if read groups are decoupled from samples, then this value needs to be revisited to reflect all
   /// read

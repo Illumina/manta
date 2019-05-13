@@ -24,7 +24,8 @@
 struct CallOptionsDiploid {
   float indelPrior = 1e-5f;
 
-  /// breakpoints where the non-tumor depth is greater than the chromosome average x this factor are filtered out:
+  /// breakpoints where the non-tumor depth is greater than the chromosome average x this factor are filtered
+  /// out:
   float       maxDepthFactor      = 3.0f;
   std::string maxDepthFilterLabel = "MaxDepth";
 

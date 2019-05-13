@@ -233,7 +233,8 @@ void GlobalJumpIntronAligner<ScoreType>::align(
     }
   }
 
-  // in the backtrace start search, also allow for the case where the query falls-off the end of the reference:
+  // in the backtrace start search, also allow for the case where the query falls-off the end of the
+  // reference:
   for (unsigned queryIndex(0); queryIndex < querySize; queryIndex++) {
     const ScoreVal& sval((*thisSV)[queryIndex]);
     const ScoreType maxMatch(sval.match + (querySize - queryIndex) * scores.offEdge);
@@ -367,7 +368,8 @@ void GlobalJumpIntronAligner<ScoreType>::align(
     }
   }
 
-  // in the backtrace start search, also allow for the case where the query falls-off the end of the reference:
+  // in the backtrace start search, also allow for the case where the query falls-off the end of the
+  // reference:
   for (unsigned queryIndex(0); queryIndex < querySize; queryIndex++) {
     const ScoreVal& sval((*thisSV)[queryIndex]);
     const ScoreType maxMatch(sval.match + (querySize - queryIndex) * scores.offEdge);
