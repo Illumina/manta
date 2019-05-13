@@ -36,6 +36,7 @@ struct AlignmentFileOptions {
   typedef std::vector<std::string> files_t;
 
   files_t alignmentFilenames;
-  std::vector<bool>
-      isAlignmentTumor;  ///< indicates which positions in the alignmnetFilename correspond to tumor
+
+  /// Indicates which positions in the alignmnetFilename correspond to tumor
+  std::vector<bool> isAlignmentTumor;
 };

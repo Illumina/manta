@@ -24,6 +24,8 @@
 
 #include "SVFinder.hpp"
 
+#include <iostream>
+
 #include "blt_util/binomial_test.hpp"
 #include "blt_util/log.hpp"
 #include "common/Exceptions.hpp"
@@ -32,8 +34,6 @@
 #include "manta/SVCandidateUtil.hpp"
 #include "manta/SVReferenceUtil.hpp"
 #include "svgraph/EdgeInfoUtil.hpp"
-
-#include <iostream>
 
 //#define DEBUG_SVDATA
 

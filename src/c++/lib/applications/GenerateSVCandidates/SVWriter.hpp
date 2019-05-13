@@ -24,7 +24,6 @@
 #pragma once
 
 #include "GSCOptions.hpp"
-
 #include "common/OutStream.hpp"
 #include "format/VcfWriterCandidateSV.hpp"
 #include "format/VcfWriterDiploidSV.hpp"

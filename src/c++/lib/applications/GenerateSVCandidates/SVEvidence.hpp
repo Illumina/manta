@@ -20,16 +20,6 @@
 /// \file
 /// \author Chris Saunders and Xiaoyu Chen
 ///
-
-#pragma once
-
-#include <cassert>
-
-#include <iosfwd>
-#include <map>
-#include <string>
-#include <vector>
-
 ///
 /// \brief classes required to build the SVEvidence object
 ///
@@ -44,20 +34,34 @@
 /// ...for each fragment. The object stores this per-fragment information for all fragments impacting
 /// all alleles at a given locus (But note at present we limit the alternate alleles to one).
 ///
-/// The class structure below represents kind of a crummy db schema -- there's probably a better way to
-/// do this?? Open to suggestions...
-///
 
-/// track all support data from an individual read in a fragment specific to an individual breakend of a
-/// single allele
+#pragma once
+
+#include <cassert>
+#include <iosfwd>
+#include <map>
+#include <string>
+#include <vector>
+
+/// For a single read from a read pair, track all support data specific to an individual breakend of a single
+/// allele
 ///
 struct SVFragmentEvidenceAlleleBreakendPerRead {
-  bool isSplitEvaluated = false;  ///< have we checked this read for split support of this bp?
-  bool isSplitSupport   = false;  ///< if evaluated, does this read support this allele in the bp?
-  bool isTier2SplitSupport =
-      false;  ///< if evaluated, does this read support this allele in the bp by permissive criteria?
-  float splitEvidence = 0;  ///< if evaluated, what is the evidence score?
-  float splitLnLhood  = 0;  ///< ln likelihood of best split alignment
+  /// True if the read has been evaluated for support across the given allele breakend
+  bool isSplitEvaluated = false;
+
+  /// If isSplitEvaluated is true, this indicates if the read supports the given allele breakend
+  bool isSplitSupport = false;
+
+  /// If isSplitEvaluated is true, this indicates if the read supports the given allele breakend by a more
+  /// permissive criteria
+  bool isTier2SplitSupport = false;
+
+  /// If isSplitEvaluated is true, this provides the read's evidence score
+  float splitEvidence = 0;
+
+  /// If isSplitEvaluated is true, this is the log likelihood the best alignment across the given breakend
+  float splitLnLhood = 0;
 };
 
 std::ostream& operator<<(std::ostream& os, const SVFragmentEvidenceAlleleBreakendPerRead& svbpr);
@@ -78,12 +82,14 @@ struct SVFragmentEvidenceAlleleBreakend {
     fragLengthProb    = 0;
   }
 
-  bool isFragmentSupport = false;  ///< if true, paired-read analysis shows that this read pair fragment
-                                   ///< supports this allele on this breakend
-  float fragLengthProb =
-      0;  ///< if isFragmentSupport, what is the prob of the fragment size given this allele?
-  SVFragmentEvidenceAlleleBreakendPerRead read1;  // read1 specific evidence
-  SVFragmentEvidenceAlleleBreakendPerRead read2;  // read2 specific evidence
+  /// If true, paired-read analysis shows that this read pair fragment supports this allele on this breakend
+  bool isFragmentSupport = false;
+
+  /// If isFragmentSupport is true, this is the prob of the fragment size given the specified allele breakend
+  float fragLengthProb = 0;
+
+  SVFragmentEvidenceAlleleBreakendPerRead read1;  ///< read1 specific evidence
+  SVFragmentEvidenceAlleleBreakendPerRead read2;  ///< read2 specific evidence
 };
 
 std::ostream& operator<<(std::ostream& os, const SVFragmentEvidenceAlleleBreakend& svbp);
@@ -93,6 +99,8 @@ std::ostream& operator<<(std::ostream& os, const SVFragmentEvidenceAlleleBreaken
 struct SVFragmentEvidenceAllele {
   SVFragmentEvidenceAlleleBreakend& getBp(const bool isBp1) { return (isBp1 ? bp1 : bp2); }
 
+  /// \return A tuple of boolean values indicating if the read supports breakend1 or breakend2, respectively,
+  /// of the given allele.
   std::pair<bool, bool> isAnySplitReadSupport(const bool isRead1) const
   {
     return std::make_pair(bp1.getRead(isRead1).isSplitSupport, bp2.getRead(isRead1).isSplitSupport);
@@ -127,19 +135,21 @@ struct SVFragmentEvidenceRead {
 
   void setTier2Anchored(const bool val) { _isTier2Anchored = val; }
 
-  bool isScanned = false;  ///< if true, this read's bam record has been scanned to fill in the remaining
-                           ///< values in this object
-  bool isShadow = false;   ///< read was originally unmapped but had a mapped mate read, mapq is MAPQ of the
-                           ///< mate in this case
+  /// If true, this read's bam record has been scanned to fill in the remaining values in this object
+  bool isScanned = false;
+
+  /// Read was originally unmapped but had a mapped mate read, mapq is MAPQ of the mate in this case
+  bool isShadow = false;
 
   unsigned mapq = 0;
   unsigned size = 0;
 
 private:
-  bool _isAnchored =
-      false;  ///< if true, the read is found and known to have a confident mapping wrt fragment support
-  bool _isTier2Anchored = false;  ///< if true, the read is found and known to have a confident mapping wrt
-                                  ///< fragment support at tier2
+  /// If true, the read is found and known to have a confident mapping wrt fragment support
+  bool _isAnchored = false;
+
+  /// If true, the read is found and known to have a confident mapping wrt fragment support at tier2
+  bool _isTier2Anchored = false;
 };
 
 std::ostream& operator<<(std::ostream& os, const SVFragmentEvidenceRead& svr);
@@ -154,7 +164,7 @@ struct SVFragmentEvidence {
 
   const SVFragmentEvidenceRead& getRead(const bool isRead1) const { return (isRead1 ? read1 : read2); }
 
-  /// does this fragment provide any pair evidence for any allele/bp combination?
+  /// \return True if this fragment provides paired read support for either breakend of either allele
   bool isAnySpanningPairSupport() const
   {
     const bool isRefSupport(ref.bp1.isFragmentSupport || ref.bp2.isFragmentSupport);
@@ -171,7 +181,10 @@ struct SVFragmentEvidence {
     return (isAltSupport);
   }
 
-  /// does this fragment read provide any split evidence for any allele/bp combination?
+  /// Indicates if this fragment read provides split evidence for any allele/bp combination
+  ///
+  /// \return A tuple of boolean values indicating if the read supports breakend1 or breakend2, respectively,
+  /// of either the ref or alt alleles.
   std::pair<bool, bool> isAnySplitReadSupport(const bool isRead1) const
   {
     const std::pair<bool, bool> isAlt(alt.isAnySplitReadSupport(isRead1));

@@ -118,7 +118,7 @@ private:
     }
 
   public:
-    /// pack 3x5 bits into a single uint16_t:
+    // pack 3x5 bits into a single uint16_t:
     code_t match : 3;
     code_t ins : 3;
     code_t del : 3;
@@ -126,10 +126,11 @@ private:
     code_t intron : 3;
   };
 
-  const ScoreType _intronOpenScore;     ///< gap open for introns (i.e. deletions starting with splice motif)
-                                        ///< (should be negative)
-  const ScoreType _intronOffEdgeScore;  ///< As offEdge but only of the last aligned bases match a splice
-                                        ///< motif (should be negative)
+  /// Gap open for introns (i.e. deletions starting with splice motif) (should be negative)
+  const ScoreType _intronOpenScore;
+
+  /// As offEdge but only of the last aligned bases match a splice motif (should be negative)
+  const ScoreType _intronOffEdgeScore;
 
   // add the matrices here to reduce allocations over many alignment calls:
   typedef std::vector<ScoreVal> ScoreVec;

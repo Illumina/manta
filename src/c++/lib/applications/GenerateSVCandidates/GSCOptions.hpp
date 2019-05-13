@@ -69,27 +69,32 @@ struct GSCOptions {
   std::string rnaOutputFilename;
   std::string evidenceBamStub;
 
-  bool isVerbose = false;  ///< provide some high-level log info to assist in debugging
+  /// Provide some high-level log info to assist in debugging
+  bool isVerbose = false;
 
-  bool isSkipAssembly =
-      false;  ///< if true, skip assembly and run a low-resolution, breakdancer-like subset of the workflow
+  /// If true, skip assembly and run a low-resolution, breakdancer-like subset of the workflow
+  bool isSkipAssembly = false;
 
-  bool isSkipScoring = false;  ///< if true, skip quality scoring and output candidates only
+  /// If true, skip quality scoring and output candidates only
+  bool isSkipScoring = false;
 
-  bool enableRemoteReadRetrieval =
-      false;  ///< if true, turn on retrieval of poorly mapped remote reads for assembly
+  /// If true, turn on retrieval of poorly mapped remote reads for assembly
+  bool enableRemoteReadRetrieval = false;
 
-  bool isRNA = false;  ///< if true, RNA specific filtering on candidates and diploid scoring is used
+  /// If true, RNA specific filtering on candidates and diploid scoring is used
+  bool isRNA = false;
 
-  bool isUnstrandedRNA = false;  ///< For unstranded RNA data, the direction of fusion transcripts is unknown
+  /// For unstranded RNA data, the direction of fusion transcripts is unknown
+  bool isUnstrandedRNA = false;
 
-  unsigned minCandidateSpanningCount =
-      3;  ///< how many spanning evidence observations are required to become a candidate?
+  /// How many spanning evidence observations are required to become a candidate?
+  unsigned minCandidateSpanningCount = 3;
 
-  unsigned minScoredVariantSize =
-      50;  ///< min size for scoring and scored output following candidate generation
+  /// Min size for scoring and scored output following candidate generation
+  unsigned minScoredVariantSize = 50;
 
-  bool isOutputContig = false;  ///< if true, an assembled contig is written in VCF
+  /// If true, an assembled contig is written in VCF
+  bool isOutputContig = false;
 };
 
 void parseGSCOptions(const illumina::Program& prog, int argc, char* argv[], GSCOptions& opt);

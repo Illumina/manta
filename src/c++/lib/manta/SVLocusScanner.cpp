@@ -139,7 +139,7 @@ static SVObservation getSplitSVCandidate(
 static bool isSplitOpenDownstream(const ALIGNPATH::path_t& align)
 {
   using namespace ALIGNPATH;
-  ///TODO replace this heuristic with a better check (looking at all SA alignments at once)
+  /// TODO replace this heuristic with a better check (looking at all SA alignments at once)
   return (apath_clip_lead_size(align) < apath_clip_trail_size(align));
 }
 
@@ -182,7 +182,8 @@ static void updateSABreakend(
 
 /// \brief Convert details from one of \p localRead's SA-tag split-read alignments into an SVObservation.
 ///
-/// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
+/// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2,
+/// etc..)
 static SVObservation getSplitSACandidate(
     const ReadScannerDerivOptions&                 dopt,
     const bam_record&                              localRead,
@@ -311,9 +312,9 @@ static void parseSACandidatesFromRead(
 /// interface supports parsing out any number of split alignments, and this function may be updated to do so
 /// in the future.
 ///
-/// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
-/// \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the vector
-/// are preserved
+/// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2,
+/// etc..) \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the
+/// vector are preserved
 ///                        but not read.
 static void getSACandidatesFromRead(
     const ReadScannerOptions&                      opt,
@@ -346,9 +347,9 @@ static void getSACandidatesFromRead(
 
 /// \brief Convert all large indels already present in a single read's alignment into SVObservation objects
 ///
-/// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
-/// \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the vector
-/// are preserved
+/// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2,
+/// etc..) \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the
+/// vector are preserved
 ///                        but not read.
 static void getSVCandidatesFromReadIndels(
     const ReadScannerOptions&                      opt,
@@ -465,9 +466,9 @@ static void getSVCandidatesFromReadIndels(
 /// the poorly aligned sections of the reads should be mapped elsewhere due to a large indel or SV breakpoint
 /// not reflected in the current read alignment.
 ///
-/// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
-/// \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the vector
-/// are preserved
+/// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2,
+/// etc..) \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the
+/// vector are preserved
 ///                        but not read.
 static void getSVCandidatesFromSemiAligned(
     const ReadScannerOptions&                      opt,
@@ -560,7 +561,8 @@ struct AlignmentPairAnalyzer {
   /// \param[in] isRemoteAlignmentInferred True if remote read alignment was inferred from the local read
   /// alignment
   ///                                      instead of directly observed from the remote read alignment record
-  /// \param[in] isForwardStrand True if the local read is 1st in read pair (this value is used in stranded RNA mode)
+  /// \param[in] isForwardStrand True if the local read is 1st in read pair (this value is used in stranded
+  /// RNA mode)
   void reset(
       const SimpleAlignment& localAlignment,
       const SimpleAlignment& remoteAlignment,
@@ -797,8 +799,8 @@ private:
     const pos_t cigarAdjustedFragmentSize(
         _totalNonInsertSize + (insertRange.end_pos() - insertRange.begin_pos()));
 
-    // Identify read pairs with an 'outtie' orientation and skip these cases (so they will be counted as anomalous)
-    // These are typically small fragments from FFPE samples.
+    // Identify read pairs with an 'outtie' orientation and skip these cases (so they will be counted as
+    // anomalous) These are typically small fragments from FFPE samples.
     const bool isOuttieReadPair(cigarAdjustedFragmentSize < 0);
 
     if (isOuttieReadPair) return;

@@ -37,11 +37,21 @@ struct AlignmentScores {
   {
   }
 
-  const ScoreType match;     ///< match score
-  const ScoreType mismatch;  ///< mismatch score (should be negative)
-  const ScoreType open;      ///< gap open, gap of length N is scored (open + N * extend) (should be negative)
-  const ScoreType
-                  extend;  ///< gap extend, gap of length N is scored (open + N * extend) (should be negative or zero)
-  const ScoreType offEdge;  ///< score applied when query goes off the end of an edge (should be negative)
-  const bool isAllowEdgeInsertion;  ///< are insertions allowed directly on the leading and trailing edges?
+  /// Match score
+  const ScoreType match;
+
+  /// Mismatch score (should be negative)
+  const ScoreType mismatch;
+
+  /// Gap open, gap of length N is scored (open + N * extend) (should be negative)
+  const ScoreType open;
+
+  /// Gap extend, gap of length N is scored (open + N * extend) (should be negative or zero)
+  const ScoreType extend;
+
+  /// Score applied when query goes off the end of an edge (should be negative)
+  const ScoreType offEdge;
+
+  /// Are insertions allowed directly on the leading and trailing edges?
+  const bool isAllowEdgeInsertion;
 };

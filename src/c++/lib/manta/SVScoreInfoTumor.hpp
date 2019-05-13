@@ -94,7 +94,7 @@ inline double altLnCompFraction(const index_t i)
 
 }  // namespace TUMOR_GT
 
-/// consolidate all tumor-only scoring results applied to an SV candidate
+/// Consolidate all tumor-only scoring results applied to an SV candidate
 struct SVScoreInfoTumor {
   void clear()
   {
@@ -108,9 +108,11 @@ struct SVScoreInfoTumor {
 
   TUMOR_GT::index_t gt = TUMOR_GT::REF;
 
-  unsigned altScore =
-      0;  ///< quality score indicating any non-reference state (regardless of specific genotype)
-  unsigned gtScore = 0;  ///< quality score of genotype
+  /// Quality score indicating any non-reference state (regardless of specific genotype)
+  unsigned altScore = 0;
+
+  /// Quality score of genotype
+  unsigned gtScore = 0;
 };
 
 std::ostream& operator<<(std::ostream& os, const SVScoreInfoTumor& sid);

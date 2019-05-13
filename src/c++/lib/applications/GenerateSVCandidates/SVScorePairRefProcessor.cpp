@@ -22,13 +22,13 @@
 ///
 
 #include "SVScorePairRefProcessor.hpp"
+
+#include <cassert>
+#include <sstream>
+
 #include "common/Exceptions.hpp"
 #include "htsapi/bam_record_util.hpp"
 #include "manta/SVCandidateUtil.hpp"
-
-#include <cassert>
-
-#include <sstream>
 
 /// standard debug output for this file:
 //#define DEBUG_PAIR

@@ -19,14 +19,14 @@
 
 #pragma once
 
-#include "blt_util/id_map.hpp"
-#include "manta/ReadGroupLabel.hpp"
-#include "manta/ReadGroupStats.hpp"
+#include <iosfwd>
+#include <string>
 
 #include "boost/optional.hpp"
 
-#include <iosfwd>
-#include <string>
+#include "blt_util/id_map.hpp"
+#include "manta/ReadGroupLabel.hpp"
+#include "manta/ReadGroupStats.hpp"
 
 /// \brief manages multiple read_group_stats
 ///

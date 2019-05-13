@@ -29,9 +29,9 @@
 
 #include "blt_util/basic_matrix.hpp"
 
-/// represents alignment of a query sequence which can switch over from reference1 to reference2
+/// Represents alignment of a query sequence which can switch over from reference1 to reference2
 ///
-/// an empty alignment to one reference indicates that the entire alignment is to the other reference
+/// An empty alignment to one reference indicates that the entire alignment is to the other reference
 ///
 template <typename ScoreType>
 struct JumpAlignmentResult {
@@ -48,8 +48,9 @@ struct JumpAlignmentResult {
 
   ScoreType score;
   unsigned  jumpInsertSize;
-  unsigned  jumpRange;  ///< length of sequence over which jump would have the same score (left-most on align1
-                        ///< is reported)
+
+  /// Length of sequence over which jump would have the same score (left-most on align1 is reported)
+  unsigned  jumpRange;
   Alignment align1;
   Alignment align2;
 };

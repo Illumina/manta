@@ -25,25 +25,30 @@
 
 /// options for SVLocusGraph edge iteration and noise edge filtration
 struct LocusEdgeOptions {
-  unsigned locusIndex = 0;      ///< if isLocusIndex, report this locus only
-  bool isNodeIndex1   = false;  ///< if true, generate candidates for all edges touching a specifc node in one
-                                ///< locus. Assumes isLocusIndex is true
-  unsigned nodeIndex1 = 0;
-  bool isNodeIndex2   = false;  ///< if true, generate candidates for only the edge from node1 to node2 in one
-                                ///< locus. Assumes isLocusIndex & isNodeIndex1 are true
-  unsigned nodeIndex2 = 0;
+  /// If isLocusIndex, report this locus only
+  unsigned locusIndex = 0;
+
+  /// If true, generate candidates for all edges touching a specific node in one locus. Assumes isLocusIndex
+  /// is true.
+  bool     isNodeIndex1 = false;
+  unsigned nodeIndex1   = 0;
+
+  /// If true, generate candidates for only the edge from node1 to node2 in one locus. Assumes isLocusIndex
+  /// and isNodeIndex1 are true.
+  bool     isNodeIndex2 = false;
+  unsigned nodeIndex2   = 0;
 };
 
-/// options for SVLocusGraph edge iteration and noise edge filtration
+/// Options for SVLocusGraph edge iteration and noise edge filtration
 struct EdgeOptions {
   unsigned binCount = 1;  ///< divide all edges in the graph into binCount bins of approx equal complexity
   unsigned binIndex = 0;  ///< out of binCount bins, iterate through the edges in this bin only
 
-  bool isLocusIndex = false;  ///< if true, generate candidates for a specific SVgraph locus only, and ignore
-                              ///< binCount/binIndex
+  /// If true, generate candidates for a specific SVgraph locus only, and ignore binCount/binIndex
+  bool             isLocusIndex = false;
   LocusEdgeOptions locusOpt;
 
-  unsigned graphNodeMaxEdgeCount =
-      10;  ///< if both nodes of an edge have an edge count higher than this, then skip evaluation of this
-           ///< edge, set to 0 to turn this filtration off
+  /// If both nodes of an edge have an edge count higher than this, then skip evaluation of this edge, set to
+  /// 0 to turn this filtration off
+  unsigned graphNodeMaxEdgeCount = 10;
 };

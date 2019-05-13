@@ -24,7 +24,6 @@
 #pragma once
 
 #include "SVScorePairProcessor.hpp"
-
 #include "manta/SVCandidateAssemblyData.hpp"
 #include "manta/ShadowReadFinder.hpp"
 #include "options/ReadScannerOptions.hpp"

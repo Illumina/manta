@@ -23,10 +23,10 @@
 
 #pragma once
 
+#include <iosfwd>
+
 #include "bam_seq.hpp"
 #include "bam_util.hpp"
-
-#include <iosfwd>
 
 struct bam_record {
   bam_record() : _bp(bam_init1()) {}

@@ -23,12 +23,14 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include "GSCOptions.hpp"
 #include "JunctionCallInfo.hpp"
 #include "SVEvidence.hpp"
 #include "SVScorePairProcessor.hpp"
 #include "SplitReadAlignment.hpp"
-
 #include "assembly/AssembledContig.hpp"
 #include "blt_util/qscore_snp.hpp"
 #include "htsapi/bam_header_info.hpp"
@@ -40,9 +42,6 @@
 #include "manta/SVModelScoreInfo.hpp"
 #include "manta/SVMultiJunctionCandidate.hpp"
 #include "manta/SVScoreInfoSomatic.hpp"
-
-#include <string>
-#include <vector>
 
 struct CallOptionsSharedDeriv {
   explicit CallOptionsSharedDeriv(const CallOptionsShared& opt) : refQ(opt.snpPrior), altQ(0) {}

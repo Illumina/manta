@@ -25,11 +25,8 @@
 
 #include <cassert>
 #include <cstring>
-
 #include <iostream>
 
-/// pretty print sequence is such a way that it's easy to locate position number
-///
 void printSeq(const char* seq, std::ostream& os)
 {
   static const unsigned rowSize(100);

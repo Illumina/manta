@@ -50,10 +50,16 @@ void EdgeRuntimeTracker::stop(const EdgeInfo& edge)
     std::ostringstream oss;
     oss << std::setprecision(4);
     edge.write(oss);
-    oss << '\t' << lastTime << '\t' << _candidateCount << '\t' << _complexCandidateCount << '\t'
-        << _assembledCandidateCount << '\t' << _assembledComplexCandidateCount << '\t'
-        << candidacyTime.getWallSeconds() << '\t' << assemblyTime.getWallSeconds() << '\t'
-        << remoteReadRetrievalTime.getWallSeconds() << '\t' << scoreTime.getWallSeconds() << '\n';
+    oss << '\t' << lastTime;
+    oss << '\t' << _candidateCount;
+    oss << '\t' << _complexCandidateCount;
+    oss << '\t' << _assembledCandidateCount;
+    oss << '\t' << _assembledComplexCandidateCount;
+    oss << '\t' << candidacyTime.getWallSeconds();
+    oss << '\t' << assemblyTime.getWallSeconds();
+    oss << '\t' << remoteReadRetrievalTime.getWallSeconds();
+    oss << '\t' << scoreTime.getWallSeconds();
+    oss << '\n';
     _streamPtr->write(oss.str());
   }
 }

@@ -58,7 +58,7 @@ struct SampleReadInputCounts {
   // using doubles for integral counts here because (1) counts are potentially very high and (2) exact counts
   // don't matter
 
-  ///< total number of reads filtered for mapq before any classification step
+  /// Total number of reads filtered for mapq before any classification step
   double minMapq = 0;
 
   SVLocusEvidenceCount evidenceCount;

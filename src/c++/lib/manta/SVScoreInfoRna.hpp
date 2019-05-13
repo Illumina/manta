@@ -26,7 +26,6 @@
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
-
 #include <iosfwd>
 #include <set>
 #include <string>
@@ -42,13 +41,15 @@ struct SVScoreInfoRna {
 
   std::set<std::string> filters;
 
-  unsigned altScore =
-      0;  ///< quality score indicating any non-reference state (regardless of specific genotype)
+  /// Quality score indicating any non-reference state (regardless of specific genotype)
+  unsigned altScore = 0;
 
   /// Dummy value used for variant score in RNA output
   static const int defaultScore = 42;
+
   /// Min length for passing fusions
-  static const int         minLength = 100000;
+  static const int minLength = 100000;
+
   static const std::string rnaFilterLabel;
   static const std::string impreciseLabel;
   static const std::string localLabel;

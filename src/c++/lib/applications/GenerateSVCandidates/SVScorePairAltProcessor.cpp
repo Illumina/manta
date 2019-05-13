@@ -22,16 +22,16 @@
 ///
 
 #include "SVScorePairAltProcessor.hpp"
+
+#include <cassert>
+#include <sstream>
+
 #include "alignment/AlignmentScoringUtil.hpp"
 #include "blt_util/SimpleAlignment.hpp"
 #include "blt_util/seq_util.hpp"
 #include "common/Exceptions.hpp"
 #include "htsapi/bam_record_util.hpp"
 #include "manta/SVCandidateUtil.hpp"
-
-#include <cassert>
-
-#include <sstream>
 
 /// standard debug output for this file:
 //#define DEBUG_PAIR

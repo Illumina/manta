@@ -24,10 +24,10 @@
 
 #pragma once
 
-#include "manta/SVCandidate.hpp"
-
 #include <array>
 #include <iosfwd>
+
+#include "manta/SVCandidate.hpp"
 
 /// extend vector A with the contents of B
 ///

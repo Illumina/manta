@@ -307,13 +307,14 @@ static void scoreSplitReads(
       bp.interval.tid,
       std::max(0, bp.interval.range.begin_pos() - extendedSearchRange),
       bp.interval.range.end_pos() + extendedSearchRange);
+
   while (readStream.next()) {
     const bam_record& bamRead(*(readStream.get_record_ptr()));
 
     if (isReadUnmappedOrFilteredCore(bamRead)) continue;
 
-    /// TODO: remove this filter?
-    /// The supplemental alignment is likely to be hard-clipped
+    // TODO: remove this filter?
+    // The supplemental alignment is likely to be hard-clipped
     if (bamRead.isNonStrictSupplement()) continue;
 
     // Skip reads that do not overlap the entire homology range of this breakpoint.

@@ -22,8 +22,8 @@
 ///
 
 #include "GSCOptions.hpp"
-#include "EdgeOptionsParser.hpp"
 
+#include "EdgeOptionsParser.hpp"
 #include "blt_util/log.hpp"
 #include "common/ProgramUtil.hpp"
 #include "options/AlignmentFileOptionsParser.hpp"

@@ -258,9 +258,9 @@ void splitReadAligner(
       targetBpOffsetRange.end_pos() + static_cast<pos_t>(flankScoreSize));
 
 #ifdef DEBUG_SRA
-  log_os << __FUNCTION__ << "query size = " << querySize << " target size = " << targetSize << '\n';
-  log_os << __FUNCTION__ << "targetBeginPos = " << targetBpOffsetRange.begin_pos() << '\n';
-  log_os << __FUNCTION__ << "scan start = " << scanStart << " scan end = " << scanEnd << '\n';
+  log_os << __FUNCTION__ << " query size = " << querySize << " target size = " << targetSize << '\n';
+  log_os << __FUNCTION__ << " targetBeginPos = " << targetBpOffsetRange.begin_pos() << '\n';
+  log_os << __FUNCTION__ << " scan start = " << scanStart << " scan end = " << scanEnd << '\n';
 #endif
   if (scanEnd < scanStart) {
     std::ostringstream oss;
@@ -333,6 +333,18 @@ void splitReadAligner(
   setEvidence(alignment);
 
 #ifdef DEBUG_SRA
-  log_os << __FUNCTION__ << "bestpos: " << bestPos << " final alignment\n" << alignment << "\n";
+  log_os << __FUNCTION__ << " bestpos: " << bestPos << " final alignment:\n" << alignment << "\n";
+
+  std::string alignedQuerySeq(std::string(bestPos, ' ') + querySeq);
+
+  for (unsigned queryIndex(0); queryIndex < querySize; queryIndex++) {
+    if (bestPos + queryIndex < targetSeq.size()) {
+      if (querySeq[queryIndex] == targetSeq[bestPos + queryIndex]) continue;
+    }
+    alignedQuerySeq[bestPos + queryIndex] = std::tolower(alignedQuerySeq[bestPos + queryIndex]);
+  }
+  log_os << "Query/Target Alignment:\n";
+  log_os << alignedQuerySeq << "\n";
+  log_os << targetSeq << "\n";
 #endif
 }

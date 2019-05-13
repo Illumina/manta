@@ -124,8 +124,8 @@ struct SVScoreInfoDiploid {
 
   std::set<std::string> filters;
 
-  unsigned altScore =
-      0;  ///< quality score indicating any non-reference state (regardless of specific genotype)
+  /// Quality score indicating any non-reference state (regardless of specific genotype)
+  unsigned altScore = 0;
 
   std::vector<SVScoreInfoDiploidSample> samples;
 };

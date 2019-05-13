@@ -23,13 +23,13 @@
 
 #pragma once
 
-#include "blt_util/io_util.hpp"
-#include "blt_util/time_util.hpp"
-#include "svgraph/EdgeInfo.hpp"
+#include <iosfwd>
 
 #include "boost/noncopyable.hpp"
 
-#include <iosfwd>
+#include "blt_util/io_util.hpp"
+#include "blt_util/time_util.hpp"
+#include "svgraph/EdgeInfo.hpp"
 
 /// Simple edge time tracker and reporter
 ///

@@ -266,10 +266,10 @@ private:
   std::vector<ValType>    _data;
   boost::dynamic_bitset<> _occup;
 
-  ///< used to cache the copy needed for masking:
+  /// Used to cache the copy needed for masking:
   boost::dynamic_bitset<> _occup_mask_helper;
 
-  ///< used to cache the copy needed for rotate:
+  /// Used to cache the copy needed for rotate:
   boost::dynamic_bitset<> _occup_rotate_helper;
 
   ValClear _clearFunc;

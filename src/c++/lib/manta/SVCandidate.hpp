@@ -31,12 +31,7 @@
 #include "manta/SVBreakend.hpp"
 
 struct SVCandidate {
-#if 0
-    double
-    breakpointProb(pos_t x, pos_t y) const;
-#endif
-
-  /// if false, the breakend interval is at base-pair resolution
+  /// If false, the breakend interval is at base-pair resolution
   ///
   /// false does not mean that the interval size is zero, a precise breakend interval range represents
   /// microhomology at the breakend site
@@ -156,7 +151,7 @@ public:
   // strand for bp1
   std::string insertSeq;
 
-  // Assembled contig sequence for outputting in VCF
+  /// Assembled contig sequence for outputting in VCF
   std::string contigSeq;
 
   // for some small indels, the alignment becomes sufficiently complex that a CIGAR string provides better
@@ -164,22 +159,29 @@ public:
   // (this is provided for any small SV which is more complicated than a simple insert or deletion)
   ALIGNPATH::path_t insertAlignment;
 
-  unsigned candidateIndex = 0;  ///< low-res candidate index number, used to generate unique SV id
-  unsigned assemblyAlignIndex =
-      0;  ///< high-res assembly index number of alignment, used to generate unique SV id
-  unsigned assemblySegmentIndex =
-      0;  ///< high-res assembly index number of alignment segment, used to generate unique SV id
+  /// Low-res candidate index number, used to generate unique SV id
+  unsigned candidateIndex = 0;
 
-  bool isUnknownSizeInsertion = false;  ///< these insertions haven't been assembled all the way through
+  /// High-res assembly index number of alignment, used to generate unique SV id
+  unsigned assemblyAlignIndex = 0;
 
-  std::string unknownSizeInsertionLeftSeq;   ///< for an incomplete insertion, this is the known left side of
-                                             ///< the insert sequence
-  std::string unknownSizeInsertionRightSeq;  ///< for an incomplete insertion, this is the known right side of
-                                             ///< the insert sequence
+  /// High-res assembly index number of alignment segment, used to generate unique SV id
+  unsigned assemblySegmentIndex = 0;
 
-  unsigned forwardTranscriptStrandReadCount =
-      0;  ///< Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
-  unsigned reverseTranscriptStrandReadCount = 0;  ///< Number of reads (pairs) directed from bp2 to bp1
+  /// If true, the insertion hasn't been assembled all the way through
+  bool isUnknownSizeInsertion = false;
+
+  /// For an incomplete insertion, this is the known left side of the insert sequence
+  std::string unknownSizeInsertionLeftSeq;
+
+  /// For an incomplete insertion, this is the known right side of the insert sequence
+  std::string unknownSizeInsertionRightSeq;
+
+  /// Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
+  unsigned forwardTranscriptStrandReadCount = 0;
+
+  /// Number of reads (pairs) directed from bp2 to bp1
+  unsigned reverseTranscriptStrandReadCount = 0;
 
   /// If true, this sv candidate should be filtered out based on information in the candidate's own single
   /// junction.

@@ -27,9 +27,7 @@
 #include "SVEvidenceWriter.hpp"
 #include "SVScorerPairOptions.hpp"
 #include "SVScorerShared.hpp"
-
 #include "blt_util/SizeDistribution.hpp"
-
 #include "manta/BamRegionProcessor.hpp"
 #include "manta/JunctionIdGenerator.hpp"
 #include "manta/ReadFilter.hpp"

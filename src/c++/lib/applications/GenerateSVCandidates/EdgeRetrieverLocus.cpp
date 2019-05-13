@@ -24,7 +24,6 @@
 #include "EdgeRetrieverLocus.hpp"
 
 #include <cassert>
-
 #include <iostream>
 
 //#define DEBUG_EDGER

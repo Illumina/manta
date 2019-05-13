@@ -22,19 +22,19 @@
 
 #pragma once
 
+#include <iosfwd>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 #include "alignment/GlobalAligner.hpp"
 #include "alignment/GlobalJumpAligner.hpp"
 #include "assembly/AssembledContig.hpp"
 #include "blt_util/reference_contig_segment.hpp"
 #include "manta/SVCandidate.hpp"
 
-#include <iosfwd>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 /// \brief Minimum set of information required to describe bp transformations between SVCandidate and its
-///        corresponding contig alignment
+/// corresponding contig alignment
 ///
 struct BPOrientation {
   void clear()
@@ -46,12 +46,14 @@ struct BPOrientation {
     isTranscriptStrandKnown = false;
   }
 
-  bool isBp2AlignedFirst =
-      false;  ///< should the contig on the fwd strand align bp2->bp1 (true) or bp1->bp2 (false)
-  bool isBp1Reversed = false;  ///< should all bp1 reads be reversed for the contig to assemble correctly?
-  bool isBp2Reversed = false;  ///< should all bp2 reads be reversed for the contig to assemble correctly?
-  bool isBp1First    = true;   ///< Is this candidate oriented from bp1 to bp2 (used in RNA)? Valid if
-                               ///< isTranscriptStrandKnown is true
+  /// should the contig on the fwd strand align bp2->bp1 (true) or bp1->bp2 (false)?
+  bool isBp2AlignedFirst = false;
+  bool isBp1Reversed     = false;  ///< should all bp1 reads be reversed for the contig to assemble correctly?
+  bool isBp2Reversed     = false;  ///< should all bp2 reads be reversed for the contig to assemble correctly?
+
+  /// Is this candidate oriented from bp1 to bp2 (used in RNA)? Valid if isTranscriptStrandKnown is true
+  bool isBp1First = true;
+
   bool isTranscriptStrandKnown = false;  ///< Do we know the strand for this candidate (RNA)
 };
 
@@ -68,8 +70,10 @@ struct LargeInsertionInfo {
   bool     isLeftCandidate  = false;
   bool     isRightCandidate = false;
   unsigned contigOffset     = 0;  ///< If candidate, how far into the contig is the breakend?
-  unsigned refOffset =
-      0;  ///< If candidate, how far from the start of the contig alignment is the breakend on reference?
+
+  /// If candidate, how far from the start of the contig alignment is the breakend on reference?
+  unsigned refOffset = 0;
+
   int score = 0;  ///< What is the alignment score of the contig up to the insertion breakpoint?
 };
 
@@ -128,38 +132,44 @@ struct SVCandidateAssemblyData {
   typedef AlignmentResult<int>     SmallAlignmentResultType;
   typedef JumpAlignmentResult<int> JumpAlignmentResultType;
 
-  typedef std::pair<unsigned, unsigned>
-      CandidateSegmentType;  ///< 'segments' only pertain to small-event alignments
-  typedef std::vector<CandidateSegmentType>
-      CandidateSegmentSetType;  ///< 'segments' only pertain to small-event alignments
+  // Here 'segments' only pertain to small-event alignments:
+  typedef std::pair<unsigned, unsigned>     CandidateSegmentType;
+  typedef std::vector<CandidateSegmentType> CandidateSegmentSetType;
 
   Assembly contigs;  ///< assembled contigs for both breakpoints
 
-  /// note that isCandidateSpanning can be != isSpanning in cases where the breakends are so close that the
-  /// assembler decides to fuse
-  /// them and treat a spanning hypothesis as non-spanning:
-  bool isCandidateSpanning =
-      false;  ///< before assembly, was this a 2-locus event (spanning), or a local-assembly?
-  bool isSpanning =
-      false;  ///< at assembly time, was this treated as a 2-locus event (spanning), or a local-assembly?
+  /// \brief If true, then before assembly this was a 2-locus event (spanning) instead of a local-assembly
+  ///
+  /// Note that isCandidateSpanning can be != isSpanning in cases where the breakends are so close that the
+  /// assembler decides to fuse them and treat a spanning hypothesis as non-spanning:
+  bool isCandidateSpanning = false;
+
+  /// If true, then at assembly time this was treated as a 2-locus event (spanning) instead of a
+  /// local-assembly
+  bool isSpanning = false;
 
   BPOrientation bporient;
 
   /// Assembled contigs with additional reference sequence padding added onto each edge
   std::vector<std::string> extendedContigs;
 
-  std::vector<SmallAlignmentResultType>
-      smallSVAlignments;  ///< contig smallSV alignments, one per contig, may be empty
-  std::vector<JumpAlignmentResultType>
-                                       spanningAlignments;  ///< contig spanning alignments, one per contig, may be empty
-  std::vector<CandidateSegmentSetType> smallSVSegments;  ///< list of indel sets, one per small alignment
+  /// Contig smallSV alignments, one per contig, may be empty
+  std::vector<SmallAlignmentResultType> smallSVAlignments;
 
-  std::vector<LargeInsertionInfo>
-      largeInsertInfo;  ///< data specific to searching for a large insertion candidate
+  /// Contig spanning alignments, one per contig, may be empty
+  std::vector<JumpAlignmentResultType> spanningAlignments;
 
-  RemoteReadCache remoteReads;  ///< remote reads retrieved to improve assembly and scoring for this locus
+  /// List of indel sets, one per small alignment
+  std::vector<CandidateSegmentSetType> smallSVSegments;
 
-  unsigned bestAlignmentIndex = 0;  ///< if non-empty sv candidate set, which contig/alignment produced them?
+  /// Data specific to searching for a large insertion candidate
+  std::vector<LargeInsertionInfo> largeInsertInfo;
+
+  /// Remote reads retrieved to improve assembly and scoring for this locus
+  RemoteReadCache remoteReads;
+
+  /// If non-empty sv candidate set, which contig/alignment produced them?
+  unsigned bestAlignmentIndex = 0;
 
   // expanded reference regions around the candidate SV breakend regions, for small events we use only bp1ref:
   reference_contig_segment bp1ref;

@@ -210,8 +210,7 @@ struct SVLocusScanner {
   /// \brief Get the distance upstream of a breakend in which shadow read support will be searched for
   ///
   /// \TODO if read groups are decoupled from samples, then this value needs to be revisited to reflect all
-  /// read
-  ///       groups in the sample.
+  /// read groups in the sample.
   int getShadowSearchDistance(const unsigned defaultReadGroupIndex) const
   {
     return _stats[defaultReadGroupIndex].shadowSearchDistance;

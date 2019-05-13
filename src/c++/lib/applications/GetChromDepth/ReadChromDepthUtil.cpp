@@ -82,8 +82,9 @@ private:
     _depth.clear_pos(pos);
   }
 
-  depth_buffer_compressible _depth =
-      depth_buffer_compressible(16);  ///< track depth for the purpose of filtering high-depth regions
+  /// track depth for the purpose of filtering high-depth regions
+  depth_buffer_compressible _depth = depth_buffer_compressible(16);
+
   MedianDepthTracker _mtrack;
 
   bool  _isRegionInit = false;

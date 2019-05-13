@@ -20,21 +20,23 @@
 /// \file
 /// \author Chris Saunders and Xiaoyu Chen
 ///
+/// This file contains a subset of the implementation for SVScorer.hpp focusing on paired read handling
+///
+
+#include "SVScorer.hpp"
+
+#include <iostream>
+#include <sstream>
+#include <string>
 
 #include "SVScorePairAltProcessor.hpp"
 #include "SVScorePairRefProcessor.hpp"
-#include "SVScorer.hpp"
-
 #include "common/Exceptions.hpp"
 #include "htsapi/align_path_bam_util.hpp"
 #include "htsapi/bam_record_util.hpp"
 #include "htsapi/bam_streamer.hpp"
 #include "manta/SVCandidateUtil.hpp"
 #include "svgraph/GenomeIntervalUtil.hpp"
-
-#include <iostream>
-#include <sstream>
-#include <string>
 
 /// standard debug output for this file:
 //#define DEBUG_PAIR

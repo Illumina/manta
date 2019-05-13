@@ -21,7 +21,6 @@
 
 #include "EdgeRuntimeTracker.hpp"
 #include "GSCOptions.hpp"
-
 #include "alignment/GlobalAligner.hpp"
 #include "alignment/GlobalJumpAligner.hpp"
 #include "alignment/GlobalJumpIntronAligner.hpp"

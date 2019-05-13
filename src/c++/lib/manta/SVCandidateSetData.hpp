@@ -121,8 +121,9 @@ struct SVCandidateSetSequenceFragment {
     return true;
   }
 
-  std::vector<SVSequenceFragmentAssociation>
-                                  svLink;  ///< which SVs from the set are this molecule associated with?
+  /// Which SVs from the set are this molecule associated with?
+  std::vector<SVSequenceFragmentAssociation> svLink;
+
   SVCandidateSetRead              read1;
   std::vector<SVCandidateSetRead> read1Supplemental;
   SVCandidateSetRead              read2;

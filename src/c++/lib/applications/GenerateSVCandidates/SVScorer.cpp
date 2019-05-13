@@ -22,8 +22,12 @@
 ///
 
 #include "SVScorer.hpp"
-#include "SVScorePairAltProcessor.hpp"
 
+#include <algorithm>
+#include <iostream>
+#include <string>
+
+#include "SVScorePairAltProcessor.hpp"
 #include "blt_util/LinearScaler.hpp"
 #include "blt_util/log.hpp"
 #include "blt_util/math_util.hpp"
@@ -34,10 +38,6 @@
 #include "manta/BamStreamerUtils.hpp"
 #include "manta/ReadGroupStatsSet.hpp"
 #include "manta/SVCandidateUtil.hpp"
-
-#include <algorithm>
-#include <iostream>
-#include <string>
 
 //#define DEBUG_SCORE
 //#define DEBUG_SOMATIC_SCORE
@@ -173,6 +173,7 @@ void SVScorer::getBreakendMaxMappedDepthAndMQ0(
   }
 }
 
+/// Convert log likelihoods from a 2 state space to probabilities:
 static void lnToProb(float& lower, float& higher)
 {
   lower  = std::exp(lower - higher);
@@ -180,7 +181,12 @@ static void lnToProb(float& lower, float& higher)
   lower  = lower / (lower + 1);
 }
 
-/// return false if no split read support
+/// Get ref and alt allele likelihoods for the given read
+///
+/// \param isForcedSupport If true, proceed with the likelihood calculation even if there is no split support
+/// indicated for this read for any breakend of any allele.
+///
+/// \return False if likelihoods were not computed
 static bool getSampleSplitReadLnLhood(
     const SVFragmentEvidence& fragev,
     const bool                isRead1,
@@ -193,6 +199,7 @@ static bool getSampleSplitReadLnLhood(
 
   const std::pair<bool, bool> isBpSupport(fragev.isAnySplitReadSupport(isRead1));
   if (!isForcedSupport) {
+    // Abort the process if the read doesn't support any allele breakends
     if (!(isBpSupport.first || isBpSupport.second)) return false;
   }
 
@@ -222,6 +229,8 @@ static bool getSampleSplitReadLnLhood(
 static void addConservativeSplitReadSupport(
     const SVFragmentEvidence& fragev, const bool isRead1, SVSampleInfo& sampleBaseInfo)
 {
+  // A read must support a single allele with at least this probability to be enumerated in the VCF output's
+  // split read count:
   static const float splitSupportProb(0.999f);
 
   // only consider reads where at least one allele and one breakend is confident
@@ -358,12 +367,15 @@ static void getSVSupportSummary(const SVEvidence& evidence, SVScoreInfo& baseInf
 }
 
 /// Check for and fix conflicts in pair and split read support for one sample
+///
+/// \param isFindAltPairConflict If true, resolve conflicts in support for the alt allele (ref allele
+/// conflicts are always resolved)
 static void resolvePairSplitConflictsSample(
     const bool isFindAltPairConflict, SVEvidence::evidenceTrack_t& sampleEvidence)
 {
   for (SVEvidence::evidenceTrack_t::value_type& val : sampleEvidence) {
 #ifdef DEBUG_SCORE
-    log_os << __FUNCTION__ << ": conflict check for " << val.first << "\n";
+    log_os << __FUNCTION__ << ": conflict check for read name " << val.first << "\n";
 #endif
     SVFragmentEvidence& fragev(val.second);
 
@@ -371,16 +383,17 @@ static void resolvePairSplitConflictsSample(
     if (!fragev.isAnySpanningPairSupport()) continue;
     //    if (! (fragev.isAnySplitReadSupport(true) || fragev.isAnySplitReadSupport(false))) continue;
 
-    // if there's a difference in fragment support for one "frag-favored" allele, then
+    // If there's a difference in fragment support for one allele, then
     // there must also be either neutral split support or split support in favor of the same allele
 
     const float refPairLhood(getSpanningPairAlleleLhood(fragev.ref));
     const float altPairLhood(getSpanningPairAlleleLhood(fragev.alt));
 
     static const bool isForcedSupport(true);
-    float             refSplitLnLhoodRead1;
-    float             altSplitLnLhoodRead1;
-    const bool        isRead1Split(
+
+    float      refSplitLnLhoodRead1;
+    float      altSplitLnLhoodRead1;
+    const bool isRead1Split(
         getSampleSplitReadLnLhood(fragev, true, refSplitLnLhoodRead1, altSplitLnLhoodRead1, isForcedSupport));
 
     float      refSplitLnLhoodRead2;
@@ -447,7 +460,16 @@ static void resolvePairSplitConflictsSample(
 /// Check for and fix conflicts in pair and split read support in all samples
 ///
 /// Check for cases where pair support was added in error, the fragment does span the breakpoint, but the
-/// alignment past the breakpoint is poor, and is better in the alt allele.
+/// alignment past the breakpoint is poor, and is better in the other allele.
+///
+/// A schematic of the intended filtration scenario is as follows:
+///
+/// >>X>>XXXX>XXXXX>>>read1>-------<read2<<<<<<<<<<<<<<<
+///                |
+///                Breakpoint Location
+///
+/// Here 'X' shows mismatch locations in the read, and thus poor split read support for this breakend, even
+/// though it is possible that read pair analysis showed this to be supporting.
 ///
 /// note this might be done more naturally during the pair computation, but all the info we need is added
 /// during the split routine, so it's at least checked here as well:

@@ -23,11 +23,11 @@
 
 #pragma once
 
-#include "EdgeOptions.hpp"
+#include <string>
 
 #include "boost/program_options.hpp"
 
-#include <string>
+#include "EdgeOptions.hpp"
 
 boost::program_options::options_description getOptionsDescription(EdgeOptions& opt);
 

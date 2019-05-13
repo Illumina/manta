@@ -29,11 +29,16 @@
 /// Information added to each read in the process of assembly
 ///
 struct AssemblyReadInfo {
-  bool isUsed     = false;
-  bool isFiltered = false;  ///< if true, the read was 'used' but filtered out, so there is no meaningful
-                            ///< contig id association
-  bool                  isPseudo = false;  ///< if true, the read was an assembled contig
-  std::vector<unsigned> contigIds;         ///< index of the contigs that this read is used in
+  bool isUsed = false;
+
+  /// If true, the read was 'used' but filtered out, so there is no meaningful contig id association
+  bool isFiltered = false;
+
+  /// If true, the read was an assembled contig
+  bool isPseudo = false;
+
+  /// Index of the contigs that this read is used in
+  std::vector<unsigned> contigIds;
 };
 
 typedef std::vector<std::string>      AssemblyReadInput;

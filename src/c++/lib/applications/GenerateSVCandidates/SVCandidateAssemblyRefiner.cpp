@@ -26,6 +26,9 @@
 
 #include "SVCandidateAssemblyRefiner.hpp"
 
+#include <iostream>
+#include <unordered_set>
+
 #include "alignment/AlignmentScoringUtil.hpp"
 #include "alignment/AlignmentUtil.hpp"
 #include "blt_util/align_path.hpp"
@@ -36,9 +39,6 @@
 #include "htsapi/samtools_fasta_util.hpp"
 #include "manta/SVCandidateUtil.hpp"
 #include "manta/SVReferenceUtil.hpp"
-
-#include <iostream>
-#include <unordered_set>
 
 //#define DEBUG_REFINER
 //#define DEBUG_CONTIG
@@ -97,10 +97,11 @@ static bool isLowQualitySpanningSVAlignment(
     const bool                  isRNA,
     const ALIGNPATH::path_t&    input_apath)
 {
-  unsigned minAlignReadLength(
-      30);  ///< require min length of each contig sub-alignment even after off-reference clipping:
-  static const float minScoreFrac(
-      0.75);  ///< require min fraction of optimal score in each contig sub-alignment
+  /// Require min length of each contig sub-alignment even after off-reference clipping
+  unsigned minAlignReadLength(30);
+
+  /// Require min fraction of optimal score in each contig sub-alignment
+  static const float minScoreFrac(0.75);
   if (isRNA) {
     minAlignReadLength = 20;
   }
@@ -165,7 +166,8 @@ static bool isLowQualitySpanningSVAlignment(
 ///
 /// \param[in] apath Input alignment which will be searched for large indels
 /// \param[in] minSize Minimum qualifying indel size
-/// \param[out] segments Return the indices in apath for each qualifying indel. Each qualifying indel has a (start,end)
+/// \param[out] segments Return the indices in apath for each qualifying indel. Each qualifying indel has a
+/// (start,end)
 ///                      index pair to account for combined insetion/deletion (ie. 'complex') events.
 static void getLargeIndelSegments(
     const ALIGNPATH::path_t&                    apath,
@@ -319,13 +321,20 @@ static bool isLowQualitySmallSVAlignment(
     const bool                  isComplex,
     ALIGNPATH::path_t&          apath)
 {
-  static const unsigned minAlignRefSpanSimple(30);  ///< min reference length for alignment
-  static const unsigned minAlignReadLengthSimple(
-      30);                                           ///< min length of alignment after off-reference clipping
-  static const unsigned minAlignRefSpanComplex(35);  ///< min reference length for alignment
-  static const unsigned minAlignReadLengthComplex(
-      35);                                ///< min length of alignment after off-reference clipping
-  static const float minScoreFrac(0.75);  ///< min fraction of optimal score in each contig sub-alignment:
+  // Min reference length for alignment:
+  static const unsigned minAlignRefSpanSimple(30);
+
+  // Min length of alignment after off-reference clipping:
+  static const unsigned minAlignReadLengthSimple(30);
+
+  // Min reference length for alignment:
+  static const unsigned minAlignRefSpanComplex(35);
+
+  // Min length of alignment after off-reference clipping:
+  static const unsigned minAlignReadLengthComplex(35);
+
+  // Min reference length for alignment
+  static const float minScoreFrac(0.75);
 
   const unsigned minAlignRefSpan(isComplex ? minAlignRefSpanComplex : minAlignRefSpanSimple);
   const unsigned minAlignReadLength(isComplex ? minAlignReadLengthComplex : minAlignReadLengthSimple);
@@ -560,12 +569,17 @@ static bool isLargeInsertSegment(
 {
   using namespace ALIGNPATH;
 
-  static const unsigned minAlignReadLength(40);  ///< min length of aligned portion of contig
-  static const unsigned minExtendedReadLength(
-      minSemiLargeInsertionLength);  ///< min length of unaligned portion of contig
+  // Min length of aligned portion of contig
+  static const unsigned minAlignReadLength(40);
 
-  static const unsigned minAlignRefSpan(40);  ///< min reference length for alignment
-  static const float    minScoreFrac(0.75);   ///< min fraction of optimal score in each contig sub-alignment:
+  // Min length of unaligned portion of contig
+  static const unsigned minExtendedReadLength(minSemiLargeInsertionLength);
+
+  // Min reference length for alignment
+  static const unsigned minAlignRefSpan(40);
+
+  // Min fraction of optimal score in each contig sub-alignment
+  static const float minScoreFrac(0.75);
 
   const unsigned pathSize(apath_read_length(apath));
 
@@ -654,8 +668,8 @@ static bool isFinishedLargeInsertAlignment(
 /// \param[in] refRange range of the event (ie indel) of interest in reference coordinates
 /// \param[in] readRange range of the event (ie indel) of interest in read coordinates
 ///
-/// range coordinates are zero indexed and start at the first affected positions (so are not like vcf coordinates)
-/// for instance:
+/// range coordinates are zero indexed and start at the first affected positions (so are not like vcf
+/// coordinates) for instance:
 ////  the deletion 10M1D10M would have refRange(10,11), readRange(10,10)
 ////  the insertion 10M1I10M would have refRange(10,10), readRange(10,11)
 ///
