@@ -1,9 +1,15 @@
 ## Unreleased
 
+### Added
+- Add configuration option to turn off the evidence signal filter during candidate generation (DRAGEN-1873)
+  - This enables very high sensitivity during high depth tumor-only calling 
+
 ### Changed
-- Accelerate SV discovery and genotyping (MANTA-1521)
-  - Changes the SV discovering and genotyping phase from a multi-process to a multi-thread design. As a result Manta will run at least 25% faster on a typical modern server.
+- Change the SV candidate discovery and genotyping phase from a multi-process to a multi-thread design for better CPU utilization (MANTA-1521)
+  - As a result, runtime is faster and less variable than before.
+  - Runtime improvements vary by workload and server configuration, for typical WGS workloads on a modern server an improvement of ~5-10% may be expected, but improvements of up to 50% have been observed for cases where work previously was poorly distributed across processes.
   - SGE support is removed with this change.
+- Update htslib/samtools to 1.9 (MANTA-1483)
 
 ## v1.5.1 - 2019-02-15
 This is a minor update from v1.5.0.
