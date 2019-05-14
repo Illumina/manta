@@ -177,9 +177,9 @@ Supported project languages are C++11 for core methods development and python2 (
 
 * Basic formatting restrictions on c++ code:
   * spaces instead of tabs
-  * 4-space indents
-  * "ANSI" bracket style
-* Note the above restrictions are enforced by an astyle script which is occasionally run on the master branch (see [run_cxx_formatter.bash](../../scratch/source_check_and_format/run_cxx_formatter.bash))
+  * 2-space indents
+* Note the above restrictions, in addition to others, are enforced by a clang-format script which is occasionally run on
+the develop branch (see [run_cxx_formatter.bash](../../scratch/source_check_and_format/run_cxx_formatter.bash))
 * Name formatting for all newly introduced code:
   * Make variable/type names self-documenting whereever this is practical, e.g. sampleCount, breakpointRegion, etc.
   * Lowercase camelCase variable names
