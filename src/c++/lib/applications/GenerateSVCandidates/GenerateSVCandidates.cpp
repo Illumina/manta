@@ -123,8 +123,12 @@ static void multiJunctionFilterGroupCandidateSV(
 #endif
 }
 
+namespace {
+
 /// Mutable data shared by all worker threads:
 std::atomic<bool> isWorkerThreadException(false);
+
+}  // namespace
 
 /// These are thread-local data that we initialize before the thread pool to reduce total initialization
 /// costs, specifically we want to avoid initializing them for every edge (in principal, this has not been

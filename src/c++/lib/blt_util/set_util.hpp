@@ -29,8 +29,10 @@
 template <typename T>
 void inplaceSetSubtract(const std::set<T>& A, std::set<T>& B)
 {
-  auto ait(A.cbegin()), ait_end(A.cend());
-  auto bit(B.cbegin()), bit_end(B.cend());
+  auto ait(A.cbegin());
+  auto ait_end(A.cend());
+  auto bit(B.cbegin());
+  auto bit_end(B.cend());
   while ((bit != bit_end) && (ait != ait_end)) {
     if (*ait < *bit) {
       ++ait;
