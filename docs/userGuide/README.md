@@ -626,7 +626,9 @@ The contig sequence of each precise SV will be provided in the INFO field `CONTI
 The configuration step creates a new workflow run script in the
 requested run directory:
 
-`{MANTA_ANALYSIS_PATH}/runWorkflow.py`
+```
+${MANTA_ANALYSIS_PATH}/runWorkflow.py
+```
 
 This script is used to control parallel execution of Manta via the
 [pyFlow][2] task engine on a single compute node.
@@ -636,7 +638,9 @@ left off.
 
 For a full list of execution options, see:
 
-`{MANTA_ANALYSIS_PATH}/runWorkflow.py -h`
+```
+${MANTA_ANALYSIS_PATH}/runWorkflow.py -h
+```
 
 Example execution on a single node:
 
