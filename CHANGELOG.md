@@ -1,4 +1,4 @@
-## Unreleased
+## v1.6.0 - 2019-06-25
 
 ### Added
 - Add configuration option to turn off the evidence signal filter during candidate generation (DRAGEN-1873)
