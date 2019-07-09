@@ -1,4 +1,5 @@
 ## v1.6.0 - 2019-06-25
+This is a significant engineering update from the v1.5.x release, in which the SV candidate generation step has been changed to a single multi-threaded process to improve task scheduling. This slightly improves average runtime and reduces runtime variability. With this update, support for job distribution over SGE is dropped.
 
 ### Added
 - Add configuration option to turn off the evidence signal filter during candidate generation (DRAGEN-1873)
