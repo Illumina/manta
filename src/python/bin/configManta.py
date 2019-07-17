@@ -74,9 +74,9 @@ You must specify a BAM or CRAM file for at least one sample.
 
 
     def addExtendedGroupOptions(self,group) :
-        group.add_option("--existingAlignStatsFile",
-                         dest="existingAlignStatsFile", metavar="FILE",
-                         help="Pre-calculated alignment statistics file. Skips alignment stats calculation.")
+        group.add_option("--defaultAlignStatsFile", "--existingAlignStatsFile",
+                         dest="defaultAlignStatsFile", metavar="FILE",
+                         help="Default alignment statistics to use when direct estimation from the sample fails")
         group.add_option("--useExistingChromDepths",
                          dest="useExistingChromDepths", action="store_true",
                          help="Use pre-calculated chromosome depths.")
@@ -102,7 +102,7 @@ You must specify a BAM or CRAM file for at least one sample.
             'isRNA' : False,
             'isOutputContig' : False,
             'isUnstrandedRNA' : False,
-            'existingAlignStatsFile' : None,
+            'defaultAlignStatsFile' : None,
             'useExistingChromDepths' : False,
             'isRetainTempFiles' : False,
             'isGenerateSupportBam' : False
@@ -136,8 +136,8 @@ You must specify a BAM or CRAM file for at least one sample.
             if options.isUnstrandedRNA :
                 raise OptParseException("Unstranded only applied for RNA inputs")
 
-        if options.existingAlignStatsFile is not None :
-            options.existingAlignStatsFile=validateFixExistingFileArg(options.existingAlignStatsFile,"existing align stats")
+        if options.defaultAlignStatsFile is not None :
+            options.defaultAlignStatsFile=validateFixExistingFileArg(options.defaultAlignStatsFile,"default align stats")
 
         groomBamList(options.normalBamList,"normal sample")
         groomBamList(options.tumorBamList, "tumor sample")

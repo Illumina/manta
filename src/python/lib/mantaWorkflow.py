@@ -174,12 +174,6 @@ def summarizeStats(self, taskPrefix="", dependencies=None) :
 
     return summaryTasks
 
-def copyStats(self) :
-    statsPath=self.paths.getStatsPath()
-    existingStatsPath=self.params.existingAlignStatsFile
-
-    shutil.copy(existingStatsPath, statsPath)
-
 def runStats(self,taskPrefix="",dependencies=None) :
 
     statsPath=self.paths.getStatsPath()
@@ -201,8 +195,8 @@ def runStats(self,taskPrefix="",dependencies=None) :
         cmd.extend(["--ref", self.params.referenceFasta])
         cmd.extend(["--output-file",tmpStatsFiles[-1]])
         cmd.extend(["--align-file",bamPath])
-        if self.params.existingAlignStatsFile:
-            cmd.extend(["--default-stats-file",self.params.existingAlignStatsFile])
+        if self.params.defaultAlignStatsFile:
+            cmd.extend(["--default-stats-file",self.params.defaultAlignStatsFile])
 
         statsTasks.add(self.addTask(preJoin(taskPrefix,"generateStats_"+indexStr),cmd,dependencies=dirTask))
 

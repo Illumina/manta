@@ -662,9 +662,6 @@ These options are useful for Manta development and debugging:
 * The `--generateEvidenceBam` option can be used to generate bam files
   of evidence reads for SVs listed in the candidate vcf file.
   (More details in the section "Generating evidence bams" below)
-* The `--default-stats-file` option can be used to provide a file
-  containing read group statistics for Manta to fall back on when stats
-  estimation fails due to insufficient high-confidence read pairs.
 
 
 ### Extended use cases

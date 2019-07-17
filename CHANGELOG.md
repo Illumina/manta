@@ -1,5 +1,5 @@
 ## v1.6.0 - 2019-06-25
-This is a significant engineering update from the v1.5.x release, in which the SV candidate generation step has been changed to a single multi-threaded process to improve task scheduling. This slightly improves average runtime and reduces runtime variability. With this update, support for job distribution over SGE is dropped.
+This is a significant engineering update from the v1.5.1 release, in which the SV candidate generation step has been changed to a single multi-threaded process to improve task scheduling. This slightly improves average runtime and reduces runtime variability. With this update, support for job distribution over SGE is dropped.
 
 ### Added
 - Add configuration option to turn off the evidence signal filter during candidate generation (DRAGEN-1873)
@@ -16,13 +16,13 @@ This is a significant engineering update from the v1.5.x release, in which the S
 This is a minor update from v1.5.0.
 
 ### Changed
-- Make existingAlignmentStats as a fallback option (MANTA-1487)
-  - It prioritizes stats estimated from the alignment file and allows static stats file when stats estimation fails due to insufficient high-confidence read pairs.
+- Change behavior of existingAlignmentStats option (MANTA-1487)
+  - Alignment statistics provided by this option will only be used as a default when direct estimation from the sample fails.
 - Minor updates on Methods writeup (MANTA-1522)
 
 ### Fixed
 - Fix a bug in selecting large insertion candidates (MANTA-1496)
-- Fix a minor bug in QC small SV alignment (MANTA-1498)
+- Fix a minor bug in QC small alignment SV (MANTA-1498)
 
 ## v1.5.0 - 2018-11-12
 This is a major update from v1.4.0, featuring improved precision and stability, a new configurable option of overlapping pair reads, and a few bug fixes. VCF representation is improved by introducing a couple of new filters and representing inversions as two breakend records.
