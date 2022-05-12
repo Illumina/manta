@@ -43,7 +43,7 @@ struct qphred_cache {
     return qc().get_mapped_qscore_imp(basecall_qscore, mapping_qscore);
   }
 
-  enum { MAX_QSCORE = 70, MAX_MAP = 90 };
+  enum { MAX_QSCORE = 93, MAX_MAP = 90 };
 
   static void qscore_check(const int qscore, const char* label)
   {
