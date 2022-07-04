@@ -76,6 +76,7 @@ struct bam_streamer : public stream_state_reporter, public boost::noncopyable {
   void resetRegion(int referenceContigId, int beginPos, int endPos);
 
   bool next();
+  bool next0();
 
   const bam_record* get_record_ptr() const
   {

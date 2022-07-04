@@ -186,7 +186,7 @@ void bam_streamer::resetRegion(int referenceContigId, int beginPos, int endPos)
   _record_no     = 0;
 }
 
-bool bam_streamer::next()
+bool bam_streamer::next0()
 {
   if (nullptr == _hfp) return false;
 
@@ -221,6 +221,40 @@ bool bam_streamer::next()
   if (_is_record_set) _record_no++;
 
   return _is_record_set;
+}
+
+bool bam_streamer::next() {
+  bool ret;
+  while ((ret=next0())) {
+    const auto cigar = _brec.raw_cigar();
+    if (_brec.n_cigar() > 1) {
+      int op0 = bam_cigar_op(cigar[0]);
+      int op1 = bam_cigar_op(cigar[1]);
+      int op_n0 = bam_cigar_op(cigar[_brec.n_cigar() - 1]);
+      int op_n1 = bam_cigar_op(cigar[_brec.n_cigar() - 2]);
+      if (
+        (op0 == BAM_CINS && op1 == BAM_CDEL) || //starts with ID
+        (op0 == BAM_CDEL && op1 == BAM_CINS) || //starts with DI
+        (op_n1 == BAM_CDEL && op_n0 == BAM_CINS) || //ends with DI
+        (op_n1 == BAM_CINS && op_n0 == BAM_CDEL) || //ends with ID
+        (op0 == BAM_CSOFT_CLIP && (op1==BAM_CDEL || op1==BAM_CINS)) ||  // starts with SD or SI 
+        ((op_n1 == BAM_CDEL || op_n1==BAM_CINS) && op_n0 == BAM_CSOFT_CLIP)  // ends with SD or SI
+      ) {
+        char op0cigar = (op0==BAM_CINS?'I':(op0==BAM_CDEL?'D':(op0==BAM_CSOFT_CLIP?'S':'x')));
+        char op1cigar = (op1==BAM_CINS?'I':(op1==BAM_CDEL?'D':(op1==BAM_CSOFT_CLIP?'S':'x')));
+        char opn1cigar = (op_n1==BAM_CINS?'I':(op_n1==BAM_CDEL?'D':(op_n1==BAM_CSOFT_CLIP?'S':'x')));
+        char opn0cigar = (op_n0==BAM_CINS?'I':(op_n0==BAM_CDEL?'D':(op_n0==BAM_CSOFT_CLIP?'S':'x')));
+        std::cout << "Skipping read: " << _brec.qname() << " CIGAR edges: " 
+           << " " << op0cigar << op1cigar <<"..."<< opn1cigar<<opn0cigar <<"\n";
+        // unusable read, made by abra realigner, load next
+      } else {
+        break;  // cigar seems ok
+      }
+    } else {
+      break;   // single-item cigar is always ok
+    }
+  }
+  return ret;
 }
 
 const char* bam_streamer::target_id_to_name(const int32_t tid) const
