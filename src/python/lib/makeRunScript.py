@@ -129,7 +129,7 @@ results -- in this case the dry run will not cover the full 'live' run task set.
     def isLocalSmtp() :
         import smtplib
         try :
-            smtplib.SMTP('localhost')
+            smtplib.SMTP('localhost', 25, 'localhost', 5)
         except :
             return False
         return True
